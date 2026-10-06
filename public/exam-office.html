@@ -987,7 +987,11 @@
   /* ---------------- TERM SETTINGS ---------------- */
   function toDatetimeLocal(isoString) {
     if (!isoString) return '';
-    const d = new Date(isoString);
+    // Strip off any trailing 'Z' or offset if present so it parses uniformly, 
+    // or use local/UTC methods consistently to prevent shifting.
+    const cleanStr = isoString.replace('Z', '');
+    const d = new Date(cleanStr);
+    if (isNaN(d.getTime())) return '';
     const pad = n => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
