@@ -83,7 +83,7 @@ router.get('/midterm-result', async (req, res) => {
  * GET /api/student/result
  * Assembles the full slip: subject scores + grades, class position,
  * totals, attendance and comments.
- * Query params: student_id, term, session
+ * Query params: student_id, term, session, pin_code
  */
 router.get('/result', async (req, res) => {
   const { student_id, term, session, pin_code } = req.query;
@@ -95,8 +95,6 @@ router.get('/result', async (req, res) => {
   }
 
   try {
-    // Check the release date first — never leak result data before the exam office says so,
-    // and don't waste a PIN use on a check that was always going to be blocked.
     const settingsRes = await pool.query(
       'SELECT result_release_at FROM term_settings WHERE term = $1 AND session = $2',
       [term, session]
@@ -109,8 +107,6 @@ router.get('/result', async (req, res) => {
       });
     }
 
-    // Fee check — a student with no row here is cleared by default; only an
-    // explicit cleared=false row blocks them. Also checked before touching the PIN.
     const feeRes = await pool.query(
       'SELECT cleared FROM fee_status WHERE student_id = $1 AND term = $2 AND session = $3',
       [student_id, term, session]
@@ -122,11 +118,6 @@ router.get('/result', async (req, res) => {
       });
     }
 
-    // PIN check last, right before we actually build the result — this is the only
-    // path that spends one of the student's 5 uses.
-    // One UPDATE does the bind-or-verify atomically: if the PIN is fresh (student_id
-    // NULL), it locks to this student now; if already bound, it must match this student;
-    // either way it only succeeds while uses_count is still under max_uses.
     const pinUpdateRes = await pool.query(
       `UPDATE result_pins
        SET uses_count = uses_count + 1,
@@ -140,7 +131,6 @@ router.get('/result', async (req, res) => {
     );
 
     if (pinUpdateRes.rows.length === 0) {
-      // Figure out exactly why it failed, for a clearer message.
       const pinCheckRes = await pool.query('SELECT * FROM result_pins WHERE code = $1', [pin_code]);
       if (pinCheckRes.rows.length === 0) {
         return res.status(403).json({ error: 'Invalid PIN. Please check the code and try again.' });
@@ -161,7 +151,6 @@ router.get('/result', async (req, res) => {
     }
     const student = studentRes.rows[0];
 
-    // 1. This student's subject scores, with CA pulled from mid-term
     const scoresRes = await pool.query(
       `SELECT sub.id AS subject_id, sub.name AS subject_name,
               m.assignment_score, m.test_score,
@@ -191,7 +180,6 @@ router.get('/result', async (req, res) => {
     const maxObtainable = subjects.length * 100;
     const average = maxObtainable ? Number(((totalScore / maxObtainable) * 100).toFixed(1)) : 0;
 
-    // 2. Subject highest + position within class, for each subject this student offers
     const subjectStats = {};
     for (const s of subjects) {
       const classScoresRes = await pool.query(
@@ -210,7 +198,6 @@ router.get('/result', async (req, res) => {
       subjectStats[s.subject_id] = { highest, position: mine ? ordinal(mine.position) : '-' };
     }
 
-    // 3. Class position: rank by total score across all subjects, per student
     const classTotalsRes = await pool.query(
       `SELECT r.student_id,
               SUM(COALESCE(m.assignment_score,0) + COALESCE(m.test_score,0) + COALESCE(r.exam_score,0)) AS total
@@ -225,12 +212,12 @@ router.get('/result', async (req, res) => {
     const classRanked = rankByTotal(classEntries);
     const myClassRank = classRanked.find((e) => e.studentId === student.id);
 
-    // 4. Attendance + comments
     const termRecordRes = await pool.query(
       `SELECT * FROM term_records WHERE student_id = $1 AND term = $2 AND session = $3`,
       [student_id, term, session]
     );
     const termRecord = termRecordRes.rows[0] || null;
+    const pinData = pinUpdateRes.rows[0];
 
     res.json({
       student: { id: student.id, name: student.name, admission_no: student.admission_no, class: student.class, photo_url: student.photo_url },
@@ -249,6 +236,11 @@ router.get('/result', async (req, res) => {
       comments: termRecord
         ? { form_teacher: termRecord.form_teacher_comment, principal: termRecord.principal_comment }
         : null,
+      pin_usage: {
+        code: pinData.code,
+        uses_count: pinData.uses_count,
+        max_uses: pinData.max_uses
+      }
     });
   } catch (err) {
     console.error(err);
