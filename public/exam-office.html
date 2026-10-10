@@ -107,7 +107,7 @@
       <div id="tab-comments" class="tab-content card" style="display:none;">
         <p class="section-title">Principal Comments &amp; Promotion Overrides</p>
         <p style="font-size: 13px; color: #718096; margin-bottom: 16px;">
-          Lookup a student to set custom principal remarks or repeat/promotion statuses (e.g., "Not promoted. To repeat the class"). This overrides automated scores.
+          Lookup a student to set custom principal remarks or repeat/promotion statuses (e.g., "Not promoted. To repeat the class"). This overrides automated comments.
         </p>
         <div class="form-grid">
           <input type="text" id="commentAdmNo" placeholder="Enter Admission No (e.g. 246)" />
@@ -238,7 +238,7 @@
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
       
       document.getElementById(`tab-${tabName}`).style.display = 'block';
-      event.target.classList.add('active');
+      if (event && event.target) event.target.classList.add('active');
 
       if (tabName === 'students') loadStudents();
       if (tabName === 'teachers') loadTeachers();
@@ -251,6 +251,7 @@
       if (tabName === 'deadlines') loadDeadlines();
     }
 
+    // STUDENTS
     async function loadStudents() {
       const search = document.getElementById('studentSearch')?.value || '';
       const className = document.getElementById('studentClassFilter')?.value || '';
@@ -279,6 +280,17 @@
       }
     }
 
+    async function deleteStudent(id) {
+      if (!confirm('Are you sure you want to delete this student?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/students/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Could not delete');
+        showToast('Student deleted');
+        loadStudents();
+      } catch (err) { showToast(err.message); }
+    }
+
+    // TEACHERS
     async function loadTeachers() {
       const tbody = document.getElementById('teachersTableBody');
       if (!tbody) return;
@@ -292,6 +304,34 @@
       } catch (err) { tbody.innerHTML = '<tr><td colspan="4">Failed to load teachers.</td></tr>'; }
     }
 
+    async function addTeacher() {
+      const name = document.getElementById('newTeacherName').value.trim();
+      const email = document.getElementById('newTeacherEmail').value.trim();
+      const password = document.getElementById('newTeacherPassword').value.trim();
+      if (!name || !email || !password) return showToast('Please fill all fields.');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/teachers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        if (!res.ok) throw new Error('Failed to add teacher');
+        showToast('Teacher added');
+        loadTeachers();
+      } catch (err) { showToast(err.message); }
+    }
+
+    async function deleteTeacher(id) {
+      if (!confirm('Delete this teacher?')) return;
+      try {
+        await fetch(`${API_BASE}/api/exam-office/teachers/${id}`, { method: 'DELETE' });
+        showToast('Teacher deleted');
+        loadTeachers();
+      } catch (err) { showToast('Could not delete teacher'); }
+    }
+
+    // COMMENTS OVERRIDE
     async function lookupStudentCommentRecord() {
       const admission_no = document.getElementById('commentAdmNo').value.trim();
       if (!admission_no) return showToast('Enter an admission number.');
@@ -325,10 +365,64 @@
           body: JSON.stringify({ student_id: activeCommentStudentId, term, session, principal_comment })
         });
         if (!res.ok) throw new Error('Failed to save');
-        showToast('Comment override saved successfully!');
+        showToast('Comment override saved!');
       } catch (err) { showToast(err.message); }
     }
 
+    // CLASSES
+    async function loadClasses() {
+      const tbody = document.getElementById('classesTableBody');
+      if (!tbody) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/classes`);
+        const data = await res.json();
+        tbody.innerHTML = (data.classes || []).map(c => `<tr><td>${c.id}</td><td>${c.name}</td><td>${c.level}</td><td>${c.arm}</td><td>-</td></tr>`).join('') || '<tr><td colspan="5">No classes found.</td></tr>';
+      } catch (err) { tbody.innerHTML = '<tr><td colspan="5">Failed to load classes.</td></tr>'; }
+    }
+
+    async function addClass() {
+      const level = document.getElementById('classLevel').value.trim();
+      const arm = document.getElementById('classArm').value.trim();
+      if (!level || !arm) return showToast('Enter level and arm.');
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/classes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ level, arm })
+        });
+        if (!res.ok) throw new Error('Could not add class');
+        showToast('Class added');
+        loadClasses();
+      } catch (err) { showToast(err.message); }
+    }
+
+    // SUBJECTS
+    async function loadSubjects() {
+      const tbody = document.getElementById('subjectsTableBody');
+      if (!tbody) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/subjects`);
+        const data = await res.json();
+        tbody.innerHTML = (data.subjects || []).map(s => `<tr><td>${s.id}</td><td>${s.name}</td><td>-</td></tr>`).join('') || '<tr><td colspan="3">No subjects found.</td></tr>';
+      } catch (err) { tbody.innerHTML = '<tr><td colspan="3">Failed to load subjects.</td></tr>'; }
+    }
+
+    async function addSubject() {
+      const name = document.getElementById('subjectName').value.trim();
+      if (!name) return showToast('Enter subject name.');
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/subjects`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        if (!res.ok) throw new Error('Could not add subject');
+        showToast('Subject added');
+        loadSubjects();
+      } catch (err) { showToast(err.message); }
+    }
+
+    // PINS
     async function loadPins() {
       const search = document.getElementById('pinSearch')?.value || '';
       const status = document.getElementById('pinStatusFilter')?.value || '';
@@ -345,6 +439,7 @@
       } catch (err) { tbody.innerHTML = '<tr><td colspan="5">Failed to load PINs.</td></tr>'; }
     }
 
+    // FEES
     async function loadFees() {
       const search = document.getElementById('feeSearch')?.value || '';
       const term = document.getElementById('feeTerm')?.value || 'First Term';
@@ -372,26 +467,6 @@
         showToast('Fee status updated');
         loadFees();
       } catch (err) { showToast('Failed to update fee status'); }
-    }
-
-    async function loadClasses() {
-      const tbody = document.getElementById('classesTableBody');
-      if (!tbody) return;
-      try {
-        const res = await fetch(`${API_BASE}/api/exam-office/classes`);
-        const data = await res.json();
-        tbody.innerHTML = (data.classes || []).map(c => `<tr><td>${c.id}</td><td>${c.name}</td><td>${c.level}</td><td>${c.arm}</td><td>-</td></tr>`).join('') || '<tr><td colspan="5">No classes found.</td></tr>';
-      } catch (err) {}
-    }
-
-    async function loadSubjects() {
-      const tbody = document.getElementById('subjectsTableBody');
-      if (!tbody) return;
-      try {
-        const res = await fetch(`${API_BASE}/api/exam-office/subjects`);
-        const data = await res.json();
-        tbody.innerHTML = (data.subjects || []).map(s => `<tr><td>${s.id}</td><td>${s.name}</td><td>-</td></tr>`).join('') || '<tr><td colspan="3">No subjects found.</td></tr>';
-      } catch (err) {}
     }
 
     async function loadAssignments() {

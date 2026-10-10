@@ -1,30 +1,38 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-
-const teacherRoutes = require('./routes/teacher');
-const studentRoutes = require('./routes/student');
-const formTeacherRoutes = require('./routes/form-teacher');
-const examOfficeRoutes = require('./routes/exam-office');
-const termSettingsRoutes = require('./routes/term-settings');
-const developerRoutes = require('./routes/developer');
+require('dotenv').config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public', { index: false })); // serves every page + uploaded photos; root ("/") handled below instead of defaulting to index.html
+app.use(express.urlencoded({ extended: true }));
 
-app.use('/api/teacher', teacherRoutes);
-app.use('/api/student', studentRoutes);
-app.use('/api/form-teacher', formTeacherRoutes);
-app.use('/api/exam-office', examOfficeRoutes);
-app.use('/api/term-settings', termSettingsRoutes);
-app.use('/api/developer', developerRoutes);
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// The homepage is now the landing page (role picker), not the raw API message.
-// Every individual page (index.html, teacher.html, etc.) is still reachable directly by name.
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'landing.html')));
+// Import Routes
+const studentRouter = require('./routes/student');
+const examOfficeRouter = require('./routes/exam-office');
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`ResultPro API listening on port ${PORT}`));
+// Mount API Routes
+app.use('/api/student', studentRouter);
+app.use('/api/exam-office', examOfficeRouter);
+
+// Fallback HTML routes
+app.get('/exam-office', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'exam-office.html'));
+});
+
+app.get('/student', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Start Server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
