@@ -18,10 +18,18 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Import Routes
 const studentRouter = require('./routes/student');
 const examOfficeRouter = require('./routes/exam-office');
+const termSettingsRouter = require('./routes/term-settings');
+const developerRouter = require('./routes/developer');
+const teacherRouter = require('./routes/teacher');
+const formTeacherRouter = require('./routes/form-teacher');
 
 // Mount API Routes
 app.use('/api/student', studentRouter);
 app.use('/api/exam-office', examOfficeRouter);
+app.use('/api/term-settings', termSettingsRouter);
+app.use('/api/developer', developerRouter);
+app.use('/api/teacher', teacherRouter);
+app.use('/api/form-teacher', formTeacherRouter);
 
 // Fallback HTML routes
 app.get('/exam-office', (req, res) => {
