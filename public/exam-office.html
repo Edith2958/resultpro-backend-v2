@@ -455,11 +455,22 @@
 
 <div class="toast" id="toast"></div>
 
+
 <script>
   const API_BASE = window.location.origin; 
   let officer = null;
   let cache = { subjects: [], teachers: [], classes: [] };
   let activeCommentStudentId = null;
+  let studentPage = 1;
+  const STUDENTS_PER_PAGE = 25;
+  let searchDebounceTimer;
+  let officePinPage = 1;
+  const OFFICE_PINS_PER_PAGE = 25;
+  let officePinSearchDebounceTimer;
+  let feePage = 1;
+  const FEES_PER_PAGE = 25;
+  let feeSearchDebounceTimer;
+  let lastStudentsList = [];
 
   const saved = sessionStorage.getItem('resultpro_officer');
   if (saved) {
@@ -573,11 +584,6 @@
     document.getElementById('doClass').innerHTML = classOpts;
   }
 
-  /* ---------------- STUDENTS ---------------- */
-  let studentPage = 1;
-  const STUDENTS_PER_PAGE = 25;
-  let searchDebounceTimer;
-
   function debouncedSearch() {
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(searchStudents, 350);
@@ -592,8 +598,6 @@
     studentPage = Math.max(1, studentPage + delta);
     loadStudents();
   }
-
-  let lastStudentsList = [];
 
   async function loadStudents() {
     const search = document.getElementById('studentSearch').value.trim();
@@ -726,7 +730,6 @@
     } catch (err) { showToast(err.message || 'Could not add student.'); }
   }
 
-  /* ---------------- PRINCIPAL COMMENTS OVERRIDE ---------------- */
   async function lookupStudentCommentRecord() {
     const admission_no = document.getElementById('commentAdmNo').value.trim();
     if (!admission_no) return showToast('Enter an admission number.');
@@ -764,7 +767,6 @@
     } catch (err) { showToast(err.message); }
   }
 
-  /* ---------------- SUBJECTS ---------------- */
   async function loadSubjects() {
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/subjects`);
@@ -800,7 +802,6 @@
     } catch (err) { showToast(err.message || 'Could not add subject.'); }
   }
 
-  /* ---------------- TEACHERS ---------------- */
   async function loadTeachers() {
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/teachers`);
@@ -840,7 +841,6 @@
     } catch (err) { showToast(err.message || 'Could not add teacher.'); }
   }
 
-  /* ---------------- CLASSES ---------------- */
   async function loadClasses() {
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/classes`);
@@ -875,7 +875,6 @@
     } catch (err) { showToast(err.message || 'Could not add class.'); }
   }
 
-  /* ---------------- ASSIGNMENTS ---------------- */
   async function loadAssignments() {
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/assignments`);
@@ -910,7 +909,6 @@
     } catch (err) { showToast(err.message || 'Could not assign.'); }
   }
 
-  /* ---------------- FORM TEACHERS ---------------- */
   async function loadFormTeachers() {
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/form-teachers`);
@@ -944,7 +942,6 @@
     } catch (err) { showToast(err.message || 'Could not assign.'); }
   }
 
-  /* ---------------- SHARED DELETE ---------------- */
   async function deleteItem(resource, id, reloadFn) {
     if (!confirm('Are you sure you want to delete this?')) return;
     try {
@@ -956,11 +953,6 @@
       showToast('Deleted.');
     } catch (err) { showToast(err.message || 'Could not delete.'); }
   }
-
-  /* ---------------- PINS (read-only) ---------------- */
-  let officePinPage = 1;
-  const OFFICE_PINS_PER_PAGE = 25;
-  let officePinSearchDebounceTimer;
 
   function debouncedOfficePinSearch() {
     clearTimeout(officePinSearchDebounceTimer);
@@ -1015,11 +1007,6 @@
       showToast('Could not load PINs.');
     }
   }
-
-  /* ---------------- FEES ---------------- */
-  let feePage = 1;
-  const FEES_PER_PAGE = 25;
-  let feeSearchDebounceTimer;
 
   function debouncedFeeSearch() {
     clearTimeout(feeSearchDebounceTimer);
@@ -1087,7 +1074,6 @@
     }
   }
 
-  /* ---------------- TERM SETTINGS ---------------- */
   function toDatetimeLocal(isoString) {
     if (!isoString) return '';
     const d = new Date(isoString);
