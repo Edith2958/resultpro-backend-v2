@@ -11,11 +11,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend files
+// Serve static frontend files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Import Routes
+// Import API Routes
 const studentRouter = require('./routes/student');
 const examOfficeRouter = require('./routes/exam-office');
 const termSettingsRouter = require('./routes/term-settings');
@@ -31,13 +31,13 @@ app.use('/api/developer', developerRouter);
 app.use('/api/teacher', teacherRouter);
 app.use('/api/form-teacher', formTeacherRouter);
 
-// Fallback HTML routes
-app.get('/exam-office', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'exam-office.html'));
+// Frontend HTML Page Routes
+app.get('/student', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'student.html'));
 });
 
-app.get('/student', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/exam-office', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'exam-office.html'));
 });
 
 // Start Server
