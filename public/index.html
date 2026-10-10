@@ -439,7 +439,7 @@
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
         const mins = Math.floor((diff / (1000 * 60)) % 60);
         const secs = Math.floor((diff / 1000) % 60);
-        el.textContent = `⏳ Results open in ${days}d${hours}h ${mins}m${secs}s`;
+        el.textContent = `⏳ Results open in ${days}d ${hours}h ${mins}m ${secs}s`;
       }
       tick();
       releaseCountdownInterval = setInterval(tick, 1000);
@@ -550,17 +550,17 @@
     }
     document.getElementById('studentName').textContent = data.student.name;
     document.getElementById('studentMeta').textContent =
-      `${data.student.class} · Admission no. ${data.student.admission_no} · ${data.term},${data.session}`;
+      `${data.student.class} · Admission no. ${data.student.admission_no} · ${data.term}, ${data.session}`;
 
     document.getElementById('statTotalLabel').textContent = 'Total score';
     document.getElementById('statAverageLabel').textContent = 'Average';
     document.getElementById('statPositionLabel').textContent = 'Class position';
     document.getElementById('statAttendanceLabel').textContent = 'Attendance';
-    document.getElementById('statTotal').textContent = `${data.summary.total_score} /${data.summary.max_obtainable}`;
+    document.getElementById('statTotal').textContent = `${data.summary.total_score} / ${data.summary.max_obtainable}`;
     document.getElementById('statAverage').textContent = `${data.summary.average}%`;
-    document.getElementById('statPosition').textContent = `${data.summary.class_position} of${data.summary.class_size}`;
+    document.getElementById('statPosition').textContent = `${data.summary.class_position} of ${data.summary.class_size}`;
     document.getElementById('statAttendance').textContent = data.attendance
-      ? `${data.attendance.present} /${data.attendance.total_days}`
+      ? `${data.attendance.present} / ${data.attendance.total_days}`
       : 'Not recorded';
 
     const tbody = document.getElementById('subjectsBody');
@@ -593,13 +593,12 @@
       commentsBlock.innerHTML = '';
     }
 
-    // Render QR Code & PIN Usage Banner
     if (data.pin_usage) {
       document.getElementById('verificationBox').style.display = 'block';
       const qrcodeContainer = document.getElementById('qrcode');
-      qrcodeContainer.innerHTML = ''; // clear previous
+      qrcodeContainer.innerHTML = '';
       
-      const verificationText = `Verified: ${data.student.name} (${data.student.admission_no}) - Result PIN:${data.pin_usage.code}`;
+      const verificationText = `Verified: ${data.student.name} (${data.student.admission_no}) - Result PIN: ${data.pin_usage.code}`;
       new QRCode(qrcodeContainer, {
         text: verificationText,
         width: 110,
@@ -607,14 +606,14 @@
       });
 
       document.getElementById('pinUsageText').textContent = 
-        `PIN Usage: ${data.pin_usage.uses_count} of${data.pin_usage.max_uses} used`;
+        `PIN Usage: ${data.pin_usage.uses_count} of ${data.pin_usage.max_uses} used`;
     }
   }
 
   function renderMidTermResult(data) {
     document.getElementById('emptyState').style.display = 'none';
     document.getElementById('resultView').style.display = 'block';
-    document.getElementById('verificationBox').style.display = 'none'; // hide QR on mid-term
+    document.getElementById('verificationBox').style.display = 'none';
 
     const avatarEl = document.getElementById('studentAvatar');
     if (data.student.photo_url) {
@@ -624,14 +623,14 @@
     }
     document.getElementById('studentName').textContent = data.student.name;
     document.getElementById('studentMeta').textContent =
-      `${data.student.class} · Admission no. ${data.student.admission_no} · ${data.term},${data.session} (Mid-term)`;
+      `${data.student.class} · Admission no. ${data.student.admission_no} · ${data.term}, ${data.session} (Mid-term)`;
 
     document.getElementById('statTotalLabel').textContent = 'Passed';
     document.getElementById('statAverageLabel').textContent = 'Average';
     document.getElementById('statPositionLabel').textContent = 'Class position';
     document.getElementById('statAttendanceLabel').textContent = 'Attendance';
     const passed = data.subjects.filter(s => s.remark === 'Pass').length;
-    document.getElementById('statTotal').textContent = `${passed} /${data.subjects.length} passed`;
+    document.getElementById('statTotal').textContent = `${passed} / ${data.subjects.length} passed`;
     document.getElementById('statAverage').textContent = '—';
     document.getElementById('statPosition').textContent = '—';
     document.getElementById('statAttendance').textContent = '—';
@@ -643,4 +642,31 @@
         <th>Subject</th>
         <th class="num">Assignment</th>
         <th class="num">Test</th>
-        <th class="
+        <th class="num">Total</th>
+        <th class="num">Remark</th>
+      </tr>`;
+
+    data.subjects.forEach(s => {
+      const tr = document.createElement('tr');
+      const remarkClass = s.remark === 'Pass' ? 'grade-A' : s.remark === 'Fail' ? 'grade-F' : '';
+      tr.innerHTML = `
+        <td>${s.subject_name}</td>
+        <td class="num">${s.assignment ?? '—'}</td>
+        <td class="num">${s.test ?? '—'}</td>
+        <td class="num"><strong>${s.total ?? '—'}</strong></td>
+        <td class="num"><span class="grade-pill ${remarkClass}">${s.remark || '—'}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('commentsBlock').innerHTML = '';
+  }
+
+  function backToLogin() {
+    document.getElementById('resultView').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('loginView').style.display = 'block';
+  }
+</script>
+</body>
+</html>
