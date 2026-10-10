@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- QR Code Library CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <title>Greenfield Secondary School — Check Your Result</title>
 <style>
   :root {
@@ -52,7 +54,6 @@
     display: flex; align-items: center; justify-content: center;
     font-weight: bold; font-size: 18px;
     margin: 0 auto 12px;
-    font-family: 'Nunito', Arial, sans-serif;
   }
 
   .school-header h1 {
@@ -60,11 +61,9 @@
     margin: 0;
     font-weight: 800;
     font-family: 'Baloo 2', sans-serif;
-    letter-spacing: 0.3px;
   }
 
   .school-header p {
-    font-family: Arial, sans-serif;
     font-size: 13px;
     color: var(--text-soft);
     margin: 4px 0 0;
@@ -82,11 +81,9 @@
     font-size: 16px;
     font-weight: normal;
     margin: 0 0 18px;
-    font-family: Arial, sans-serif;
   }
 
   label {
-    font-family: Arial, sans-serif;
     font-size: 12px;
     color: var(--text-soft);
     display: block;
@@ -96,7 +93,6 @@
   input, select {
     width: 100%;
     padding: 10px 12px;
-    font-family: Arial, sans-serif;
     font-size: 14px;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -119,7 +115,6 @@
     font-family: 'Baloo 2', sans-serif;
     font-size: 15px;
     font-weight: 700;
-    letter-spacing: 0.3px;
     text-transform: uppercase;
     border: none;
     border-radius: 14px;
@@ -127,12 +122,10 @@
     color: #fff;
     cursor: pointer;
     box-shadow: 0 4px 0 var(--navy-light);
-    transition: transform 0.05s, box-shadow 0.05s;
   }
 
   button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--navy-light); }
   button:hover { filter: brightness(1.05); }
-  button:disabled { background: #CCCCCC; box-shadow: 0 4px 0 #AAAAAA; cursor: not-allowed; }
 
   button.secondary {
     background: transparent;
@@ -141,10 +134,8 @@
     box-shadow: none;
     margin-top: 10px;
   }
-  button.secondary:active { transform: none; }
 
   .error-msg {
-    font-family: Arial, sans-serif;
     font-size: 13px;
     color: var(--fail);
     background: var(--fail-bg);
@@ -171,23 +162,13 @@
     background: var(--navy);
     color: var(--gold);
     display: flex; align-items: center; justify-content: center;
-    font-family: Arial, sans-serif;
     font-weight: bold;
     font-size: 14px;
     flex-shrink: 0;
   }
 
-  .student-line .name {
-    font-size: 15px;
-    margin: 0;
-  }
-
-  .student-line .meta {
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    color: var(--text-soft);
-    margin: 2px 0 0;
-  }
+  .student-line .name { font-size: 15px; margin: 0; }
+  .student-line .meta { font-size: 12px; color: var(--text-soft); margin: 2px 0 0; }
 
   .stat-grid {
     display: grid;
@@ -203,7 +184,6 @@
   }
 
   .stat-box .label {
-    font-family: Arial, sans-serif;
     font-size: 10px;
     color: var(--text-soft);
     margin: 0;
@@ -211,15 +191,11 @@
     letter-spacing: 0.4px;
   }
 
-  .stat-box .value {
-    font-size: 16px;
-    margin: 3px 0 0;
-  }
+  .stat-box .value { font-size: 16px; margin: 3px 0 0; }
 
   table {
     width: 100%;
     border-collapse: collapse;
-    font-family: Arial, sans-serif;
     font-size: 12px;
     margin-bottom: 18px;
   }
@@ -233,11 +209,7 @@
   }
 
   th.num, td.num { text-align: right; }
-
-  td {
-    padding: 8px 4px;
-    border-bottom: 1px solid var(--border);
-  }
+  td { padding: 8px 4px; border-bottom: 1px solid var(--border); }
 
   .grade-pill {
     display: inline-block;
@@ -251,26 +223,38 @@
   .grade-C, .grade-D, .grade-E { background: #FFF4D1; color: #CE8E00; }
   .grade-F { background: var(--fail-bg); color: var(--fail); }
 
-  .comments-block {
-    font-family: Arial, sans-serif;
-  }
-
   .comments-block .comment-label {
     font-size: 11px;
     color: var(--text-soft);
     text-transform: uppercase;
-    letter-spacing: 0.4px;
     margin: 0 0 4px;
   }
 
-  .comments-block p.comment-text {
-    font-size: 13px;
-    margin: 0 0 14px;
-    font-family: 'Nunito', Arial, sans-serif;
+  .comments-block p.comment-text { font-size: 13px; margin: 0 0 14px; }
+
+  .verification-box {
+    background: var(--cream);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  .verification-box p {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin: 8px 0 0;
+  }
+
+  #qrcode {
+    display: inline-block;
+    padding: 8px;
+    background: #fff;
+    border-radius: 6px;
   }
 
   .loading, .empty-state {
-    font-family: Arial, sans-serif;
     font-size: 13px;
     color: var(--text-soft);
     text-align: center;
@@ -297,7 +281,6 @@
   <!-- LOGIN VIEW -->
   <div class="card" id="loginView">
     <h2>Check your result</h2>
-
     <div class="error-msg" id="loginError"></div>
 
     <label for="admissionNo">Admission number</label>
@@ -332,8 +315,7 @@
       </div>
     </div>
 
-    <p id="releaseCountdown" style="font-family:'Nunito',Arial,sans-serif; font-size:12px; color:var(--warn); margin:0 0 14px; display:none; font-weight:700;"></p>
-
+    <p id="releaseCountdown" style="font-size:12px; color:var(--warn); margin:0 0 14px; display:none; font-weight:700;"></p>
     <button id="loginBtn" onclick="checkResult()">View result</button>
   </div>
 
@@ -388,6 +370,12 @@
 
     <div class="comments-block" id="commentsBlock"></div>
 
+    <!-- QR Code & PIN Usage Banner -->
+    <div class="verification-box" id="verificationBox" style="display:none;">
+      <div id="qrcode"></div>
+      <p id="pinUsageText"></p>
+    </div>
+
     <div style="display:flex; gap:8px;">
       <button class="secondary" onclick="window.print()" style="flex:1;">Print / Save as PDF</button>
       <button class="secondary" onclick="backToLogin()" style="flex:1;">Check another result</button>
@@ -401,9 +389,8 @@
 </div>
 
 <script>
-  // Change this if your backend runs somewhere other than localhost:4000
-  const API_BASE = window.location.origin; // always same-origin — this server serves both the pages and the API
-  let releaseCountdownInterval; // declared early — togglePinField() below runs immediately on page load and needs this ready
+  const API_BASE = window.location.origin;
+  let releaseCountdownInterval;
 
   function getInitials(name) {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -414,7 +401,7 @@
     document.getElementById('pinFieldWrap').style.display = isFullTerm ? 'block' : 'none';
     checkReleaseCountdown();
   }
-  togglePinField(); // set correct initial state on page load
+  togglePinField();
 
   async function checkReleaseCountdown() {
     clearInterval(releaseCountdownInterval);
@@ -452,7 +439,7 @@
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
         const mins = Math.floor((diff / (1000 * 60)) % 60);
         const secs = Math.floor((diff / 1000) % 60);
-        el.textContent = `⏳ Results open in ${days}d ${hours}h ${mins}m ${secs}s`;
+        el.textContent = `⏳ Results open in ${days}d${hours}h ${mins}m${secs}s`;
       }
       tick();
       releaseCountdownInterval = setInterval(tick, 1000);
@@ -477,7 +464,7 @@
     const surname = document.getElementById('surname').value.trim();
     const term = document.getElementById('termSelect').value;
     const session = document.getElementById('sessionInput').value.trim();
-    const resultType = document.getElementById('resultType').value; // 'fullterm' | 'midterm'
+    const resultType = document.getElementById('resultType').value;
     const pinCode = document.getElementById('pinCode').value.trim();
 
     if (!admissionNo || !surname || !session) {
@@ -493,7 +480,6 @@
     document.getElementById('loadingView').style.display = 'block';
 
     try {
-      // Step 1: log in / verify student
       const loginRes = await fetch(`${API_BASE}/api/student/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -506,8 +492,6 @@
       }
 
       const student = loginData.student;
-
-      // Step 2: fetch the result — full term or mid-term, depending on what was picked
       const endpoint = resultType === 'midterm' ? 'midterm-result' : 'result';
       const pinParam = resultType === 'fullterm' ? `&pin_code=${encodeURIComponent(pinCode)}` : '';
       const resultRes = await fetch(
@@ -517,7 +501,6 @@
 
       document.getElementById('loadingView').style.display = 'none';
 
-      // Results haven't been released yet — show the release date instead of a generic empty state
       if (resultRes.status === 403 && resultData.result_release_at) {
         const releaseDate = new Date(resultData.result_release_at);
         showError(`Results aren't released yet. They'll be available from ${releaseDate.toLocaleString()}.`);
@@ -525,15 +508,12 @@
         return;
       }
 
-      // Fee hold — different message, points the student to the accounts office
       if (resultRes.status === 403 && resultData.fee_hold) {
         showError(resultData.error);
         document.getElementById('loginView').style.display = 'block';
         return;
       }
 
-      // Any other blocked check (invalid PIN, PIN belongs to someone else, PIN exhausted,
-      // no PIN supplied) — show the specific message from the server instead of a generic one.
       if (resultRes.status === 403 && resultData.error) {
         showError(resultData.error);
         document.getElementById('loginView').style.display = 'block';
@@ -570,17 +550,17 @@
     }
     document.getElementById('studentName').textContent = data.student.name;
     document.getElementById('studentMeta').textContent =
-      `${data.student.class} · Admission no. ${data.student.admission_no} · ${data.term}, ${data.session}`;
+      `${data.student.class} · Admission no. ${data.student.admission_no} · ${data.term},${data.session}`;
 
     document.getElementById('statTotalLabel').textContent = 'Total score';
     document.getElementById('statAverageLabel').textContent = 'Average';
     document.getElementById('statPositionLabel').textContent = 'Class position';
     document.getElementById('statAttendanceLabel').textContent = 'Attendance';
-    document.getElementById('statTotal').textContent = `${data.summary.total_score} / ${data.summary.max_obtainable}`;
+    document.getElementById('statTotal').textContent = `${data.summary.total_score} /${data.summary.max_obtainable}`;
     document.getElementById('statAverage').textContent = `${data.summary.average}%`;
-    document.getElementById('statPosition').textContent = `${data.summary.class_position} of ${data.summary.class_size}`;
+    document.getElementById('statPosition').textContent = `${data.summary.class_position} of${data.summary.class_size}`;
     document.getElementById('statAttendance').textContent = data.attendance
-      ? `${data.attendance.present} / ${data.attendance.total_days}`
+      ? `${data.attendance.present} /${data.attendance.total_days}`
       : 'Not recorded';
 
     const tbody = document.getElementById('subjectsBody');
@@ -612,11 +592,29 @@
     } else {
       commentsBlock.innerHTML = '';
     }
+
+    // Render QR Code & PIN Usage Banner
+    if (data.pin_usage) {
+      document.getElementById('verificationBox').style.display = 'block';
+      const qrcodeContainer = document.getElementById('qrcode');
+      qrcodeContainer.innerHTML = ''; // clear previous
+      
+      const verificationText = `Verified: ${data.student.name} (${data.student.admission_no}) - Result PIN:${data.pin_usage.code}`;
+      new QRCode(qrcodeContainer, {
+        text: verificationText,
+        width: 110,
+        height: 110,
+      });
+
+      document.getElementById('pinUsageText').textContent = 
+        `PIN Usage: ${data.pin_usage.uses_count} of${data.pin_usage.max_uses} used`;
+    }
   }
 
   function renderMidTermResult(data) {
     document.getElementById('emptyState').style.display = 'none';
     document.getElementById('resultView').style.display = 'block';
+    document.getElementById('verificationBox').style.display = 'none'; // hide QR on mid-term
 
     const avatarEl = document.getElementById('studentAvatar');
     if (data.student.photo_url) {
@@ -626,52 +624,23 @@
     }
     document.getElementById('studentName').textContent = data.student.name;
     document.getElementById('studentMeta').textContent =
-      `${data.student.class} · Admission no. ${data.student.admission_no} · ${data.term}, ${data.session} (Mid-term)`;
+      `${data.student.class} · Admission no. ${data.student.admission_no} · ${data.term},${data.session} (Mid-term)`;
 
-    // Mid-term has no class position/attendance/average — relabel and show a pass/fail count instead
     document.getElementById('statTotalLabel').textContent = 'Passed';
     document.getElementById('statAverageLabel').textContent = 'Average';
     document.getElementById('statPositionLabel').textContent = 'Class position';
     document.getElementById('statAttendanceLabel').textContent = 'Attendance';
     const passed = data.subjects.filter(s => s.remark === 'Pass').length;
-    document.getElementById('statTotal').textContent = `${passed} / ${data.subjects.length} passed`;
+    document.getElementById('statTotal').textContent = `${passed} /${data.subjects.length} passed`;
     document.getElementById('statAverage').textContent = '—';
     document.getElementById('statPosition').textContent = '—';
     document.getElementById('statAttendance').textContent = '—';
 
     const tbody = document.getElementById('subjectsBody');
     tbody.innerHTML = '';
-    // Swap the table header for mid-term's simpler columns
     document.querySelector('#resultView thead').innerHTML = `
       <tr>
         <th>Subject</th>
         <th class="num">Assignment</th>
         <th class="num">Test</th>
-        <th class="num">Total</th>
-        <th class="num">Remark</th>
-      </tr>`;
-
-    data.subjects.forEach(s => {
-      const tr = document.createElement('tr');
-      const remarkClass = s.remark === 'Pass' ? 'grade-A' : s.remark === 'Fail' ? 'grade-F' : '';
-      tr.innerHTML = `
-        <td>${s.subject_name}</td>
-        <td class="num">${s.assignment ?? '—'}</td>
-        <td class="num">${s.test ?? '—'}</td>
-        <td class="num"><strong>${s.total ?? '—'}</strong></td>
-        <td class="num"><span class="grade-pill ${remarkClass}">${s.remark || '—'}</span></td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    document.getElementById('commentsBlock').innerHTML = '';
-  }
-
-  function backToLogin() {
-    document.getElementById('resultView').style.display = 'none';
-    document.getElementById('emptyState').style.display = 'none';
-    document.getElementById('loginView').style.display = 'block';
-  }
-</script>
-</body>
-</html>
+        <th class="
