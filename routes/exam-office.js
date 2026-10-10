@@ -1,260 +1,244 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
-const { getGrade, rankByTotal, ordinal } = require('../utils/grading');
 
-/**
- * Automated principal comment based on student average
- * (Outstanding is now set to start from 90+)
- */
-function getPrincipalComment(average) {
-  if (average >= 90) return "An outstanding performance! Keep up the brilliant work.";
-  if (average >= 75) return "Very good result. Consistency will bring even greater success.";
-  if (average >= 60) return "A satisfactory performance. Put in more effort next term.";
-  if (average >= 50) return "Fair attempt, but you need to dedicate more time to your studies.";
-  return "Poor performance. Immediate consultation with teachers and parents is required.";
-}
-
-/**
- * POST /api/student/login
- * Simple check: admission_no + surname match.
- */
-router.post('/login', async (req, res) => {
-  const { admission_no, surname } = req.body;
-  if (!admission_no || !surname) {
-    return res.status(400).json({ error: 'admission_no and surname are required' });
-  }
-
+// 1. Get Students (with search and class filter)
+router.get('/students', async (req, res) => {
+  const { search = '', class: className = '' } = req.query;
   try {
-    const { rows } = await pool.query(
-      `SELECT id, name, admission_no, class, photo_url FROM students
-       WHERE admission_no = $1 AND name ILIKE $2`,
-      [admission_no, `%${surname}%`]
-    );
+    let query = 'SELECT * FROM students WHERE 1=1';
+    let params = [];
+    let paramIndex = 1;
 
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'No matching student found' });
+    if (search) {
+      query += ` AND (name ILIKE $${paramIndex} OR admission_no ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
+      paramIndex++;
     }
 
-    res.json({ student: rows[0] });
+    if (className) {
+      query += ` AND class = $${paramIndex}`;
+      params.push(className);
+      paramIndex++;
+    }
+
+    query += ' ORDER BY name ASC';
+    const result = await pool.query(query, params);
+    res.json({ students: result.rows });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Login failed' });
+    console.error('Error fetching students:', err);
+    res.status(500).json({ error: 'Failed to fetch students' });
   }
 });
 
-/**
- * GET /api/student/midterm-result
- */
-router.get('/midterm-result', async (req, res) => {
-  const { student_id, term, session } = req.query;
-  if (!student_id || !term || !session) {
-    return res.status(400).json({ error: 'student_id, term and session are required' });
-  }
-
+// Delete Student
+router.delete('/students/:id', async (req, res) => {
   try {
-    const studentRes = await pool.query('SELECT * FROM students WHERE id = $1', [student_id]);
-    if (studentRes.rows.length === 0) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
-    const student = studentRes.rows[0];
-
-    const { rows } = await pool.query(
-      `SELECT sub.id AS subject_id, sub.name AS subject_name, m.assignment_score, m.test_score
-       FROM mid_term_results m
-       JOIN subjects sub ON sub.id = m.subject_id
-       WHERE m.student_id = $1 AND m.term = $2 AND m.session = $3
-       ORDER BY sub.name ASC`,
-      [student_id, term, session]
-    );
-
-    const subjects = rows.map((row) => {
-      const assignment = row.assignment_score !== null ? Number(row.assignment_score) : null;
-      const test = row.test_score !== null ? Number(row.test_score) : null;
-      const hasAny = assignment !== null || test !== null;
-      const total = hasAny ? (assignment || 0) + (test || 0) : null;
-      const remark = total === null ? null : (total >= 15 ? 'Pass' : 'Fail');
-      return { subject_id: row.subject_id, subject_name: row.subject_name, assignment, test, total, remark };
-    });
-
-    res.json({
-      student: { id: student.id, name: student.name, admission_no: student.admission_no, class: student.class, photo_url: student.photo_url },
-      term, session, subjects,
-    });
+    await pool.query('DELETE FROM students WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to load mid-term result' });
+    res.status(500).json({ error: 'Failed to delete student' });
   }
 });
 
-/**
- * GET /api/student/result
- */
-router.get('/result', async (req, res) => {
-  const { student_id, term, session, pin_code } = req.query;
-  if (!student_id || !term || !session) {
-    return res.status(400).json({ error: 'student_id, term and session are required' });
-  }
-  if (!pin_code) {
-    return res.status(400).json({ error: 'A result PIN is required to view the full-term result', pin_required: true });
-  }
-
+// 2. Teachers Directory
+router.get('/teachers', async (req, res) => {
   try {
-    const settingsRes = await pool.query(
-      'SELECT result_release_at FROM term_settings WHERE term = $1 AND session = $2',
-      [term, session]
+    const result = await pool.query('SELECT id, name, email FROM teachers ORDER BY name ASC');
+    res.json({ teachers: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch teachers' });
+  }
+});
+
+router.post('/teachers', async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO teachers (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email',
+      [name, email, password]
     );
-    const releaseAt = settingsRes.rows[0]?.result_release_at;
-    if (releaseAt && new Date(releaseAt) > new Date()) {
-      return res.status(403).json({
-        error: 'Results have not been released yet',
-        result_release_at: releaseAt,
-      });
-    }
+    res.json({ success: true, teacher: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add teacher' });
+  }
+});
 
-    const feeRes = await pool.query(
-      'SELECT cleared FROM fee_status WHERE student_id = $1 AND term = $2 AND session = $3',
-      [student_id, term, session]
-    );
-    if (feeRes.rows.length > 0 && feeRes.rows[0].cleared === false) {
-      return res.status(403).json({
-        error: 'Your result is on hold due to an outstanding balance. Please contact the school\'s accounts office.',
-        fee_hold: true,
-      });
-    }
+router.delete('/teachers/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM teachers WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete teacher' });
+  }
+});
 
-    const pinUpdateRes = await pool.query(
-      `UPDATE result_pins
-       SET uses_count = uses_count + 1,
-           student_id = COALESCE(student_id, $2),
-           first_used_at = COALESCE(first_used_at, NOW())
-       WHERE code = $1
-         AND uses_count < max_uses
-         AND (student_id IS NULL OR student_id = $2)
-       RETURNING *`,
-      [pin_code, student_id]
-    );
-
-    if (pinUpdateRes.rows.length === 0) {
-      const pinCheckRes = await pool.query('SELECT * FROM result_pins WHERE code = $1', [pin_code]);
-      if (pinCheckRes.rows.length === 0) {
-        return res.status(403).json({ error: 'Invalid PIN. Please check the code and try again.' });
-      }
-      const pin = pinCheckRes.rows[0];
-      if (pin.uses_count >= pin.max_uses) {
-        return res.status(403).json({ error: 'This PIN has reached its maximum number of uses. Please get a new one.' });
-      }
-      if (pin.student_id && String(pin.student_id) !== String(student_id)) {
-        return res.status(403).json({ error: 'This PIN is already registered to another student.' });
-      }
-      return res.status(403).json({ error: 'This PIN could not be used. Please check the code and try again.' });
-    }
-
-    const studentRes = await pool.query('SELECT * FROM students WHERE id = $1', [student_id]);
-    if (studentRes.rows.length === 0) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
-    const student = studentRes.rows[0];
-
-    const scoresRes = await pool.query(
-      `SELECT sub.id AS subject_id, sub.name AS subject_name,
-              m.assignment_score, m.test_score,
-              r.exam_score, r.manual_ca_override
-       FROM results r
-       JOIN subjects sub ON sub.id = r.subject_id
-       LEFT JOIN mid_term_results m
-         ON m.student_id = r.student_id AND m.subject_id = r.subject_id AND m.term = r.term AND m.session = r.session
-       WHERE r.student_id = $1 AND r.term = $2 AND r.session = $3
-       ORDER BY sub.name ASC`,
+// 3. Term Records & Custom Principal Comment Overrides
+router.post('/term-records', async (req, res) => {
+  const { student_id, term, session, principal_comment } = req.body;
+  try {
+    // Check if a record already exists for this student, term, and session
+    const existing = await pool.query(
+      'SELECT id FROM term_records WHERE student_id = $1 AND term = $2 AND session = $3',
       [student_id, term, session]
     );
 
-    const subjects = scoresRes.rows.map((row) => {
-      const midTermTotal =
-        row.assignment_score !== null || row.test_score !== null
-          ? Number(row.assignment_score || 0) + Number(row.test_score || 0)
-          : null;
-      const ca = midTermTotal !== null ? midTermTotal : Number(row.manual_ca_override || 0);
-      const exam = Number(row.exam_score || 0);
-      const total = ca + exam;
-      const { grade, remark } = getGrade(total);
-      return { subject_id: row.subject_id, subject_name: row.subject_name, ca, exam, total, grade, remark };
-    });
-
-    const totalScore = subjects.reduce((sum, s) => sum + s.total, 0);
-    const maxObtainable = subjects.length * 100;
-    const average = maxObtainable ? Number(((totalScore / maxObtainable) * 100).toFixed(1)) : 0;
-
-    const subjectStats = {};
-    for (const s of subjects) {
-      const classScoresRes = await pool.query(
-        `SELECT r.student_id,
-                COALESCE(m.assignment_score,0) + COALESCE(m.test_score,0) + COALESCE(r.exam_score,0) AS total
-         FROM results r
-         LEFT JOIN mid_term_results m
-           ON m.student_id = r.student_id AND m.subject_id = r.subject_id AND m.term = r.term AND m.session = r.session
-         WHERE r.class = $1 AND r.subject_id = $2 AND r.term = $3 AND r.session = $4`,
-        [student.class, s.subject_id, term, session]
+    if (existing.rows.length > 0) {
+      // Update existing record
+      await pool.query(
+        'UPDATE term_records SET principal_comment = $1 WHERE student_id = $2 AND term = $3 AND session = $4',
+        [principal_comment, student_id, term, session]
       );
-      const entries = classScoresRes.rows.map((r) => ({ studentId: r.student_id, total: Number(r.total) }));
-      const ranked = rankByTotal(entries);
-      const mine = ranked.find((e) => e.studentId === student.id);
-      const highest = ranked.length ? ranked[0].total : null;
-      subjectStats[s.subject_id] = { highest, position: mine ? ordinal(mine.position) : '-' };
+    } else {
+      // Insert new record
+      await pool.query(
+        'INSERT INTO term_records (student_id, term, session, principal_comment) VALUES ($1, $2, $3, $4)',
+        [student_id, term, session, principal_comment]
+      );
     }
 
-    const classTotalsRes = await pool.query(
-      `SELECT r.student_id,
-              SUM(COALESCE(m.assignment_score,0) + COALESCE(m.test_score,0) + COALESCE(r.exam_score,0)) AS total
-       FROM results r
-       LEFT JOIN mid_term_results m
-         ON m.student_id = r.student_id AND m.subject_id = r.subject_id AND m.term = r.term AND m.session = r.session
-       WHERE r.class = $1 AND r.term = $2 AND r.session = $3
-       GROUP BY r.student_id`,
-      [student.class, term, session]
-    );
-    const classEntries = classTotalsRes.rows.map((r) => ({ studentId: r.student_id, total: Number(r.total) }));
-    const classRanked = rankByTotal(classEntries);
-    const myClassRank = classRanked.find((e) => e.studentId === student.id);
+    res.json({ success: true, message: 'Principal comment override saved successfully!' });
+  } catch (err) {
+    console.error('Error saving term record override:', err);
+    res.status(500).json({ error: 'Failed to save term record override' });
+  }
+});
 
-    const termRecordRes = await pool.query(
-      `SELECT * FROM term_records WHERE student_id = $1 AND term = $2 AND session = $3`,
+// 4. Result PINs Manager
+router.get('/pins', async (req, res) => {
+  const { search = '', status = '' } = req.query;
+  try {
+    let query = `
+      SELECT p.*, s.name AS student_name, s.admission_no AS student_admission_no
+      FROM result_pins p
+      LEFT JOIN students s ON s.id = p.student_id
+      WHERE 1=1
+    `;
+    let params = [];
+    if (search) {
+      query += ` AND (p.code ILIKE $1 OR s.name ILIKE $1 OR s.admission_no ILIKE $1)`;
+      params.push(`%${search}%`);
+    }
+    query += ' ORDER BY p.id DESC';
+    const result = await pool.query(query, params);
+    res.json({ pins: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch PINs' });
+  }
+});
+
+// 5. Fee Clearance Status
+router.get('/fee-status', async (req, res) => {
+  const { term = 'First Term', session = '2025/2026', search = '' } = req.query;
+  try {
+    let query = `
+      SELECT s.id, s.admission_no, s.name, s.class, 
+             COALESCE(f.cleared, false) AS cleared
+      FROM students s
+      LEFT JOIN fee_status f ON f.student_id = s.id AND f.term = $1 AND f.session = $2
+      WHERE 1=1
+    `;
+    let params = [term, session];
+    if (search) {
+      query += ` AND (s.name ILIKE $3 OR s.admission_no ILIKE $3)`;
+      params.push(`%${search}%`);
+    }
+    query += ' ORDER BY s.name ASC';
+    const result = await pool.query(query, params);
+    res.json({ students: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch fee statuses' });
+  }
+});
+
+router.post('/fee-status', async (req, res) => {
+  const { student_id, term, session, cleared } = req.body;
+  try {
+    const existing = await pool.query(
+      'SELECT id FROM fee_status WHERE student_id = $1 AND term = $2 AND session = $3',
       [student_id, term, session]
     );
-    const termRecord = termRecordRes.rows[0] || null;
-    const pinData = pinUpdateRes.rows[0];
 
-    // Priority: Custom exam-office comment (e.g., "Not promoted") overrides automated average comment
-    const principalComment = termRecord?.principal_comment || getPrincipalComment(average);
-
-    res.json({
-      student: { id: student.id, name: student.name, admission_no: student.admission_no, class: student.class, photo_url: student.photo_url },
-      term, session,
-      subjects: subjects.map((s) => ({ ...s, highest: subjectStats[s.subject_id].highest, position: subjectStats[s.subject_id].position })),
-      summary: {
-        total_score: totalScore,
-        max_obtainable: maxObtainable,
-        average,
-        class_position: myClassRank ? ordinal(myClassRank.position) : '-',
-        class_size: classRanked.length,
-      },
-      attendance: termRecord
-        ? { present: termRecord.times_present, absent: termRecord.times_absent, total_days: termRecord.total_days }
-        : null,
-      comments: {
-        form_teacher: termRecord?.form_teacher_comment || null,
-        principal: principalComment
-      },
-      pin_usage: {
-        code: pinData.code,
-        uses_count: pinData.uses_count,
-        max_uses: pinData.max_uses
-      }
-    });
+    if (existing.rows.length > 0) {
+      await pool.query(
+        'UPDATE fee_status SET cleared = $1 WHERE student_id = $2 AND term = $3 AND session = $4',
+        [cleared, student_id, term, session]
+      );
+    } else {
+      await pool.query(
+        'INSERT INTO fee_status (student_id, term, session, cleared) VALUES ($1, $2, $3, $4)',
+        [student_id, term, session, cleared]
+      );
+    }
+    res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to load result' });
+    res.status(500).json({ error: 'Failed to update fee status' });
   }
+});
+
+// 6. Classes & Subjects & Assignments (Placeholders / Table Queries)
+router.get('/classes', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM classes ORDER BY level, arm ASC');
+    res.json({ classes: result.rows });
+  } catch (err) { res.json({ classes: [] }); }
+});
+
+router.post('/classes', async (req, res) => {
+  const { level, arm } = req.body;
+  try {
+    await pool.query('INSERT INTO classes (name, level, arm) VALUES ($1, $2, $3)', [`${level} ${arm}`, level, arm]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed to add class' }); }
+});
+
+router.get('/subjects', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM subjects ORDER BY name ASC');
+    res.json({ subjects: result.rows });
+  } catch (err) { res.json({ subjects: [] }); }
+});
+
+router.post('/subjects', async (req, res) => {
+  const { name } = req.body;
+  try {
+    await pool.query('INSERT INTO subjects (name) VALUES ($1)', [name]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed to add subject' }); }
+});
+
+router.get('/assignments', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      ta.*, t.name AS teacher_name, sub.name AS subject_name 
+      FROM teacher_assignments ta
+      JOIN teachers t ON t.id = ta.teacher_id
+      JOIN subjects sub ON sub.id = ta.subject_id
+    `.replace('ta.*', 'SELECT ta.*')).catch(() => ({ rows: [] }));
+    res.json({ assignments: result.rows || [] });
+  } catch (err) { res.json({ assignments: [] }); }
+});
+
+router.get('/form-teachers', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT ft.*, t.name AS teacher_name 
+      FROM form_teachers ft
+      JOIN teachers t ON t.id = ft.teacher_id
+    `).catch(() => ({ rows: [] }));
+    res.json({ formTeachers: result.rows || [] });
+  } catch (err) { res.json({ formTeachers: [] }); }
+});
+
+router.get('/deadline-overrides', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT d.*, t.name AS teacher_name 
+      FROM deadline_overrides d
+      JOIN teachers t ON t.id = d.teacher_id
+    `).catch(() => ({ rows: [] }));
+    res.json({ overrides: result.rows || [] });
+  } catch (err) { res.json({ overrides: [] }); }
 });
 
 module.exports = router;

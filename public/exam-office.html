@@ -32,7 +32,7 @@
     .section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0 0 16px; }
     
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
-    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; outline: none; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; outline: none; background: white; }
     button.primary { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; }
     button.primary:hover { background: var(--primary); }
     
@@ -41,7 +41,7 @@
     th { background: var(--cream); font-weight: 600; color: var(--primary); }
     .student-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #CBD5E0; }
     
-    #toast { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 12px 20px; border-radius: 8px; display: none; z-index: 100; }
+    #toast { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 12px 20px; border-radius: 8px; display: none; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
@@ -73,7 +73,7 @@
       <div id="tab-students" class="tab-content card">
         <p class="section-title">Students Registry</p>
         <div class="form-grid">
-          <input type="text" id="studentSearch" placeholder="Search by name or admission no..." oninput="loadStudents()" />
+          <input type="text" id="studentSearch" placeholder="Search by name or admission no..." oninput="loadStudents()" autocomplete="off" />
           <select id="studentClassFilter" onchange="loadStudents()">
             <option value="">All Classes</option>
           </select>
@@ -90,8 +90,8 @@
       <div id="tab-teachers" class="tab-content card" style="display:none;">
         <p class="section-title">Teachers Directory</p>
         <div class="form-grid" style="max-width: 700px;">
-          <input type="text" id="newTeacherName" placeholder="Teacher Name" />
-          <input type="email" id="newTeacherEmail" placeholder="Email Address" />
+          <input type="text" id="newTeacherName" placeholder="Teacher Name" autocomplete="off" />
+          <input type="email" id="newTeacherEmail" placeholder="Email Address" autocomplete="off" />
           <input type="password" id="newTeacherPassword" placeholder="Password" />
           <button class="primary" onclick="addTeacher()">Add Teacher</button>
         </div>
@@ -110,7 +110,7 @@
           Lookup a student to set custom principal remarks or repeat/promotion statuses (e.g., "Not promoted. To repeat the class"). This overrides automated comments.
         </p>
         <div class="form-grid">
-          <input type="text" id="commentAdmNo" placeholder="Enter Admission No (e.g. 246)" />
+          <input type="text" id="commentAdmNo" placeholder="Enter Admission No (e.g. 246)" autocomplete="off" />
           <select id="commentTerm">
             <option>First Term</option><option>Second Term</option><option>Third Term</option>
           </select>
@@ -129,7 +129,7 @@
       <div id="tab-pins" class="tab-content card" style="display:none;">
         <p class="section-title">Result PINs Manager</p>
         <div class="form-grid">
-          <input type="text" id="pinSearch" placeholder="Search PIN or Student..." oninput="loadPins()" />
+          <input type="text" id="pinSearch" placeholder="Search PIN or Student..." oninput="loadPins()" autocomplete="off" />
           <select id="pinStatusFilter" onchange="loadPins()">
             <option value="">All PIN Statuses</option>
             <option value="unused">Unused</option>
@@ -149,7 +149,7 @@
       <div id="tab-fees" class="tab-content card" style="display:none;">
         <p class="section-title">Fee Clearance Status</p>
         <div class="form-grid">
-          <input type="text" id="feeSearch" placeholder="Search student..." oninput="loadFees()" />
+          <input type="text" id="feeSearch" placeholder="Search student..." oninput="loadFees()" autocomplete="off" />
           <select id="feeTerm">
             <option>First Term</option><option>Second Term</option><option>Third Term</option>
           </select>
@@ -167,8 +167,8 @@
       <div id="tab-classes" class="tab-content card" style="display:none;">
         <p class="section-title">Manage Classes</p>
         <div class="form-grid" style="max-width: 500px;">
-          <input type="text" id="classLevel" placeholder="Level (e.g. JSS1)" />
-          <input type="text" id="classArm" placeholder="Arm (e.g. A)" />
+          <input type="text" id="classLevel" placeholder="Level (e.g. JSS1)" autocomplete="off" />
+          <input type="text" id="classArm" placeholder="Arm (e.g. A)" autocomplete="off" />
           <button class="primary" onclick="addClass()">Add Class</button>
         </div>
         <table>
@@ -181,7 +181,7 @@
       <div id="tab-subjects" class="tab-content card" style="display:none;">
         <p class="section-title">Manage Subjects</p>
         <div class="form-grid" style="max-width: 400px;">
-          <input type="text" id="subjectName" placeholder="Subject Name" />
+          <input type="text" id="subjectName" placeholder="Subject Name" autocomplete="off" />
           <button class="primary" onclick="addSubject()">Add Subject</button>
         </div>
         <table>
@@ -251,6 +251,25 @@
       if (tabName === 'deadlines') loadDeadlines();
     }
 
+    // Populate Class Filter dropdown dynamically
+    async function loadClassDropdowns() {
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/classes`);
+        const data = await res.json();
+        const select = document.getElementById('studentClassFilter');
+        if (!select) return;
+        const currentVal = select.value;
+        let options = '<option value="">All Classes</option>';
+        (data.classes || []).forEach(c => {
+          options += `<option value="${c.name}">${c.name}</option>`;
+        });
+        select.innerHTML = options;
+        select.value = currentVal;
+      } catch (err) {
+        console.error('Failed to load classes for dropdown', err);
+      }
+    }
+
     // STUDENTS
     async function loadStudents() {
       const search = document.getElementById('studentSearch')?.value || '';
@@ -272,7 +291,7 @@
             <td><strong>${s.admission_no}</strong></td>
             <td>${s.name}</td>
             <td>${s.class}</td>
-            <td><button onclick="deleteStudent(${s.id})" style="color:var(--danger); background:none; border:none; cursor:pointer;">Delete</button></td>
+            <td><button onclick="deleteStudent(${s.id})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-weight:600;">Delete</button></td>
           </tr>`;
         }).join('');
       } catch (err) {
@@ -299,7 +318,7 @@
         const data = await res.json();
         tbody.innerHTML = (data.teachers || []).map(t => `<tr>
           <td>${t.id}</td><td><strong>${t.name}</strong></td><td>${t.email}</td>
-          <td><button onclick="deleteTeacher(${t.id})" style="color:var(--danger); background:none; border:none; cursor:pointer;">Delete</button></td>
+          <td><button onclick="deleteTeacher(${t.id})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-weight:600;">Delete</button></td>
         </tr>`).join('') || '<tr><td colspan="4">No teachers found.</td></tr>';
       } catch (err) { tbody.innerHTML = '<tr><td colspan="4">Failed to load teachers.</td></tr>'; }
     }
@@ -318,6 +337,9 @@
         });
         if (!res.ok) throw new Error('Failed to add teacher');
         showToast('Teacher added');
+        document.getElementById('newTeacherName').value = '';
+        document.getElementById('newTeacherEmail').value = '';
+        document.getElementById('newTeacherPassword').value = '';
         loadTeachers();
       } catch (err) { showToast(err.message); }
     }
@@ -377,6 +399,7 @@
         const res = await fetch(`${API_BASE}/api/exam-office/classes`);
         const data = await res.json();
         tbody.innerHTML = (data.classes || []).map(c => `<tr><td>${c.id}</td><td>${c.name}</td><td>${c.level}</td><td>${c.arm}</td><td>-</td></tr>`).join('') || '<tr><td colspan="5">No classes found.</td></tr>';
+        loadClassDropdowns();
       } catch (err) { tbody.innerHTML = '<tr><td colspan="5">Failed to load classes.</td></tr>'; }
     }
 
@@ -392,6 +415,8 @@
         });
         if (!res.ok) throw new Error('Could not add class');
         showToast('Class added');
+        document.getElementById('classLevel').value = '';
+        document.getElementById('classArm').value = '';
         loadClasses();
       } catch (err) { showToast(err.message); }
     }
@@ -418,6 +443,7 @@
         });
         if (!res.ok) throw new Error('Could not add subject');
         showToast('Subject added');
+        document.getElementById('subjectName').value = '';
         loadSubjects();
       } catch (err) { showToast(err.message); }
     }
@@ -499,7 +525,10 @@
       } catch (err) {}
     }
 
-    window.onload = () => { loadStudents(); };
+    window.onload = () => { 
+      loadClassDropdowns();
+      loadStudents(); 
+    };
   </script>
 </body>
 </html>
