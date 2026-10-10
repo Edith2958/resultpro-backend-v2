@@ -17,34 +17,30 @@
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { margin: 0; background: #EDF2F7; color: var(--text); }
     
-    /* Layout */
     .header { background: var(--primary); color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
     .header h1 { margin: 0; font-size: 20px; font-weight: 600; }
     .container { display: flex; min-height: calc(100vh - 61px); }
     
     /* Sidebar Navigation */
-    .sidebar { width: 240px; background: white; border-right: 1px solid var(--border); padding: 16px 0; }
+    .sidebar { width: 260px; background: white; border-right: 1px solid var(--border); padding: 16px 0; overflow-y: auto; }
     .nav-btn { width: 100%; text-align: left; padding: 12px 24px; background: none; border: none; font-size: 14px; color: var(--text); cursor: pointer; border-left: 4px solid transparent; }
     .nav-btn.active { background: var(--cream); border-left-color: var(--accent); color: var(--accent); font-weight: 600; }
     
     /* Main Content Area */
-    .main { flex: 1; padding: 24px; }
+    .main { flex: 1; padding: 24px; overflow-y: auto; }
     .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0 0 16px; }
     
-    /* Forms & Controls */
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
     input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; outline: none; }
     button.primary { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; }
     button.primary:hover { background: var(--primary); }
     
-    /* Data Tables */
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
     th { background: var(--cream); font-weight: 600; color: var(--primary); }
     .student-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #CBD5E0; }
     
-    /* Toast Notifications */
     #toast { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 12px 20px; border-radius: 8px; display: none; z-index: 100; }
   </style>
 </head>
@@ -58,116 +54,167 @@
   <div class="container">
     <!-- Sidebar Navigation -->
     <div class="sidebar">
-      <button class="nav-btn active" onclick="switchTab('students')">Students List</button>
+      <button class="nav-btn active" onclick="switchTab('students')">Students Registry</button>
       <button class="nav-btn" onclick="switchTab('teachers')">Teachers Directory</button>
       <button class="nav-btn" onclick="switchTab('comments')">Term Comments &amp; Overrides</button>
+      <button class="nav-btn" onclick="switchTab('pins')">Result PINs Manager</button>
+      <button class="nav-btn" onclick="switchTab('fees')">Fee Clearance Status</button>
       <button class="nav-btn" onclick="switchTab('classes')">Classes</button>
       <button class="nav-btn" onclick="switchTab('subjects')">Subjects</button>
+      <button class="nav-btn" onclick="switchTab('assignments')">Teacher Assignments</button>
+      <button class="nav-btn" onclick="switchTab('formteachers')">Form Teachers</button>
+      <button class="nav-btn" onclick="switchTab('deadlines')">Deadline Extensions</button>
     </div>
 
     <!-- Main Content Area -->
     <div class="main">
 
-      <!-- TAB 1: STUDENTS LIST -->
+      <!-- TAB 1: STUDENTS -->
       <div id="tab-students" class="tab-content card">
         <p class="section-title">Students Registry</p>
-        
         <div class="form-grid">
           <input type="text" id="studentSearch" placeholder="Search by name or admission no..." oninput="loadStudents()" />
           <select id="studentClassFilter" onchange="loadStudents()">
             <option value="">All Classes</option>
           </select>
-          <button class="primary" onclick="showAddStudentModal()">+ Add New Student</button>
         </div>
-
         <table>
           <thead>
-            <tr>
-              <th>Photo</th>
-              <th>Admission No</th>
-              <th>Full Name</th>
-              <th>Class</th>
-              <th>Actions</th>
-            </tr>
+            <tr><th>Photo</th><th>Admission No</th><th>Full Name</th><th>Class</th><th>Actions</th></tr>
           </thead>
-          <tbody id="studentsTableBody">
-            <tr><td colspan="5">Loading students...</td></tr>
-          </tbody>
+          <tbody id="studentsTableBody"><tr><td colspan="5">Loading students...</td></tr></tbody>
         </table>
       </div>
 
-      <!-- TAB 2: TEACHERS DIRECTORY -->
+      <!-- TAB 2: TEACHERS -->
       <div id="tab-teachers" class="tab-content card" style="display:none;">
         <p class="section-title">Teachers Directory</p>
-        
-        <div class="form-grid" style="max-width: 600px;">
+        <div class="form-grid" style="max-width: 700px;">
           <input type="text" id="newTeacherName" placeholder="Teacher Name" />
           <input type="email" id="newTeacherEmail" placeholder="Email Address" />
           <input type="password" id="newTeacherPassword" placeholder="Password" />
           <button class="primary" onclick="addTeacher()">Add Teacher</button>
         </div>
-
         <table>
           <thead>
-            <tr>
-              <th>ID</th>
-              <th>Teacher Name</th>
-              <th>Email</th>
-              <th>Actions</th>
-            </tr>
+            <tr><th>ID</th><th>Name</th><th>Email</th><th>Actions</th></tr>
           </thead>
-          <tbody id="teachersTableBody">
-            <tr><td colspan="4">Loading teachers...</td></tr>
-          </tbody>
+          <tbody id="teachersTableBody"><tr><td colspan="4">Loading teachers...</td></tr></tbody>
         </table>
       </div>
 
-      <!-- TAB 3: TERM COMMENTS & PROMOTION OVERRIDES -->
+      <!-- TAB 3: TERM COMMENTS & OVERRIDES -->
       <div id="tab-comments" class="tab-content card" style="display:none;">
         <p class="section-title">Principal Comments &amp; Promotion Overrides</p>
         <p style="font-size: 13px; color: #718096; margin-bottom: 16px;">
-          Lookup a student to set a custom principal comment or promotion status (e.g., "Not promoted. Required to repeat class"). This will override automated comments.
+          Lookup a student to set custom principal remarks or repeat/promotion statuses (e.g., "Not promoted. To repeat the class"). This overrides automated scores.
         </p>
-
         <div class="form-grid">
-          <input type="text" id="commentAdmNo" placeholder="Enter Admission No (e.g., 246)" />
+          <input type="text" id="commentAdmNo" placeholder="Enter Admission No (e.g. 246)" />
           <select id="commentTerm">
-            <option>First Term</option>
-            <option>Second Term</option>
-            <option>Third Term</option>
+            <option>First Term</option><option>Second Term</option><option>Third Term</option>
           </select>
           <input type="text" id="commentSession" value="2025/2026" placeholder="Session" />
           <button class="primary" onclick="lookupStudentCommentRecord()">Find Student</button>
         </div>
-
         <div id="commentEditorWrap" style="display:none; background: var(--cream); padding: 16px; border-radius: 8px; margin-top: 16px;">
           <p id="commentStudentInfo" style="font-weight: 700; font-size: 14px; margin: 0 0 12px; color: var(--primary);"></p>
-          
-          <label style="font-size: 13px; font-weight: 600;">Custom Principal Comment / Promotion Remark:</label>
-          <textarea id="customPrincipalComment" rows="3" style="margin-top: 6px; margin-bottom: 12px;" placeholder="e.g., Not promoted. Required to repeat JSS1 due to low overall performance."></textarea>
-          
-          <button class="primary" onclick="saveCustomPrincipalComment()">Save Override Comment</button>
+          <label style="font-size: 13px; font-weight: 600;">Custom Principal Comment / Promotion Status:</label>
+          <textarea id="customPrincipalComment" rows="3" style="margin-top: 6px; margin-bottom: 12px;" placeholder="e.g. Not promoted. Required to repeat the class due to poor standing."></textarea>
+          <button class="primary" onclick="saveCustomPrincipalComment()">Save Custom Comment</button>
         </div>
       </div>
 
-      <!-- TAB 4: CLASSES -->
+      <!-- TAB 4: PINS MANAGER -->
+      <div id="tab-pins" class="tab-content card" style="display:none;">
+        <p class="section-title">Result PINs Manager</p>
+        <div class="form-grid">
+          <input type="text" id="pinSearch" placeholder="Search PIN or Student..." oninput="loadPins()" />
+          <select id="pinStatusFilter" onchange="loadPins()">
+            <option value="">All PIN Statuses</option>
+            <option value="unused">Unused</option>
+            <option value="active">Active / In Use</option>
+            <option value="exhausted">Exhausted</option>
+          </select>
+        </div>
+        <table>
+          <thead>
+            <tr><th>PIN Code</th><th>Uses</th><th>Max Uses</th><th>Registered Student</th><th>Status</th></tr>
+          </thead>
+          <tbody id="pinsTableBody"><tr><td colspan="5">Loading PINs...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- TAB 5: FEE CLEARANCE -->
+      <div id="tab-fees" class="tab-content card" style="display:none;">
+        <p class="section-title">Fee Clearance Status</p>
+        <div class="form-grid">
+          <input type="text" id="feeSearch" placeholder="Search student..." oninput="loadFees()" />
+          <select id="feeTerm">
+            <option>First Term</option><option>Second Term</option><option>Third Term</option>
+          </select>
+          <input type="text" id="feeSession" value="2025/2026" />
+        </div>
+        <table>
+          <thead>
+            <tr><th>Admission No</th><th>Student Name</th><th>Class</th><th>Fee Status</th><th>Action</th></tr>
+          </thead>
+          <tbody id="feesTableBody"><tr><td colspan="5">Loading fee statuses...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- TAB 6: CLASSES -->
       <div id="tab-classes" class="tab-content card" style="display:none;">
         <p class="section-title">Manage Classes</p>
-        <div class="form-grid" style="max-width: 400px;">
+        <div class="form-grid" style="max-width: 500px;">
           <input type="text" id="classLevel" placeholder="Level (e.g. JSS1)" />
           <input type="text" id="classArm" placeholder="Arm (e.g. A)" />
           <button class="primary" onclick="addClass()">Add Class</button>
         </div>
-        <tbody id="classesList"></tbody>
+        <table>
+          <thead><tr><th>ID</th><th>Class Name</th><th>Level</th><th>Arm</th><th>Action</th></tr></thead>
+          <tbody id="classesTableBody"><tr><td colspan="5">Loading classes...</td></tr></tbody>
+        </table>
       </div>
 
-      <!-- TAB 5: SUBJECTS -->
+      <!-- TAB 7: SUBJECTS -->
       <div id="tab-subjects" class="tab-content card" style="display:none;">
         <p class="section-title">Manage Subjects</p>
         <div class="form-grid" style="max-width: 400px;">
-          <input type="text" id="subjectName" placeholder="Subject Name (e.g. Mathematics)" />
+          <input type="text" id="subjectName" placeholder="Subject Name" />
           <button class="primary" onclick="addSubject()">Add Subject</button>
         </div>
+        <table>
+          <thead><tr><th>ID</th><th>Subject Name</th><th>Action</th></tr></thead>
+          <tbody id="subjectsTableBody"><tr><td colspan="3">Loading subjects...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- TAB 8: TEACHER ASSIGNMENTS -->
+      <div id="tab-assignments" class="tab-content card" style="display:none;">
+        <p class="section-title">Teacher Assignments</p>
+        <table>
+          <thead><tr><th>Teacher</th><th>Subject</th><th>Class</th></tr></thead>
+          <tbody id="assignmentsTableBody"><tr><td colspan="3">Loading assignments...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- TAB 9: FORM TEACHERS -->
+      <div id="tab-formteachers" class="tab-content card" style="display:none;">
+        <p class="section-title">Form Teachers Management</p>
+        <table>
+          <thead><tr><th>Teacher</th><th>Class</th></tr></thead>
+          <tbody id="formTeachersTableBody"><tr><td colspan="2">Loading form teachers...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- TAB 10: DEADLINE EXTENSIONS -->
+      <div id="tab-deadlines" class="tab-content card" style="display:none;">
+        <p class="section-title">Deadline Extensions</p>
+        <table>
+          <thead><tr><th>Teacher</th><th>Class</th><th>Term</th><th>Session</th></tr></thead>
+          <tbody id="deadlinesTableBody"><tr><td colspan="4">Loading extensions...</td></tr></tbody>
+        </table>
       </div>
 
     </div>
@@ -179,7 +226,6 @@
     const API_BASE = window.location.origin;
     let activeCommentStudentId = null;
 
-    // Toast helper
     function showToast(msg) {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
@@ -187,7 +233,6 @@
       setTimeout(() => { toast.style.display = 'none'; }, 3000);
     }
 
-    // Switch active tabs
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -197,145 +242,189 @@
 
       if (tabName === 'students') loadStudents();
       if (tabName === 'teachers') loadTeachers();
+      if (tabName === 'pins') loadPins();
+      if (tabName === 'fees') loadFees();
+      if (tabName === 'classes') loadClasses();
+      if (tabName === 'subjects') loadSubjects();
+      if (tabName === 'assignments') loadAssignments();
+      if (tabName === 'formteachers') loadFormTeachers();
+      if (tabName === 'deadlines') loadDeadlines();
     }
 
-    // Load Students List
     async function loadStudents() {
-      const search = document.getElementById('studentSearch').value.trim();
-      const className = document.getElementById('studentClassFilter').value;
+      const search = document.getElementById('studentSearch')?.value || '';
+      const className = document.getElementById('studentClassFilter')?.value || '';
       const tbody = document.getElementById('studentsTableBody');
+      if (!tbody) return;
 
       try {
         const res = await fetch(`${API_BASE}/api/exam-office/students?search=${encodeURIComponent(search)}&class=${encodeURIComponent(className)}`);
         const data = await res.json();
-
         if (!data.students || data.students.length === 0) {
           tbody.innerHTML = '<tr><td colspan="5">No students found.</td></tr>';
           return;
         }
-
         tbody.innerHTML = data.students.map(s => {
           const photoSrc = s.photo_url ? (s.photo_url.startsWith('/') ? s.photo_url : '/' + s.photo_url) : '/uploads/default-avatar.png';
-          return `
-            <tr>
-              <td><img src="${photoSrc}" class="student-img" onerror="this.src='/uploads/default-avatar.png'" /></td>
-              <td><strong>${s.admission_no}</strong></td>
-              <td>${s.name}</td>
-              <td>${s.class}</td>
-              <td><button onclick="deleteStudent(${s.id})" style="color:var(--danger); background:none; border:none; cursor:pointer;">Delete</button></td>
-            </tr>
-          `;
+          return `<tr>
+            <td><img src="${photoSrc}" class="student-img" onerror="this.src='/uploads/default-avatar.png'" /></td>
+            <td><strong>${s.admission_no}</strong></td>
+            <td>${s.name}</td>
+            <td>${s.class}</td>
+            <td><button onclick="deleteStudent(${s.id})" style="color:var(--danger); background:none; border:none; cursor:pointer;">Delete</button></td>
+          </tr>`;
         }).join('');
       } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="5">Failed to load students. Check backend connection.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5">Failed to load students.</td></tr>';
       }
     }
 
-    // Load Teachers Directory
     async function loadTeachers() {
       const tbody = document.getElementById('teachersTableBody');
+      if (!tbody) return;
       try {
         const res = await fetch(`${API_BASE}/api/exam-office/teachers`);
         const data = await res.json();
-
-        if (!data.teachers || data.teachers.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4">No teachers added yet.</td></tr>';
-          return;
-        }
-
-        tbody.innerHTML = data.teachers.map(t => `
-          <tr>
-            <td>${t.id}</td>
-            <td><strong>${t.name}</strong></td>
-            <td>${t.email}</td>
-            <td><button onclick="deleteTeacher(${t.id})" style="color:var(--danger); background:none; border:none; cursor:pointer;">Delete</button></td>
-          </tr>
-        `).join('');
-      } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="4">Failed to load teachers.</td></tr>';
-      }
+        tbody.innerHTML = (data.teachers || []).map(t => `<tr>
+          <td>${t.id}</td><td><strong>${t.name}</strong></td><td>${t.email}</td>
+          <td><button onclick="deleteTeacher(${t.id})" style="color:var(--danger); background:none; border:none; cursor:pointer;">Delete</button></td>
+        </tr>`).join('') || '<tr><td colspan="4">No teachers found.</td></tr>';
+      } catch (err) { tbody.innerHTML = '<tr><td colspan="4">Failed to load teachers.</td></tr>'; }
     }
 
-    // Add Teacher
-    async function addTeacher() {
-      const name = document.getElementById('newTeacherName').value.trim();
-      const email = document.getElementById('newTeacherEmail').value.trim();
-      const password = document.getElementById('newTeacherPassword').value.trim();
-
-      if (!name || !email || !password) return showToast('Please fill all fields.');
-
-      try {
-        const res = await fetch(`${API_BASE}/api/exam-office/teachers`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password })
-        });
-        if (!res.ok) throw new Error('Failed to add teacher');
-        showToast('Teacher added successfully!');
-        loadTeachers();
-      } catch (err) {
-        showToast(err.message);
-      }
-    }
-
-    // Term Comments & Promotion Lookup
     async function lookupStudentCommentRecord() {
       const admission_no = document.getElementById('commentAdmNo').value.trim();
-      if (!admission_no) return showToast('Please enter an admission number.');
-
+      if (!admission_no) return showToast('Enter an admission number.');
       try {
         const res = await fetch(`${API_BASE}/api/exam-office/students?search=${encodeURIComponent(admission_no)}`);
         const data = await res.json();
         const student = (data.students || []).find(s => String(s.admission_no).toLowerCase() === admission_no.toLowerCase());
-
         if (!student) {
-          showToast('No student found with that admission number.');
+          showToast('Student not found.');
           document.getElementById('commentEditorWrap').style.display = 'none';
           return;
         }
-
         activeCommentStudentId = student.id;
-        document.getElementById('commentStudentInfo').textContent = `Editing Record for: ${student.name} (Class: ${student.class}, Adm No: ${student.admission_no})`;
+        document.getElementById('commentStudentInfo').textContent = `Student: ${student.name} (${student.class}, Adm: ${student.admission_no})`;
         document.getElementById('commentEditorWrap').style.display = 'block';
         document.getElementById('customPrincipalComment').value = '';
         showToast('Student loaded.');
-      } catch (err) {
-        showToast('Error looking up student.');
-      }
+      } catch (err) { showToast('Lookup failed.'); }
     }
 
-    // Save Custom Principal Comment / Override
     async function saveCustomPrincipalComment() {
       if (!activeCommentStudentId) return;
       const term = document.getElementById('commentTerm').value;
       const session = document.getElementById('commentSession').value.trim();
       const principal_comment = document.getElementById('customPrincipalComment').value.trim();
-
-      if (!principal_comment) return showToast('Please enter a comment.');
-
+      if (!principal_comment) return showToast('Enter a comment.');
       try {
         const res = await fetch(`${API_BASE}/api/exam-office/term-records`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            student_id: activeCommentStudentId,
-            term,
-            session,
-            principal_comment
-          })
+          body: JSON.stringify({ student_id: activeCommentStudentId, term, session, principal_comment })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to save');
-        showToast('Principal comment override saved successfully!');
-      } catch (err) {
-        showToast(err.message);
-      }
+        if (!res.ok) throw new Error('Failed to save');
+        showToast('Comment override saved successfully!');
+      } catch (err) { showToast(err.message); }
     }
 
-    // Initial Load
-    window.onload = () => {
-      loadStudents();
-    };
+    async function loadPins() {
+      const search = document.getElementById('pinSearch')?.value || '';
+      const status = document.getElementById('pinStatusFilter')?.value || '';
+      const tbody = document.getElementById('pinsTableBody');
+      if (!tbody) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/pins?search=${encodeURIComponent(search)}&status=${status}`);
+        const data = await res.json();
+        tbody.innerHTML = (data.pins || []).map(p => `<tr>
+          <td><code>${p.code}</code></td><td>${p.uses_count}</td><td>${p.max_uses}</td>
+          <td>${p.student_name ? `${p.student_name} (${p.student_admission_no})` : 'Unassigned'}</td>
+          <td>${p.uses_count >= p.max_uses ? 'Exhausted' : (p.student_id ? 'Active' : 'Unused')}</td>
+        </tr>`).join('') || '<tr><td colspan="5">No PINs found.</td></tr>';
+      } catch (err) { tbody.innerHTML = '<tr><td colspan="5">Failed to load PINs.</td></tr>'; }
+    }
+
+    async function loadFees() {
+      const search = document.getElementById('feeSearch')?.value || '';
+      const term = document.getElementById('feeTerm')?.value || 'First Term';
+      const session = document.getElementById('feeSession')?.value || '2025/2026';
+      const tbody = document.getElementById('feesTableBody');
+      if (!tbody) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/fee-status?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}&search=${encodeURIComponent(search)}`);
+        const data = await res.json();
+        tbody.innerHTML = (data.students || []).map(s => `<tr>
+          <td>${s.admission_no}</td><td>${s.name}</td><td>${s.class}</td>
+          <td><span style="color:${s.cleared ? 'var(--success)' : 'var(--danger)'}; font-weight:600;">${s.cleared ? 'Cleared' : 'On Hold'}</span></td>
+          <td><button onclick="toggleFee(${s.id}, ${s.cleared}, '${term}', '${session}')" class="primary" style="padding:4px 10px; font-size:12px;">Toggle Status</button></td>
+        </tr>`).join('') || '<tr><td colspan="5">No records found.</td></tr>';
+      } catch (err) { tbody.innerHTML = '<tr><td colspan="5">Failed to load fee statuses.</td></tr>'; }
+    }
+
+    async function toggleFee(student_id, currentStatus, term, session) {
+      try {
+        await fetch(`${API_BASE}/api/exam-office/fee-status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student_id, term, session, cleared: !currentStatus })
+        });
+        showToast('Fee status updated');
+        loadFees();
+      } catch (err) { showToast('Failed to update fee status'); }
+    }
+
+    async function loadClasses() {
+      const tbody = document.getElementById('classesTableBody');
+      if (!tbody) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/classes`);
+        const data = await res.json();
+        tbody.innerHTML = (data.classes || []).map(c => `<tr><td>${c.id}</td><td>${c.name}</td><td>${c.level}</td><td>${c.arm}</td><td>-</td></tr>`).join('') || '<tr><td colspan="5">No classes found.</td></tr>';
+      } catch (err) {}
+    }
+
+    async function loadSubjects() {
+      const tbody = document.getElementById('subjectsTableBody');
+      if (!tbody) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/subjects`);
+        const data = await res.json();
+        tbody.innerHTML = (data.subjects || []).map(s => `<tr><td>${s.id}</td><td>${s.name}</td><td>-</td></tr>`).join('') || '<tr><td colspan="3">No subjects found.</td></tr>';
+      } catch (err) {}
+    }
+
+    async function loadAssignments() {
+      const tbody = document.getElementById('assignmentsTableBody');
+      if (!tbody) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/assignments`);
+        const data = await res.json();
+        tbody.innerHTML = (data.assignments || []).map(a => `<tr><td>${a.teacher_name}</td><td>${a.subject_name}</td><td>${a.class}</td></tr>`).join('') || '<tr><td colspan="3">No assignments found.</td></tr>';
+      } catch (err) {}
+    }
+
+    async function loadFormTeachers() {
+      const tbody = document.getElementById('formTeachersTableBody');
+      if (!tbody) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/form-teachers`);
+        const data = await res.json();
+        tbody.innerHTML = (data.formTeachers || []).map(f => `<tr><td>${f.teacher_name}</td><td>${f.class}</td></tr>`).join('') || '<tr><td colspan="2">No form teachers found.</td></tr>';
+      } catch (err) {}
+    }
+
+    async function loadDeadlines() {
+      const tbody = document.getElementById('deadlinesTableBody');
+      if (!tbody) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/exam-office/deadline-overrides?term=First%20Term&session=2025/2026`);
+        const data = await res.json();
+        tbody.innerHTML = (data.overrides || []).map(d => `<tr><td>${d.teacher_name}</td><td>${d.class}</td><td>${d.term}</td><td>${d.session}</td></tr>`).join('') || '<tr><td colspan="4">No extensions found.</td></tr>';
+      } catch (err) {}
+    }
+
+    window.onload = () => { loadStudents(); };
   </script>
 </body>
 </html>
