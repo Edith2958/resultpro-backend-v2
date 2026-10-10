@@ -46,8 +46,6 @@ router.post('/login', async (req, res) => {
 /**
  * GET /api/student/midterm-result
  * Returns just the mid-term slip: Assignment, Test, Total, Pass/Fail per subject.
- * No positions/grades here — mid-term is a lighter checkpoint, not the full broadsheet.
- * Query params: student_id, term, session
  */
 router.get('/midterm-result', async (req, res) => {
   const { student_id, term, session } = req.query;
@@ -94,7 +92,6 @@ router.get('/midterm-result', async (req, res) => {
  * GET /api/student/result
  * Assembles the full slip: subject scores + grades, class position,
  * totals, attendance and comments.
- * Query params: student_id, term, session, pin_code
  */
 router.get('/result', async (req, res) => {
   const { student_id, term, session, pin_code } = req.query;
@@ -230,7 +227,6 @@ router.get('/result', async (req, res) => {
     const termRecord = termRecordRes.rows[0] || null;
     const pinData = pinUpdateRes.rows[0];
 
-    // Determine principal comment: use custom one if saved, otherwise fallback to automated score-based comment
     const principalComment = termRecord?.principal_comment || getPrincipalComment(average);
 
     res.json({
@@ -264,4 +260,3 @@ router.get('/result', async (req, res) => {
 });
 
 module.exports = router;
-```[cite: 4]
