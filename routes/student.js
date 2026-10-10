@@ -5,19 +5,18 @@ const { getGrade, rankByTotal, ordinal } = require('../utils/grading');
 
 /**
  * Automated principal comment based on student average
+ * (Outstanding is set to start from 90+)
  */
 function getPrincipalComment(average) {
-  if (average >= 75) return "An outstanding performance! Keep up the brilliant work.";
-  if (average >= 60) return "Very good result. Consistency will bring even greater success.";
-  if (average >= 50) return "A satisfactory performance. Put in more effort next term.";
-  if (average >= 40) return "Fair attempt, but you need to dedicate more time to your studies.";
+  if (average >= 90) return "An outstanding performance! Keep up the brilliant work.";
+  if (average >= 75) return "Very good result. Consistency will bring even greater success.";
+  if (average >= 60) return "A satisfactory performance. Put in more effort next term.";
+  if (average >= 50) return "Fair attempt, but you need to dedicate more time to your studies.";
   return "Poor performance. Immediate consultation with teachers and parents is required.";
 }
 
 /**
  * POST /api/student/login
- * Simple v1 check: admission_no + surname match (no PIN yet).
- * body: { admission_no, surname }
  */
 router.post('/login', async (req, res) => {
   const { admission_no, surname } = req.body;
@@ -45,7 +44,6 @@ router.post('/login', async (req, res) => {
 
 /**
  * GET /api/student/midterm-result
- * Returns just the mid-term slip: Assignment, Test, Total, Pass/Fail per subject.
  */
 router.get('/midterm-result', async (req, res) => {
   const { student_id, term, session } = req.query;
@@ -90,8 +88,6 @@ router.get('/midterm-result', async (req, res) => {
 
 /**
  * GET /api/student/result
- * Assembles the full slip: subject scores + grades, class position,
- * totals, attendance and comments.
  */
 router.get('/result', async (req, res) => {
   const { student_id, term, session, pin_code } = req.query;
@@ -227,6 +223,7 @@ router.get('/result', async (req, res) => {
     const termRecord = termRecordRes.rows[0] || null;
     const pinData = pinUpdateRes.rows[0];
 
+    // Priority: Custom exam-office comment overrides automated average comment
     const principalComment = termRecord?.principal_comment || getPrincipalComment(average);
 
     res.json({
