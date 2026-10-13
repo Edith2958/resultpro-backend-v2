@@ -364,14 +364,13 @@ router.post('/upload-photo', upload.single('photo'), async (req, res) => {
       return res.status(403).json({ error: 'You are not the form teacher for this class' });
     }
 
-    // req.file.path holds the permanent secure Cloudinary URL
     const cloudUrl = req.file.path;
     await pool.query('UPDATE students SET photo_url = $1 WHERE id = $2', [cloudUrl, student_id]);
 
     res.json({ success: true, photo_url: cloudUrl });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to save photo' });
+    console.error('UPLOAD ERROR:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to save photo: ' + err.message });
   }
 });
 
