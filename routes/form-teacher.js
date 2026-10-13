@@ -1,30 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const { getGrade, rankByTotal, ordinal } = require('../utils/grading');
-
-// Where uploaded student photos land: public/uploads/students/
-const uploadDir = path.join(__dirname, '..', 'public', 'uploads', 'students');
-fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `student-${req.body.student_id}-${Date.now()}${ext}`);
-  },
-});
-const upload = multer({
-  storage,
-  limits: { fileSize: 3 * 1024 * 1024 }, // 3MB max
-  fileFilter: (req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    cb(null, allowed.includes(file.mimetype));
-  },
-});
+const { upload } = require('../config/cloudinary'); // Import Cloudinary upload middleware
 
 /**
  * GET /api/form-teacher/my-class
@@ -57,9 +35,6 @@ async function isFormTeacherOf(teacherId, className) {
 
 /**
  * GET /api/form-teacher/broadsheet?class=JSS1A&term=First Term&session=2025/2026&teacher_id=1
- * The whole class, every subject, in one table — CA/exam/total per subject,
- * plus each student's overall total, average, and class position.
- * Only the form teacher of that class can pull this.
  */
 router.get('/broadsheet', async (req, res) => {
   const { class: className, term, session, teacher_id } = req.query;
@@ -144,7 +119,7 @@ router.get('/broadsheet', async (req, res) => {
         max_obtainable: maxObtainable,
         average,
         class_position: ordinal(rankMap[s.id]),
-        class_position_rank: rankMap[s.id], // raw number, for sorting
+        class_position_rank: rankMap[s.id],
       };
     });
 
@@ -156,11 +131,7 @@ router.get('/broadsheet', async (req, res) => {
 });
 
 /**
- * GET /api/form-teacher/class-result-slips?class=JSS1A&term=First Term&session=2025/2026&teacher_id=1
- * The full individual result slip for every student in the class, in one shot —
- * same detail as a student's own /api/student/result (CA/exam/total/grade/highest/
- * position per subject, summary, attendance, comments), just for everyone at once,
- * so the form teacher can print/download all of them together.
+ * GET /api/form-teacher/class-result-slips
  */
 router.get('/class-result-slips', async (req, res) => {
   const { class: className, term, session, teacher_id } = req.query;
@@ -199,7 +170,7 @@ router.get('/class-result-slips', async (req, res) => {
       [className, term, session]
     );
 
-    const scoreMap = {}; // "studentId-subjectId" -> { ca, exam, total, grade, remark }
+    const scoreMap = {};
     for (const row of scoresRes.rows) {
       const midTermTotal =
         row.assignment_score !== null || row.test_score !== null
@@ -211,8 +182,7 @@ router.get('/class-result-slips', async (req, res) => {
       scoreMap[`${row.student_id}-${row.subject_id}`] = { ca, exam, total, ...getGrade(total) };
     }
 
-    // Per-subject highest + position, computed once across the whole class (not per student)
-    const subjectRankings = {}; // subjectId -> { studentId -> { highest, position } }
+    const subjectRankings = {};
     for (const sub of subjects) {
       const entries = students
         .map((s) => {
@@ -227,7 +197,6 @@ router.get('/class-result-slips', async (req, res) => {
       subjectRankings[sub.id] = map;
     }
 
-    // Overall class position, based on each student's total across all subjects
     const classTotals = students.map((s) => {
       let total = 0;
       subjects.forEach((sub) => {
@@ -240,7 +209,6 @@ router.get('/class-result-slips', async (req, res) => {
     const classRankMap = {};
     classRanked.forEach((r) => { classRankMap[r.studentId] = r.position; });
 
-    // Attendance + comments, one row per student for this term+session
     const termRecordsRes = await pool.query(
       `SELECT student_id, times_present, times_absent, total_days, form_teacher_comment, principal_comment
        FROM term_records WHERE class = $1 AND term = $2 AND session = $3`,
@@ -297,10 +265,6 @@ router.get('/class-result-slips', async (req, res) => {
 
 /**
  * GET /api/form-teacher/roster
- * Loads a class roster with any existing term_record (attendance + comments)
- * for the given term/session. This is separate from the subject-teacher roster
- * because attendance/comments are one row per student per term, not per subject.
- * Query params: class, term, session, teacher_id
  */
 router.get('/roster', async (req, res) => {
   const { class: className, term, session, teacher_id } = req.query;
@@ -333,17 +297,6 @@ router.get('/roster', async (req, res) => {
 
 /**
  * POST /api/form-teacher/term-records
- * Flexible, no-friction save — same pattern as mid-term scores.
- * Send only the fields you have for each student; existing values are kept
- * if a field is omitted. Principal's comment can be added separately later
- * by whoever handles that step.
- *
- * body: {
- *   class, term, session,
- *   records: [
- *     { student_id, times_present?, times_absent?, total_days?, form_teacher_comment?, principal_comment? }
- *   ]
- * }
  */
 router.post('/term-records', async (req, res) => {
   const { class: className, term, session, records, teacher_id } = req.body;
@@ -394,7 +347,7 @@ router.post('/term-records', async (req, res) => {
 /**
  * POST /api/form-teacher/upload-photo
  * multipart/form-data with fields: student_id, class, teacher_id, and a file field named "photo"
- * Saves the file to public/uploads/students/ and updates students.photo_url.
+ * Uploads directly to Cloudinary and updates students.photo_url with the secure cloud URL.
  */
 router.post('/upload-photo', upload.single('photo'), async (req, res) => {
   const { student_id, class: className, teacher_id } = req.body;
@@ -408,15 +361,14 @@ router.post('/upload-photo', upload.single('photo'), async (req, res) => {
 
   try {
     if (!(await isFormTeacherOf(teacher_id, className))) {
-      // Clean up the file we just saved, since this teacher isn't allowed to make this change
-      fs.unlink(req.file.path, () => {});
       return res.status(403).json({ error: 'You are not the form teacher for this class' });
     }
 
-    const publicPath = `/uploads/students/${req.file.filename}`;
-    await pool.query('UPDATE students SET photo_url = $1 WHERE id = $2', [publicPath, student_id]);
+    // req.file.path holds the permanent secure Cloudinary URL
+    const cloudUrl = req.file.path;
+    await pool.query('UPDATE students SET photo_url = $1 WHERE id = $2', [cloudUrl, student_id]);
 
-    res.json({ success: true, photo_url: publicPath });
+    res.json({ success: true, photo_url: cloudUrl });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to save photo' });
