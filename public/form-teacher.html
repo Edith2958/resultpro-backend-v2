@@ -341,6 +341,14 @@
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   }
 
+  function getPhotoUrl(photoUrl) {
+    if (!photoUrl) return '';
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+      return photoUrl; // Cloudinary absolute URL
+    }
+    return `${API_BASE}${photoUrl}`; // Legacy local path
+  }
+
   function togglePasswordVisibility(inputId, btn) {
     const input = document.getElementById(inputId);
     if (input.type === "password") { input.type = "text"; btn.textContent = "Hide"; }
@@ -435,7 +443,7 @@
       <div class="student-row">
         <div class="avatar-wrap">
           <div class="avatar" id="avatar-${i}">
-            ${s.photo_url ? `<img src="${API_BASE}${s.photo_url}" alt="${s.name}" />` : getInitials(s.name)}
+            ${s.photo_url ? `<img src="${getPhotoUrl(s.photo_url)}" alt="${s.name}" />` : getInitials(s.name)}
           </div>
           <label class="photo-btn" for="photoFile-${i}">Change photo</label>
           <input class="photo-input" type="file" id="photoFile-${i}" accept="image/png, image/jpeg, image/webp"
@@ -484,7 +492,7 @@
       if (!res.ok) throw new Error(data.error || 'Photo upload failed');
 
       currentRoster[i].photo_url = data.photo_url;
-      document.getElementById(`avatar-${i}`).innerHTML = `<img src="${API_BASE}${data.photo_url}" alt="" />`;
+      document.getElementById(`avatar-${i}`).innerHTML = `<img src="${getPhotoUrl(data.photo_url)}" alt="" />`;
       showToast('Photo updated.');
     } catch (err) {
       showToast(err.message || 'Could not upload photo.');
@@ -527,7 +535,7 @@
     container.innerHTML = data.slips.map((slip) => {
       const s = slip.student;
       const avatar = s.photo_url
-        ? `<img src="${API_BASE}${s.photo_url}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
+        ? `<img src="${getPhotoUrl(s.photo_url)}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
         : getInitials(s.name);
 
       const subjectRows = slip.subjects.map(sub => `
