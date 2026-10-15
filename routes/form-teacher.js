@@ -349,29 +349,40 @@ router.post('/term-records', async (req, res) => {
  * multipart/form-data with fields: student_id, class, teacher_id, and a file field named "photo"
  * Uploads directly to Cloudinary and updates students.photo_url with the secure cloud URL.
  */
-router.post('/upload-photo', upload.single('photo'), async (req, res) => {
-  const { student_id, class: className, teacher_id } = req.body;
-
-  if (!student_id || !className || !teacher_id) {
-    return res.status(400).json({ error: 'student_id, class and teacher_id are required' });
-  }
-  if (!req.file) {
-    return res.status(400).json({ error: 'No photo file received, or the file type is not supported (use JPG, PNG or WEBP)' });
-  }
-
-  try {
-    if (!(await isFormTeacherOf(teacher_id, className))) {
-      return res.status(403).json({ error: 'You are not the form teacher for this class' });
+router.post('/upload-photo', (req, res, next) => {
+  upload.single('photo')(req, res, async (err) => {
+    if (err) {
+      console.error('MULTER/CLOUDINARY UPLOAD ERROR:', err);
+      return res.status(500).json({ error: 'Upload failed: ' + (err.message || err) });
     }
 
-    const cloudUrl = req.file.path;
-    await pool.query('UPDATE students SET photo_url = $1 WHERE id = $2', [cloudUrl, student_id]);
+    const { student_id, class: className, teacher_id } = req.body;
 
-    res.json({ success: true, photo_url: cloudUrl });
-  } catch (err) {
-    console.error('UPLOAD ERROR:', err.message, err.stack);
-    res.status(500).json({ error: 'Failed to save photo: ' + err.message });
-  }
+    if (!student_id || !className || !teacher_id) {
+      return res.status(400).json({ error: 'student_id, class and teacher_id are required' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No photo file received. Make sure the form field name is "photo".' });
+    }
+
+    try {
+      if (!(await isFormTeacherOf(teacher_id, className))) {
+        return res.status(403).json({ error: 'You are not the form teacher for this class' });
+      }
+
+      const cloudUrl = req.file.path || req.file.secure_url;
+      if (!cloudUrl) {
+        throw new Error('Cloudinary did not return a file path.');
+      }
+
+      await pool.query('UPDATE students SET photo_url = $1 WHERE id = $2', [cloudUrl, student_id]);
+
+      return res.json({ success: true, photo_url: cloudUrl });
+    } catch (dbOrLogicErr) {
+      console.error('DATABASE/LOGIC ERROR:', dbOrLogicErr);
+      return res.status(500).json({ error: 'Failed to save photo: ' + (dbOrLogicErr.message || dbOrLogicErr) });
+    }
+  });
 });
 
 module.exports = router;
