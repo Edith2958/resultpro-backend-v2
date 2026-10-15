@@ -4,11 +4,27 @@ const pool = require('../db/pool');
 const { getGrade, getMidTermRemark } = require('../utils/grading');
 
 /**
+ * Helper to validate and parse scores:
+ * - Ensures numbers are within the allowed range (0 to maxLimit).
+ * - Handles explicit clearing (empty string or null sets value to null).
+ * - Preserves existing values if the field is omitted (undefined).
+ */
+function parseScore(val, maxLimit, fieldName) {
+  if (val === undefined) {
+    return { provided: false, value: null };
+  }
+  if (val === null || String(val).trim() === '') {
+    return { provided: true, value: null }; // Explicitly cleared by user
+  }
+  const num = Number(val);
+  if (isNaN(num) || num < 0 || num > maxLimit) {
+    throw new Error(`${fieldName} must be between 0 and ${maxLimit} marks.`);
+  }
+  return { provided: true, value: num };
+}
+
+/**
  * POST /api/teacher/login
- * Simple v1 check: email + password match against the teachers table.
- * NOTE: passwords are compared as plain text for now (matches how they were seeded).
- * Swap this for a proper hashed-password check (bcrypt) before real deployment.
- * body: { email, password }
  */
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -33,8 +49,6 @@ router.post('/login', async (req, res) => {
 
 /**
  * GET /api/teacher/my-subjects
- * Returns the subject+class combinations this teacher is allowed to enter scores for.
- * Query params: teacher_id
  */
 router.get('/my-subjects', async (req, res) => {
   const { teacher_id } = req.query;
@@ -58,10 +72,6 @@ router.get('/my-subjects', async (req, res) => {
   }
 });
 
-/**
- * Checks whether a teacher is allowed to touch a given class+subject.
- * Returns true/false. Used before letting a roster load or a save happen.
- */
 async function isAssigned(teacherId, className, subjectId) {
   const { rows } = await pool.query(
     `SELECT 1 FROM teacher_subjects WHERE teacher_id = $1 AND class = $2 AND subject_id = $3`,
@@ -70,11 +80,6 @@ async function isAssigned(teacherId, className, subjectId) {
   return rows.length > 0;
 }
 
-/**
- * Blocks saving once the term's teacher_deadline has passed, UNLESS the exam office
- * has granted this specific teacher an override for this class+term+session.
- * Returns null if saving is allowed, or an error message string if it should be blocked.
- */
 async function checkDeadlineAllowsSave(teacherId, className, term, session) {
   const settingsRes = await pool.query(
     'SELECT teacher_deadline FROM term_settings WHERE term = $1 AND session = $2',
@@ -82,7 +87,7 @@ async function checkDeadlineAllowsSave(teacherId, className, term, session) {
   );
   const deadline = settingsRes.rows[0]?.teacher_deadline;
   if (!deadline || new Date(deadline) > new Date()) {
-    return null; // no deadline set, or still before it — saving is fine
+    return null;
   }
 
   const overrideRes = await pool.query(
@@ -90,7 +95,7 @@ async function checkDeadlineAllowsSave(teacherId, className, term, session) {
     [teacherId, className, term, session]
   );
   if (overrideRes.rows.length > 0) {
-    return null; // exam office granted this teacher an extension
+    return null;
   }
 
   return 'The deadline for submitting scores has passed. Contact the exam office for an extension.';
@@ -98,8 +103,6 @@ async function checkDeadlineAllowsSave(teacherId, className, term, session) {
 
 /**
  * GET /api/teacher/roster
- * Loads class roster + existing mid-term scores for a subject/term/session.
- * Query params: class, subject_id, term, session
  */
 router.get('/roster', async (req, res) => {
   const { class: className, subject_id, term, session, teacher_id } = req.query;
@@ -149,9 +152,6 @@ router.get('/roster', async (req, res) => {
 
 /**
  * POST /api/teacher/midterm-scores
- * Flexible, no-friction save: one student at a time, or a batch array.
- * Partial fields allowed — only what's sent gets updated.
- * body: { teacher_id, class, subject_id, term, session, scores: [{ student_id, assignment_score?, test_score?, status? }] }
  */
 router.post('/midterm-scores', async (req, res) => {
   const { teacher_id, class: className, subject_id, term, session, scores } = req.body;
@@ -173,21 +173,33 @@ router.post('/midterm-scores', async (req, res) => {
     await client.query('BEGIN');
 
     for (const s of scores) {
-      // Upsert: insert new row, or update only the fields provided (COALESCE keeps existing values)
+      // Validate and parse scores (Assignment: 0–15, Mid-term Test: 0–15)
+      const assignParsed = parseScore(s.assignment_score, 15, 'Assignment score');
+      const testParsed = parseScore(s.test_score, 15, 'Mid-term score');
+
       await client.query(
         `INSERT INTO mid_term_results
-           (student_id, subject_id, teacher_id, class, term, session, assignment_score, test_score, status, updated_at)
+            (student_id, subject_id, teacher_id, class, term, session, assignment_score, test_score, status, updated_at)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, NOW())
          ON CONFLICT (student_id, subject_id, term, session)
          DO UPDATE SET
-           assignment_score = COALESCE(EXCLUDED.assignment_score, mid_term_results.assignment_score),
-           test_score = COALESCE(EXCLUDED.test_score, mid_term_results.test_score),
-           status = COALESCE(EXCLUDED.status, mid_term_results.status),
-           teacher_id = EXCLUDED.teacher_id,
-           updated_at = NOW()`,
+            assignment_score = CASE WHEN $10 THEN $7 ELSE mid_term_results.assignment_score END,
+            test_score = CASE WHEN $11 THEN $8 ELSE mid_term_results.test_score END,
+            status = COALESCE(EXCLUDED.status, mid_term_results.status),
+            teacher_id = EXCLUDED.teacher_id,
+            updated_at = NOW()`,
         [
-          s.student_id, subject_id, teacher_id, className, term, session,
-          s.assignment_score ?? null, s.test_score ?? null, s.status || 'draft',
+          s.student_id,
+          subject_id,
+          teacher_id,
+          className,
+          term,
+          session,
+          assignParsed.value,
+          testParsed.value,
+          s.status || 'draft',
+          assignParsed.provided,
+          testParsed.provided,
         ]
       );
     }
@@ -197,7 +209,7 @@ router.post('/midterm-scores', async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: 'Failed to save mid-term scores' });
+    res.status(400).json({ error: err.message || 'Failed to save mid-term scores' });
   } finally {
     client.release();
   }
@@ -205,7 +217,6 @@ router.post('/midterm-scores', async (req, res) => {
 
 /**
  * GET /api/teacher/fullterm-roster
- * Loads roster with CA auto-pulled from mid_term_results, flags students missing a mid-term record.
  */
 router.get('/fullterm-roster', async (req, res) => {
   const { class: className, subject_id, term, session, teacher_id } = req.query;
@@ -269,7 +280,6 @@ router.get('/fullterm-roster', async (req, res) => {
 
 /**
  * POST /api/teacher/fullterm-scores
- * body: { teacher_id, class, subject_id, term, session, scores: [{ student_id, exam_score?, manual_ca_override?, status? }] }
  */
 router.post('/fullterm-scores', async (req, res) => {
   const { teacher_id, class: className, subject_id, term, session, scores } = req.body;
@@ -291,20 +301,33 @@ router.post('/fullterm-scores', async (req, res) => {
     await client.query('BEGIN');
 
     for (const s of scores) {
+      // Validate and parse Exam score (0–70) and manual CA override if applicable (0–30)
+      const examParsed = parseScore(s.exam_score, 70, 'Exam score');
+      const caOverrideParsed = parseScore(s.manual_ca_override, 30, 'Manual CA override');
+
       await client.query(
         `INSERT INTO results
-           (student_id, subject_id, teacher_id, class, term, session, exam_score, manual_ca_override, status, updated_at)
+            (student_id, subject_id, teacher_id, class, term, session, exam_score, manual_ca_override, status, updated_at)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, NOW())
          ON CONFLICT (student_id, subject_id, term, session)
          DO UPDATE SET
-           exam_score = COALESCE(EXCLUDED.exam_score, results.exam_score),
-           manual_ca_override = COALESCE(EXCLUDED.manual_ca_override, results.manual_ca_override),
-           status = COALESCE(EXCLUDED.status, results.status),
-           teacher_id = EXCLUDED.teacher_id,
-           updated_at = NOW()`,
+            exam_score = CASE WHEN $10 THEN $7 ELSE results.exam_score END,
+            manual_ca_override = CASE WHEN $11 THEN $8 ELSE results.manual_ca_override END,
+            status = COALESCE(EXCLUDED.status, results.status),
+            teacher_id = EXCLUDED.teacher_id,
+            updated_at = NOW()`,
         [
-          s.student_id, subject_id, teacher_id, className, term, session,
-          s.exam_score ?? null, s.manual_ca_override ?? null, s.status || 'draft',
+          s.student_id,
+          subject_id,
+          teacher_id,
+          className,
+          term,
+          session,
+          examParsed.value,
+          caOverrideParsed.value,
+          s.status || 'draft',
+          examParsed.provided,
+          caOverrideParsed.provided,
         ]
       );
     }
@@ -314,7 +337,7 @@ router.post('/fullterm-scores', async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: 'Failed to save full-term scores' });
+    res.status(400).json({ error: err.message || 'Failed to save full-term scores' });
   } finally {
     client.release();
   }
