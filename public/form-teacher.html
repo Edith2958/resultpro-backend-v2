@@ -319,7 +319,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const API_BASE = window.location.origin; // always same-origin — this server serves both the pages and the API
+  const API_BASE = window.location.origin;
   let teacher = null;
   let myClass = null;
   let currentRoster = [];
@@ -344,9 +344,9 @@
   function getPhotoUrl(photoUrl) {
     if (!photoUrl) return '';
     if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
-      return photoUrl; // Cloudinary absolute URL
+      return photoUrl; 
     }
-    return `${API_BASE}${photoUrl}`; // Legacy local path
+    return `${API_BASE}${photoUrl}`; 
   }
 
   function togglePasswordVisibility(inputId, btn) {
