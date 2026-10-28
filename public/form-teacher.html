@@ -453,16 +453,16 @@
           <p class="name">${s.name}</p>
           <div class="attendance-row">
             <div>
+              <label>Total days</label>
+              <input type="number" min="0" id="total-${i}" value="${s.total_days ?? ''}" oninput="calculateAttendance(${i})" />
+            </div>
+            <div>
               <label>Present</label>
-              <input type="number" min="0" id="present-${i}" value="${s.times_present ?? ''}" />
+              <input type="number" min="0" id="present-${i}" value="${s.times_present ?? ''}" oninput="calculateAttendance(${i})" />
             </div>
             <div>
               <label>Absent</label>
-              <input type="number" min="0" id="absent-${i}" value="${s.times_absent ?? ''}" />
-            </div>
-            <div>
-              <label>Total days</label>
-              <input type="number" min="0" id="total-${i}" value="${s.total_days ?? ''}" />
+              <input type="number" min="0" id="absent-${i}" value="${s.times_absent ?? ''}" readonly style="background-color: #e9ecef; cursor: not-allowed;" />
             </div>
           </div>
           <label>Form teacher's comment</label>
@@ -470,6 +470,22 @@
         </div>
       </div>
     `).join('');
+  }
+
+  function calculateAttendance(i) {
+    const totalInput = document.getElementById(`total-${i}`);
+    const presentInput = document.getElementById(`present-${i}`);
+    const absentInput = document.getElementById(`absent-${i}`);
+
+    const total = parseInt(totalInput.value, 10);
+    const present = parseInt(presentInput.value, 10);
+
+    if (!isNaN(total) && !isNaN(present)) {
+      const absent = total - present;
+      absentInput.value = absent >= 0 ? absent : 0;
+    } else {
+      absentInput.value = '';
+    }
   }
 
   async function uploadPhoto(i) {
