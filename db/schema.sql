@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS teachers (
 
 CREATE TABLE IF NOT EXISTS students (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(150) NOT NULL,
+  surname VARCHAR(150) NOT NULL,
+  first_name VARCHAR(150) NOT NULL,
+  middle_name VARCHAR(150), -- nullable
   admission_no VARCHAR(50) UNIQUE NOT NULL,
   class VARCHAR(20) NOT NULL, -- e.g. JSS1, SS3
   photo_url TEXT, -- nullable, initials shown on frontend if empty
