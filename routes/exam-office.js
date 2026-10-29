@@ -90,7 +90,7 @@ router.get('/fee-status', async (req, res) => {
 
   if (search) {
     params.push(`%${search}%`);
-    conditions.push(`(s.name ILIKE $${params.length} OR s.admission_no ILIKE $${params.length})`);
+    conditions.push(`(s.surname ILIKE $${params.length} OR s.first_name ILIKE $${params.length} OR s.admission_no ILIKE $${params.length})`);
   }
   if (className) {
     params.push(className);
@@ -104,13 +104,13 @@ router.get('/fee-status', async (req, res) => {
 
     params.push(term, session, limit, offset);
     const { rows } = await pool.query(
-      `SELECT s.id, s.name, s.admission_no, s.class,
+      `SELECT s.id, s.surname, s.first_name, s.middle_name, s.admission_no, s.class,
               COALESCE(f.cleared, true) AS cleared
        FROM students s
        LEFT JOIN fee_status f
          ON f.student_id = s.id AND f.term = $${params.length - 3} AND f.session = $${params.length - 2}
        ${whereClause}
-       ORDER BY s.class ASC, s.name ASC
+       ORDER BY s.class ASC, s.surname ASC
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );
@@ -183,7 +183,7 @@ router.get('/pins', async (req, res) => {
     params.push(limit, offset);
     const { rows } = await pool.query(
       `SELECT p.id, p.code, p.max_uses, p.uses_count, p.created_at, p.first_used_at,
-              s.name AS student_name, s.admission_no AS student_admission_no
+              s.surname AS student_surname, s.first_name AS student_first_name, s.admission_no AS student_admission_no
        FROM result_pins p
        LEFT JOIN students s ON s.id = p.student_id
        ${whereClause}
@@ -269,7 +269,7 @@ router.delete('/deadline-overrides/:id', async (req, res) => {
  * GET /api/exam-office/students
  * Supports search + class filter + pagination, since a real school can have
  * thousands of students — never load them all into one unfiltered list.
- * Query params: search (matches name or admission_no), class, page (1-based), pageSize
+ * Query params: search (matches surname, first_name or admission_no), class, page (1-based), pageSize
  */
 router.get('/students', async (req, res) => {
   const { search, class: className, page = 1, pageSize = 25 } = req.query;
@@ -281,7 +281,7 @@ router.get('/students', async (req, res) => {
 
   if (search) {
     params.push(`%${search}%`);
-    conditions.push(`(name ILIKE $${params.length} OR admission_no ILIKE $${params.length})`);
+    conditions.push(`(surname ILIKE $${params.length} OR first_name ILIKE $${params.length} OR admission_no ILIKE $${params.length})`);
   }
   if (className) {
     params.push(className);
@@ -295,7 +295,7 @@ router.get('/students', async (req, res) => {
 
     params.push(limit, offset);
     const { rows } = await pool.query(
-      `SELECT * FROM students ${whereClause} ORDER BY class ASC, name ASC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      `SELECT * FROM students ${whereClause} ORDER BY class ASC, surname ASC LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );
 
@@ -307,14 +307,14 @@ router.get('/students', async (req, res) => {
 });
 
 router.post('/students', async (req, res) => {
-  const { name, admission_no, class: className } = req.body;
-  if (!name || !admission_no || !className) {
-    return res.status(400).json({ error: 'name, admission_no and class are required' });
+  const { surname, first_name, middle_name, admission_no, class: className } = req.body;
+  if (!surname || !first_name || !admission_no || !className) {
+    return res.status(400).json({ error: 'surname, first_name, admission_no and class are required' });
   }
   try {
     const { rows } = await pool.query(
-      'INSERT INTO students (name, admission_no, class) VALUES ($1, $2, $3) RETURNING *',
-      [name.trim(), admission_no.trim(), className]
+      'INSERT INTO students (surname, first_name, middle_name, admission_no, class) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [surname.trim(), first_name.trim(), middle_name ? middle_name.trim() : null, admission_no.trim(), className]
     );
     res.json({ student: rows[0] });
   } catch (err) {
@@ -336,23 +336,31 @@ router.delete('/students/:id', async (req, res) => {
 
 /**
  * PUT /api/exam-office/students/:id
- * Edit a student's name, admission number, or class without deleting/re-adding them.
- * body: { name, admission_no, class } — send only the fields you want to change.
+ * Edit a student's surname, first_name, middle_name, admission number, or class without deleting/re-adding them.
  */
 router.put('/students/:id', async (req, res) => {
-  const { name, admission_no, class: className } = req.body;
-  if (!name && !admission_no && !className) {
-    return res.status(400).json({ error: 'Provide at least one of name, admission_no or class to update' });
+  const { surname, first_name, middle_name, admission_no, class: className } = req.body;
+  if (!surname && !first_name && !middle_name && !admission_no && !className) {
+    return res.status(400).json({ error: 'Provide at least one student field to update' });
   }
   try {
     const { rows } = await pool.query(
       `UPDATE students SET
-         name = COALESCE($1, name),
-         admission_no = COALESCE($2, admission_no),
-         class = COALESCE($3, class)
-       WHERE id = $4
+         surname = COALESCE($1, surname),
+         first_name = COALESCE($2, first_name),
+         middle_name = COALESCE($3, middle_name),
+         admission_no = COALESCE($4, admission_no),
+         class = COALESCE($5, class)
+       WHERE id = $6
        RETURNING *`,
-      [name?.trim() || null, admission_no?.trim() || null, className || null, req.params.id]
+      [
+        surname?.trim() || null,
+        first_name?.trim() || null,
+        middle_name !== undefined ? (middle_name ? middle_name.trim() : null) : null,
+        admission_no?.trim() || null,
+        className || null,
+        req.params.id
+      ]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Student not found' });
     res.json({ student: rows[0] });
@@ -365,9 +373,8 @@ router.put('/students/:id', async (req, res) => {
 
 /**
  * POST /api/exam-office/students/bulk-import
- * Upload an Excel (.xlsx) or CSV file with columns Name, Admission No, Class.
- * Each row is inserted independently, so one bad row doesn't block the rest —
- * the response reports exactly which rows succeeded, skipped, or failed and why.
+ * Upload an Excel (.xlsx) or CSV file supporting separate columns for Surname, First Name, Middle Name, Admission No, Class.
+ * Also handles legacy "Name" or "Full Name" columns by splitting them automatically if separate name columns aren't provided.
  */
 router.post('/students/bulk-import', upload.single('file'), async (req, res) => {
   if (!req.file) {
@@ -401,19 +408,44 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
   for (let i = 0; i < rows.length; i++) {
     const rowNum = i + 2;
     const row = rows[i];
-    const name = extractField(row, ['name', 'studentname', 'fullname']);
+
+    let surname = extractField(row, ['surname', 'last name', 'familyname']);
+    let firstName = extractField(row, ['firstname', 'first name', 'givenname']);
+    let middleName = extractField(row, ['middlename', 'middle name', 'othername']);
     const admissionNo = extractField(row, ['admissionno', 'admno', 'admissionnumber']);
     const className = extractField(row, ['class']);
 
-    if (!name || !admissionNo || !className) {
-      results.skipped.push({ row: rowNum, reason: 'Missing name, admission number, or class' });
+    // Fallback: If separate surname/first_name columns aren't found, check for generic "name" or "full name" and split it
+    if ((!surname || !firstName) && !admissionNo) {
+      // Check if admission number can still be extracted
+    }
+    
+    if (!surname || !firstName) {
+      const fullName = extractField(row, ['name', 'studentname', 'fullname']);
+      if (fullName) {
+        const parts = fullName.split(/\s+/);
+        if (parts.length >= 2) {
+          surname = parts[0];
+          firstName = parts[1];
+          if (parts.length > 2) {
+            middleName = parts.slice(2).join(' ');
+          }
+        } else if (parts.length === 1) {
+          surname = parts[0];
+          firstName = '';
+        }
+      }
+    }
+
+    if (!surname || !firstName || !admissionNo || !className) {
+      results.skipped.push({ row: rowNum, reason: 'Missing surname, first name, admission number, or class' });
       continue;
     }
 
     try {
       await pool.query(
-        'INSERT INTO students (name, admission_no, class) VALUES ($1, $2, $3)',
-        [name, admissionNo, className]
+        'INSERT INTO students (surname, first_name, middle_name, admission_no, class) VALUES ($1, $2, $3, $4, $5)',
+        [surname, firstName, middleName || null, admissionNo, className]
       );
       results.inserted++;
     } catch (err) {

@@ -30,7 +30,7 @@
     min-height: 100vh;
     padding: 24px 16px 60px;
   }
-  .wrap { max-width: 760px; margin: 0 auto; }
+  .wrap { max-width: 900px; margin: 0 auto; }
   .wrap.narrow { max-width: 420px; }
 
   .school-header { text-align: center; margin-bottom: 22px; }
@@ -141,8 +141,12 @@
     border-bottom: 1px solid var(--border);
   }
   .add-form.cols-4 { grid-template-columns: 1fr 1fr 1fr auto; }
+  .add-form.cols-student { grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto; }
+  @media (max-width: 800px) {
+    .add-form.cols-student { grid-template-columns: 1fr 1fr; }
+  }
   @media (max-width: 650px) {
-    .add-form, .add-form.cols-4 { grid-template-columns: 1fr; }
+    .add-form, .add-form.cols-4, .add-form.cols-student { grid-template-columns: 1fr; }
   }
 
   button.primary {
@@ -256,8 +260,10 @@
     <!-- STUDENTS -->
     <div id="tab-students">
       <p class="section-title">Students</p>
-      <div class="add-form cols-4">
-        <div><label>Full name</label><input type="text" id="newStudentName" placeholder="e.g. Amaka Johnson" autocomplete="off" /></div>
+      <div class="add-form cols-student">
+        <div><label>Surname</label><input type="text" id="newStudentSurname" placeholder="e.g. Johnson" autocomplete="off" /></div>
+        <div><label>First name</label><input type="text" id="newStudentFirstName" placeholder="e.g. Amaka" autocomplete="off" /></div>
+        <div><label>Middle name</label><input type="text" id="newStudentMiddleName" placeholder="e.g. Chioma" autocomplete="off" /></div>
         <div><label>Admission no.</label><input type="text" id="newStudentAdmissionNo" placeholder="e.g. 246" autocomplete="off" /></div>
         <div><label>Class</label><select id="newStudentClass"></select></div>
         <button class="primary" onclick="addStudent()">Add student</button>
@@ -265,7 +271,7 @@
 
       <div style="border: 2px dashed var(--border); border-radius: 14px; padding: 14px; margin-bottom: 18px;">
         <p style="font-size:12px; font-weight:700; margin:0 0 4px;">Bulk add from Excel/CSV</p>
-        <p class="empty-note" style="text-align:left; padding:0 0 10px;">File needs columns: <strong>Name</strong>, <strong>Admission No</strong>, <strong>Class</strong> (e.g. JSS1A). One row per student.</p>
+        <p class="empty-note" style="text-align:left; padding:0 0 10px;">File needs columns: <strong>Surname</strong>, <strong>First Name</strong>, <strong>Middle Name</strong> (optional), <strong>Admission No</strong>, <strong>Class</strong> (e.g. JSS1A). Legacy single "Name" column also supported.</p>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
           <input type="file" id="bulkImportFile" accept=".xlsx,.xls,.csv" style="flex:1; min-width:200px; padding:6px;" />
           <button class="primary" onclick="bulkImportStudents()">Upload</button>
@@ -274,7 +280,7 @@
       </div>
 
       <div class="add-form" style="border-bottom:none; padding-bottom:0; margin-bottom:14px;">
-        <div><label>Search</label><input type="text" id="studentSearch" placeholder="Name or admission no." oninput="debouncedSearch()" autocomplete="off" /></div>
+        <div><label>Search</label><input type="text" id="studentSearch" placeholder="Surname, first name or admission no." oninput="debouncedSearch()" autocomplete="off" /></div>
         <div><label>Filter by class</label><select id="studentClassFilter" onchange="searchStudents()"><option value="">All classes</option></select></div>
         <div></div>
       </div>
@@ -351,7 +357,7 @@
       <div id="formTeachersList"></div>
     </div>
 
-    <!-- PRINCIPAL COMMENTS & OVERRIDES (NEW TAB) -->
+    <!-- PRINCIPAL COMMENTS & OVERRIDES -->
     <div id="tab-comments" style="display:none;">
       <p class="section-title">Principal Comments &amp; Promotion Overrides</p>
       <p class="empty-note" style="text-align:left; padding:0 0 10px;">Lookup a student by admission number to override automated remarks or add custom repetition/promotion statuses.</p>
@@ -421,7 +427,7 @@
         <div></div>
       </div>
       <div class="add-form" style="border-bottom:none; padding-bottom:0; margin-bottom:14px;">
-        <div><label>Search</label><input type="text" id="feeSearch" placeholder="Name or admission no." oninput="debouncedFeeSearch()" autocomplete="off" /></div>
+        <div><label>Search</label><input type="text" id="feeSearch" placeholder="Surname or admission no." oninput="debouncedFeeSearch()" autocomplete="off" /></div>
         <div><label>Filter by class</label><select id="feeClassFilter" onchange="searchFeeStatus()"><option value="">All classes</option></select></div>
         <div></div>
       </div>
@@ -615,14 +621,17 @@
 
       const list = document.getElementById('studentsList');
       list.innerHTML = students.length
-        ? students.map(s => `
-          <div class="list-row" id="student-row-${s.id}">
-            <span>${s.name} <span class="meta">— ${s.class}, admission no. ${s.admission_no}</span></span>
-            <span>
-              <button class="small" onclick="startEditStudent(${s.id})">Edit</button>
-              <button class="delete-btn" onclick="deleteItem('students', ${s.id}, loadStudents)">Delete</button>
-            </span>
-          </div>`).join('')
+        ? students.map(s => {
+            const middle = s.middle_name ? ` ${s.middle_name}` : '';
+            return `
+              <div class="list-row" id="student-row-${s.id}">
+                <span><b>${s.surname}</b>, ${s.first_name}${middle} <span class="meta">— ${s.class}, admission no. ${s.admission_no}</span></span>
+                <span>
+                  <button class="small" onclick="startEditStudent(${s.id})">Edit</button>
+                  <button class="delete-btn" onclick="deleteItem('students', ${s.id}, loadStudents)">Delete</button>
+                </span>
+              </div>`;
+          }).join('')
         : `<p class="empty-note">No students found.</p>`;
 
       const totalPages = Math.max(1, Math.ceil((data.total || 0) / STUDENTS_PER_PAGE));
@@ -644,8 +653,10 @@
     const classOptions = cache.classes.map(c => `<option value="${c.name}" ${c.name === s.class ? 'selected' : ''}>${c.name}</option>`).join('');
     row.innerHTML = `
       <div style="display:flex; gap:6px; flex:1; flex-wrap:wrap;">
-        <input type="text" id="edit-name-${id}" value="${s.name}" onkeydown="if(event.key==='Enter') saveEditStudent(${id})" style="flex:1; min-width:120px; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;" />
-        <input type="text" id="edit-admno-${id}" value="${s.admission_no}" onkeydown="if(event.key==='Enter') saveEditStudent(${id})" style="width:80px; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;" />
+        <input type="text" id="edit-surname-${id}" value="${s.surname}" placeholder="Surname" style="flex:1; min-width:90px; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;" />
+        <input type="text" id="edit-firstname-${id}" value="${s.first_name}" placeholder="First name" style="flex:1; min-width:90px; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;" />
+        <input type="text" id="edit-middlename-${id}" value="${s.middle_name || ''}" placeholder="Middle name" style="flex:1; min-width:90px; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;" />
+        <input type="text" id="edit-admno-${id}" value="${s.admission_no}" placeholder="Adm No" style="width:75px; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;" />
         <select id="edit-class-${id}" style="width:auto; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;">${classOptions}</select>
       </div>
       <span>
@@ -655,15 +666,17 @@
   }
 
   async function saveEditStudent(id) {
-    const name = document.getElementById(`edit-name-${id}`).value.trim();
+    const surname = document.getElementById(`edit-surname-${id}`).value.trim();
+    const first_name = document.getElementById(`edit-firstname-${id}`).value.trim();
+    const middle_name = document.getElementById(`edit-middlename-${id}`).value.trim();
     const admission_no = document.getElementById(`edit-admno-${id}`).value.trim();
     const className = document.getElementById(`edit-class-${id}`).value;
-    if (!name || !admission_no) return showToast('Name and admission number cannot be empty.');
+    if (!surname || !first_name || !admission_no) return showToast('Surname, first name and admission number cannot be empty.');
 
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/students/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, admission_no, class: className }),
+        body: JSON.stringify({ surname, first_name, middle_name, admission_no, class: className }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -699,7 +712,7 @@
       let html = `<p style="font-size:12px; font-weight:700; color:var(--pass); margin:0 0 6px;">${data.inserted} student${data.inserted === 1 ? '' : 's'} added successfully.</p>`;
       if (data.skipped && data.skipped.length > 0) {
         html += `<p style="font-size:11px; color:var(--fail); margin:0 0 4px;">${data.skipped.length} row${data.skipped.length === 1 ? '' : 's'} skipped:</p>`;
-        html += `<div style="font-size:11px; color:var(--text-soft); max-height:120px; overflow-y:auto; background:#fff; padding:6px; border-radius:6px; border:1px solid var(--border);">${data.skipped.map(s => `Row ${s.row}:${s.reason}`).join('<br>')}</div>`;
+        html += `<div style="font-size:11px; color:var(--text-soft); max-height:120px; overflow-y:auto; background:#fff; padding:6px; border-radius:6px; border:1px solid var(--border);">${data.skipped.map(s => `Row ${s.row}: ${s.reason}`).join('<br>')}</div>`;
       }
       resultEl.innerHTML = html;
       fileInput.value = '';
@@ -711,18 +724,22 @@
   }
 
   async function addStudent() {
-    const name = document.getElementById('newStudentName').value.trim();
+    const surname = document.getElementById('newStudentSurname').value.trim();
+    const first_name = document.getElementById('newStudentFirstName').value.trim();
+    const middle_name = document.getElementById('newStudentMiddleName').value.trim();
     const admission_no = document.getElementById('newStudentAdmissionNo').value.trim();
     const className = document.getElementById('newStudentClass').value;
-    if (!name || !admission_no || !className) return showToast('Fill in name, admission number and class.');
+    if (!surname || !first_name || !admission_no || !className) return showToast('Fill in surname, first name, admission number and class.');
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/students`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, admission_no, class: className }),
+        body: JSON.stringify({ surname, first_name, middle_name, admission_no, class: className }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      document.getElementById('newStudentName').value = '';
+      document.getElementById('newStudentSurname').value = '';
+      document.getElementById('newStudentFirstName').value = '';
+      document.getElementById('newStudentMiddleName').value = '';
       document.getElementById('newStudentAdmissionNo').value = '';
       studentPage = 1;
       await loadStudents();
@@ -743,7 +760,8 @@
         return;
       }
       activeCommentStudentId = student.id;
-      document.getElementById('commentStudentInfo').textContent = `Student: ${student.name} (${student.class}, Adm: ${student.admission_no})`;
+      const middle = student.middle_name ? ` ${student.middle_name}` : '';
+      document.getElementById('commentStudentInfo').textContent = `Student: ${student.surname} ${student.first_name}${middle} (${student.class}, Adm: ${student.admission_no})`;
       document.getElementById('commentEditorWrap').style.display = 'block';
       document.getElementById('customPrincipalComment').value = '';
       showToast('Student loaded.');
@@ -987,7 +1005,7 @@
       list.innerHTML = pins.length
         ? pins.map(p => {
             const s = officePinStatus(p);
-            const who = p.student_admission_no ? `${p.student_name} (${p.student_admission_no})` : 'Not yet used';
+            const who = p.student_admission_no ? `${p.student_surname} ${p.student_first_name} (${p.student_admission_no})` : 'Not yet used';
             return `
               <div class="list-row">
                 <span style="font-family:monospace;">${p.code} <span class="meta">— ${who} — ${p.uses_count}/${p.max_uses} uses</span></span>
@@ -1036,13 +1054,16 @@
 
       const list = document.getElementById('feeList');
       list.innerHTML = students.length
-        ? students.map(s => `
-          <div class="list-row">
-            <span>${s.name} <span class="meta">— ${s.class}, admission no. ${s.admission_no}</span></span>
-            ${s.cleared
-              ? `<button class="delete-btn" style="background:var(--fail-bg); color:var(--fail);" onclick="toggleFeeStatus(${s.id}, false)">Mark not cleared</button>`
-              : `<button class="delete-btn" style="background:var(--pass-bg); color:var(--pass);" onclick="toggleFeeStatus(${s.id}, true)">Mark cleared</button>`}
-          </div>`).join('')
+        ? students.map(s => {
+            const middle = s.middle_name ? ` ${s.middle_name}` : '';
+            return `
+              <div class="list-row">
+                <span><b>${s.surname}</b>, ${s.first_name}${middle} <span class="meta">— ${s.class}, admission no. ${s.admission_no}</span></span>
+                ${s.cleared
+                  ? `<button class="delete-btn" style="background:var(--fail-bg); color:var(--fail);" onclick="toggleFeeStatus(${s.id}, false)">Mark not cleared</button>`
+                  : `<button class="delete-btn" style="background:var(--pass-bg); color:var(--pass);" onclick="toggleFeeStatus(${s.id}, true)">Mark cleared</button>`}
+              </div>`;
+          }).join('')
         : `<p class="empty-note">No students found.</p>`;
 
       const totalPages = Math.max(1, Math.ceil((data.total || 0) / FEES_PER_PAGE));
