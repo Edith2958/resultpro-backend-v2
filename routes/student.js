@@ -26,8 +26,8 @@ router.post('/login', async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `SELECT id, name, admission_no, class, photo_url FROM students
-       WHERE admission_no = $1 AND name ILIKE $2`,
+      `SELECT id, surname, first_name, middle_name, admission_no, class, photo_url FROM students
+       WHERE admission_no = $1 AND surname ILIKE $2`,
       [admission_no, `%${surname}%`]
     );
 
@@ -77,7 +77,16 @@ router.get('/midterm-result', async (req, res) => {
     });
 
     res.json({
-      student: { id: student.id, name: student.name, admission_no: student.admission_no, class: student.class, photo_url: student.photo_url },
+      student: { 
+        id: student.id, 
+        surname: student.surname,
+        first_name: student.first_name,
+        middle_name: student.middle_name,
+        name: `${student.surname} ${student.first_name}${student.middle_name ? ' ' + student.middle_name : ''}`, 
+        admission_no: student.admission_no, 
+        class: student.class, 
+        photo_url: student.photo_url 
+      },
       term, session, subjects,
     });
   } catch (err) {
@@ -227,7 +236,16 @@ router.get('/result', async (req, res) => {
     const principalComment = termRecord?.principal_comment || getPrincipalComment(average);
 
     res.json({
-      student: { id: student.id, name: student.name, admission_no: student.admission_no, class: student.class, photo_url: student.photo_url },
+      student: { 
+        id: student.id, 
+        surname: student.surname,
+        first_name: student.first_name,
+        middle_name: student.middle_name,
+        name: `${student.surname} ${student.first_name}${student.middle_name ? ' ' + student.middle_name : ''}`, 
+        admission_no: student.admission_no, 
+        class: student.class, 
+        photo_url: student.photo_url 
+      },
       term, session,
       subjects: subjects.map((s) => ({ ...s, highest: subjectStats[s.subject_id].highest, position: subjectStats[s.subject_id].position })),
       summary: {
