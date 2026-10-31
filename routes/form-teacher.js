@@ -5,6 +5,26 @@ const { getGrade, rankByTotal, ordinal } = require('../utils/grading');
 const { upload } = require('../config/cloudinary'); // Import Cloudinary upload middleware
 
 /**
+ * Helper to fetch global school settings
+ */
+async function getSchoolSettings() {
+  try {
+    const { rows } = await pool.query('SELECT * FROM school_settings WHERE id = 1');
+    return rows[0] || {
+      school_name: 'ResultPro Academy',
+      school_address: '',
+      school_phone: '',
+      school_email: '',
+      logo_url: '',
+      motto: ''
+    };
+  } catch (err) {
+    console.error('Failed to fetch school settings:', err);
+    return { school_name: 'ResultPro Academy' };
+  }
+}
+
+/**
  * GET /api/form-teacher/my-class
  * Returns the class this teacher is the form teacher for, if any.
  * Query params: teacher_id
@@ -58,10 +78,13 @@ router.get('/broadsheet', async (req, res) => {
     const subjects = subjectsRes.rows;
 
     const studentsRes = await pool.query(
-      `SELECT id, name, admission_no FROM students WHERE class = $1 ORDER BY name ASC`,
+      `SELECT id, surname, first_name, middle_name, admission_no FROM students WHERE class = $1 ORDER BY surname ASC`,
       [className]
     );
-    const students = studentsRes.rows;
+    const students = studentsRes.rows.map(s => ({
+      ...s,
+      name: `${s.surname} ${s.first_name}${s.middle_name ? ' ' + s.middle_name : ''}`
+    }));
 
     const scoresRes = await pool.query(
       `SELECT r.student_id, r.subject_id,
@@ -144,20 +167,23 @@ router.get('/class-result-slips', async (req, res) => {
       return res.status(403).json({ error: 'You are not the form teacher for this class' });
     }
 
-    const studentsRes = await pool.query(
-      `SELECT id, name, admission_no, photo_url FROM students WHERE class = $1 ORDER BY name ASC`,
-      [className]
-    );
-    const students = studentsRes.rows;
+    const [studentsRes, subjectsRes, schoolSettings] = await Promise.all([
+      pool.query(`SELECT id, surname, first_name, middle_name, admission_no, photo_url FROM students WHERE class = $1 ORDER BY surname ASC`, [className]),
+      pool.query(
+        `SELECT DISTINCT sub.id, sub.name
+         FROM teacher_subjects ts
+         JOIN subjects sub ON sub.id = ts.subject_id
+         WHERE ts.class = $1
+         ORDER BY sub.name ASC`,
+        [className]
+      ),
+      getSchoolSettings()
+    ]);
 
-    const subjectsRes = await pool.query(
-      `SELECT DISTINCT sub.id, sub.name
-       FROM teacher_subjects ts
-       JOIN subjects sub ON sub.id = ts.subject_id
-       WHERE ts.class = $1
-       ORDER BY sub.name ASC`,
-      [className]
-    );
+    const students = studentsRes.rows.map(s => ({
+      ...s,
+      name: `${s.surname} ${s.first_name}${s.middle_name ? ' ' + s.middle_name : ''}`
+    }));
     const subjects = subjectsRes.rows;
 
     const scoresRes = await pool.query(
@@ -238,7 +264,7 @@ router.get('/class-result-slips', async (req, res) => {
       const termRecord = termRecordMap[s.id];
 
       return {
-        student: { id: s.id, name: s.name, admission_no: s.admission_no, photo_url: s.photo_url },
+        student: { id: s.id, surname: s.surname, first_name: s.first_name, middle_name: s.middle_name, name: s.name, admission_no: s.admission_no, photo_url: s.photo_url },
         subjects: studentSubjects,
         summary: {
           total_score: totalScore,
@@ -256,7 +282,7 @@ router.get('/class-result-slips', async (req, res) => {
       };
     });
 
-    res.json({ class: className, term, session, slips });
+    res.json({ class: className, term, session, school: schoolSettings, slips });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to build class result slips' });
@@ -277,18 +303,23 @@ router.get('/roster', async (req, res) => {
       return res.status(403).json({ error: 'You are not the form teacher for this class' });
     }
     const { rows } = await pool.query(
-      `SELECT s.id AS student_id, s.name, s.admission_no, s.photo_url,
+      `SELECT s.id AS student_id, s.surname, s.first_name, s.middle_name, s.admission_no, s.photo_url,
               t.times_present, t.times_absent, t.total_days,
               t.form_teacher_comment, t.principal_comment
        FROM students s
        LEFT JOIN term_records t
          ON t.student_id = s.id AND t.term = $2 AND t.session = $3
        WHERE s.class = $1
-       ORDER BY s.name ASC`,
+       ORDER BY s.surname ASC`,
       [className, term, session]
     );
 
-    res.json({ roster: rows });
+    const roster = rows.map(s => ({
+      ...s,
+      name: `${s.surname} ${s.first_name}${s.middle_name ? ' ' + s.middle_name : ''}`
+    }));
+
+    res.json({ roster });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to load form teacher roster' });

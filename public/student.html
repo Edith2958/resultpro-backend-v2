@@ -71,6 +71,13 @@
     margin: 4px 0 0;
   }
 
+  .school-header .school-details {
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
   .card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -280,6 +287,7 @@
     <div class="crest" id="headerCrest">GS</div>
     <h1 id="headerSchoolName">ResultPro Academy</h1>
     <p id="headerSchoolMotto">Student result portal</p>
+    <div class="school-details" id="headerSchoolDetails"></div>
   </div>
 
   <!-- LOGIN VIEW -->
@@ -418,6 +426,20 @@
     if (school.motto) {
       document.getElementById('headerSchoolMotto').textContent = school.motto;
     }
+
+    // Render address, phone, and email nicely in the school-details container
+    const detailsParts = [];
+    if (school.school_address) detailsParts.push(school.school_address);
+    if (school.school_phone) detailsParts.push(`Phone: ${school.school_phone}`);
+    if (school.school_email) detailsParts.push(`Email: ${school.school_email}`);
+    
+    const detailsEl = document.getElementById('headerSchoolDetails');
+    if (detailsParts.length > 0) {
+      detailsEl.innerHTML = detailsParts.join(' &middot; ');
+    } else {
+      detailsEl.innerHTML = '';
+    }
+
     const crestEl = document.getElementById('headerCrest');
     if (school.logo_url) {
       crestEl.innerHTML = `<img src="${getPhotoUrl(school.logo_url)}" alt="Logo" />`;

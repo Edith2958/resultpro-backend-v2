@@ -325,13 +325,15 @@
   let teacher = null;
   let myClass = null;
   let currentRoster = [];
+  let globalSchoolSettings = null; // Store school settings globally for slips
 
   async function fetchInitialSchoolSettings() {
     try {
       const res = await fetch(`${API_BASE}/api/settings`);
       const data = await res.json();
       if (data.settings && data.settings.school_name) {
-        const s = data.settings;
+        globalSchoolSettings = data.settings;
+        const s = globalSchoolSettings;
         document.getElementById('loginSchoolName').textContent = s.school_name;
         document.getElementById('appSchoolName').textContent = s.school_name;
         document.getElementById('pageTitle').textContent = `${s.school_name} — Form Teacher Panel`;
@@ -581,6 +583,28 @@
         ? `<img src="${getPhotoUrl(s.photo_url)}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
         : getInitials(s.name);
 
+      // Build official school header for each printed slip
+      let schoolHeaderHtml = '';
+      if (globalSchoolSettings) {
+        const gs = globalSchoolSettings;
+        const crest = gs.logo_url 
+          ? `<img src="${getPhotoUrl(gs.logo_url)}" alt="Logo" style="width:100%;height:100%;object-fit:cover;" />` 
+          : getInitials(gs.school_name);
+        
+        let detailsParts = [];
+        if (gs.school_address) detailsParts.push(gs.school_address);
+        if (gs.school_phone) detailsParts.push(`Phone: ${gs.school_phone}`);
+        if (gs.school_email) detailsParts.push(`Email: ${gs.school_email}`);
+
+        schoolHeaderHtml = `
+          <div style="text-align:center; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid var(--border);">
+            <div style="width:40px; height:40px; border-radius:50%; background:var(--navy); color:var(--gold); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; margin:0 auto 6px; overflow:hidden;">${crest}</div>
+            <h2 style="font-size:16px; font-weight:800; margin:0; font-family:'Baloo 2',sans-serif;">${gs.school_name}</h2>
+            ${gs.motto ? `<p style="font-size:11px; color:var(--text-soft); margin:2px 0;">${gs.motto}</p>` : ''}
+            ${detailsParts.length > 0 ? `<p style="font-size:10px; color:var(--text-soft); margin:2px 0;">${detailsParts.join(' &middot; ')}</p>` : ''}
+          </div>`;
+      }
+
       const subjectRows = slip.subjects.map(sub => `
         <tr>
           <td style="padding:6px 4px; border-bottom:1px solid var(--border);">${sub.subject_name}</td>
@@ -600,6 +624,8 @@
 
       return `
         <div class="result-slip-page" style="border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px;">
+          ${schoolHeaderHtml}
+          
           <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--border);">
             <div style="width:48px; height:48px; border-radius:50%; background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; overflow:hidden; flex-shrink:0;">${avatar}</div>
             <div>
