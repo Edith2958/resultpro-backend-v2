@@ -22,6 +22,7 @@ const termSettingsRouter = require('./routes/term-settings');
 const developerRouter = require('./routes/developer');
 const teacherRouter = require('./routes/teacher');
 const formTeacherRouter = require('./routes/form-teacher');
+const settingsRouter = require('./routes/settings');
 
 // Mount API Routes
 app.use('/api/student', studentRouter);
@@ -30,6 +31,7 @@ app.use('/api/term-settings', termSettingsRouter);
 app.use('/api/developer', developerRouter);
 app.use('/api/teacher', teacherRouter);
 app.use('/api/form-teacher', formTeacherRouter);
+app.use('/api/settings', settingsRouter);
 
 // Frontend HTML Page Routes
 app.get('/student', (req, res) => {

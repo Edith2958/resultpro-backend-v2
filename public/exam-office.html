@@ -254,6 +254,7 @@
         <button onclick="switchTab('termSettings', 'Deadlines')">⏳ Deadlines</button>
         <button onclick="switchTab('fees', 'Fees')">💳 Fees</button>
         <button onclick="switchTab('pins', 'PINs')">🔑 PINs</button>
+        <button onclick="switchTab('settings', 'Settings')">⚙️ Settings</button>
       </div>
     </div>
 
@@ -456,6 +457,45 @@
       <div id="officePinsPager" style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:12px; color:var(--text-soft);"></div>
     </div>
 
+    <!-- SETTINGS / SCHOOL CONFIGURATION -->
+    <div id="tab-settings" style="display:none;">
+      <p class="section-title">School Configuration &amp; Branding</p>
+      <p class="empty-note" style="text-align:left; padding:0 0 10px;">Update school identity, contact information, and branding details globally across result sheets.</p>
+      
+      <div style="margin-bottom:14px;">
+        <label for="schoolName">School Name</label>
+        <input type="text" id="schoolName" placeholder="e.g. Greenfield Secondary School" autocomplete="off" />
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label for="schoolMotto">School Motto</label>
+        <input type="text" id="schoolMotto" placeholder="e.g. Knowledge & Discipline" autocomplete="off" />
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;">
+        <div>
+          <label for="schoolEmail">School Email</label>
+          <input type="email" id="schoolEmail" placeholder="info@school.com" autocomplete="off" />
+        </div>
+        <div>
+          <label for="schoolPhone">School Phone</label>
+          <input type="text" id="schoolPhone" placeholder="+234..." autocomplete="off" />
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label for="schoolAddress">School Address</label>
+        <textarea id="schoolAddress" rows="2" placeholder="Full physical street address" style="margin-top:4px;"></textarea>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label for="logoUrl">Logo URL</label>
+        <input type="text" id="logoUrl" placeholder="https://example.com/logo.png" autocomplete="off" />
+      </div>
+
+      <button class="primary" onclick="saveSchoolSettings()">Save Settings</button>
+    </div>
+
   </div>
 </div>
 
@@ -539,7 +579,7 @@
   }
 
   function switchTab(tab, label) {
-    ['students', 'subjects', 'teachers', 'classes', 'assignments', 'formTeachers', 'comments', 'termSettings', 'fees', 'pins'].forEach(t => {
+    ['students', 'subjects', 'teachers', 'classes', 'assignments', 'formTeachers', 'comments', 'termSettings', 'fees', 'pins', 'settings'].forEach(t => {
       document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
     });
     document.querySelectorAll('.tab-menu button').forEach(b => b.classList.remove('active'));
@@ -554,6 +594,7 @@
     if (tab === 'termSettings') loadTermSettings();
     if (tab === 'fees') searchFeeStatus();
     if (tab === 'pins') searchOfficePins();
+    if (tab === 'settings') loadSchoolSettings();
   }
 
   function toggleTabMenu() {
@@ -1092,6 +1133,52 @@
       showToast(cleared ? 'Marked cleared.' : 'Marked not cleared.');
     } catch (err) {
       showToast(err.message || 'Could not update status.');
+    }
+  }
+
+  async function loadSchoolSettings() {
+    try {
+      const res = await fetch(`${API_BASE}/api/settings`);
+      const data = await res.json();
+      if (data.settings) {
+        document.getElementById('schoolName').value = data.settings.school_name || '';
+        document.getElementById('schoolMotto').value = data.settings.motto || '';
+        document.getElementById('schoolEmail').value = data.settings.school_email || '';
+        document.getElementById('schoolPhone').value = data.settings.school_phone || '';
+        document.getElementById('schoolAddress').value = data.settings.school_address || '';
+        document.getElementById('logoUrl').value = data.settings.logo_url || '';
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+    }
+  }
+
+  async function saveSchoolSettings() {
+    const payload = {
+      school_name: document.getElementById('schoolName').value.trim(),
+      motto: document.getElementById('schoolMotto').value.trim(),
+      school_email: document.getElementById('schoolEmail').value.trim(),
+      school_phone: document.getElementById('schoolPhone').value.trim(),
+      school_address: document.getElementById('schoolAddress').value.trim(),
+      logo_url: document.getElementById('logoUrl').value.trim()
+    };
+
+    if (!payload.school_name) return showToast('School name is required.');
+
+    try {
+      const res = await fetch(`${API_BASE}/api/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      if (res.ok) {
+        showToast('School settings saved successfully!');
+      } else {
+        showToast(result.error || 'Failed to update settings');
+      }
+    } catch (err) {
+      showToast('An error occurred while saving settings.');
     }
   }
 
