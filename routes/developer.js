@@ -109,15 +109,19 @@ router.get('/pins', async (req, res) => {
     );
     const total = Number(countRes.rows[0].count);
 
+    // Push limit and offset parameters correctly
     params.push(limit, offset);
+    const limitIndex = params.length - 1;
+    const offsetIndex = params.length;
+
     const { rows } = await pool.query(
       `SELECT p.id, p.code, p.max_uses, p.uses_count, p.created_at, p.first_used_at,
-              s.name AS student_name, s.admission_no AS student_admission_no
+              s.surname AS student_name, s.admission_no AS student_admission_no
        FROM result_pins p
        LEFT JOIN students s ON s.id = p.student_id
        ${whereClause}
        ORDER BY p.created_at DESC
-       LIMIT $${params.length - 1} OFFSET $${params.length}`,
+       LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
       params
     );
 
