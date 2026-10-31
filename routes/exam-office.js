@@ -73,8 +73,7 @@ router.post('/term-records', async (req, res) => {
 /**
  * GET /api/exam-office/fee-status?term=&session=&class=&search=&page=&pageSize=
  * Lists students with their clearance status for a term+session. Students with
- * no fee_status row are shown as cleared=true (the default). Same search/filter/
- * pagination pattern as the students list, since this needs to scale too.
+ * no fee_status row are shown as cleared=true (the default).
  */
 router.get('/fee-status', async (req, res) => {
   const { term, session, class: className, search, page = 1, pageSize = 25 } = req.query;
@@ -90,7 +89,7 @@ router.get('/fee-status', async (req, res) => {
 
   if (search) {
     params.push(`%${search}%`);
-    conditions.push(`(s.surname ILIKE $${params.length} OR s.first_name ILIKE $${params.length} OR s.admission_no ILIKE $${params.length})`);
+    conditions.push(`(s.surname ILIKE $${params.length} OR s.first_name ILIKE $${params.length} OR s.middle_name ILIKE $${params.length} OR s.admission_no ILIKE $${params.length})`);
   }
   if (className) {
     params.push(className);
@@ -104,7 +103,9 @@ router.get('/fee-status', async (req, res) => {
 
     params.push(term, session, limit, offset);
     const { rows } = await pool.query(
-      `SELECT s.id, s.surname, s.first_name, s.middle_name, s.admission_no, s.class,
+      `SELECT s.id, s.surname, s.first_name, s.middle_name,
+              CONCAT(s.surname, ' ', s.first_name, CASE WHEN s.middle_name IS NOT NULL AND s.middle_name != '' THEN CONCAT(' ', s.middle_name) ELSE '' END) AS name,
+              s.admission_no, s.class,
               COALESCE(f.cleared, true) AS cleared
        FROM students s
        LEFT JOIN fee_status f
@@ -152,9 +153,7 @@ router.post('/fee-status', async (req, res) => {
 
 /**
  * GET /api/exam-office/pins?status=&search=&page=&pageSize=
- * Read-only view of the PINs the developer has generated for this school —
- * the exam office distributes/sells these to students but can't create new ones.
- * Same filters as the developer's own PIN listing.
+ * Read-only view of PINs generated for this school.
  */
 router.get('/pins', async (req, res) => {
   const { status, search, page = 1, pageSize = 25 } = req.query;
@@ -169,7 +168,7 @@ router.get('/pins', async (req, res) => {
   if (status === 'exhausted') conditions.push(`p.uses_count >= p.max_uses`);
   if (search) {
     params.push(`%${search}%`);
-    conditions.push(`(p.code ILIKE $${params.length} OR s.admission_no ILIKE $${params.length})`);
+    conditions.push(`(p.code ILIKE $${params.length} OR s.admission_no ILIKE $${params.length} OR s.surname ILIKE $${params.length} OR s.first_name ILIKE $${params.length})`);
   }
   const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -183,7 +182,9 @@ router.get('/pins', async (req, res) => {
     params.push(limit, offset);
     const { rows } = await pool.query(
       `SELECT p.id, p.code, p.max_uses, p.uses_count, p.created_at, p.first_used_at,
-              s.surname AS student_surname, s.first_name AS student_first_name, s.admission_no AS student_admission_no
+              s.surname AS student_surname, s.first_name AS student_first_name, s.middle_name AS student_middle_name,
+              CONCAT(s.surname, ' ', s.first_name, CASE WHEN s.middle_name IS NOT NULL AND s.middle_name != '' THEN CONCAT(' ', s.middle_name) ELSE '' END) AS student_name,
+              s.admission_no AS student_admission_no
        FROM result_pins p
        LEFT JOIN students s ON s.id = p.student_id
        ${whereClause}
@@ -203,7 +204,6 @@ router.get('/pins', async (req, res) => {
 
 /**
  * GET /api/exam-office/deadline-overrides?term=&session=
- * Lists teachers currently granted an extension past the general deadline.
  */
 router.get('/deadline-overrides', async (req, res) => {
   const { term, session } = req.query;
@@ -228,8 +228,6 @@ router.get('/deadline-overrides', async (req, res) => {
 
 /**
  * POST /api/exam-office/deadline-overrides
- * Grants a specific teacher permission to keep submitting for one class, past the deadline.
- * body: { teacher_id, class, term, session }
  */
 router.post('/deadline-overrides', async (req, res) => {
   const { teacher_id, class: className, term, session } = req.body;
@@ -251,7 +249,6 @@ router.post('/deadline-overrides', async (req, res) => {
 
 /**
  * DELETE /api/exam-office/deadline-overrides/:id
- * Revokes a previously granted extension.
  */
 router.delete('/deadline-overrides/:id', async (req, res) => {
   try {
@@ -267,9 +264,6 @@ router.delete('/deadline-overrides/:id', async (req, res) => {
 
 /**
  * GET /api/exam-office/students
- * Supports search + class filter + pagination, since a real school can have
- * thousands of students — never load them all into one unfiltered list.
- * Query params: search (matches surname, first_name or admission_no), class, page (1-based), pageSize
  */
 router.get('/students', async (req, res) => {
   const { search, class: className, page = 1, pageSize = 25 } = req.query;
@@ -281,7 +275,7 @@ router.get('/students', async (req, res) => {
 
   if (search) {
     params.push(`%${search}%`);
-    conditions.push(`(surname ILIKE $${params.length} OR first_name ILIKE $${params.length} OR admission_no ILIKE $${params.length})`);
+    conditions.push(`(surname ILIKE $${params.length} OR first_name ILIKE $${params.length} OR middle_name ILIKE $${params.length} OR admission_no ILIKE $${params.length})`);
   }
   if (className) {
     params.push(className);
@@ -295,7 +289,13 @@ router.get('/students', async (req, res) => {
 
     params.push(limit, offset);
     const { rows } = await pool.query(
-      `SELECT * FROM students ${whereClause} ORDER BY class ASC, surname ASC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      `SELECT id, surname, first_name, middle_name,
+              CONCAT(surname, ' ', first_name, CASE WHEN middle_name IS NOT NULL AND middle_name != '' THEN CONCAT(' ', middle_name) ELSE '' END) AS name,
+              admission_no, class, photo_url, created_at
+       FROM students
+       ${whereClause}
+       ORDER BY class ASC, surname ASC
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );
 
@@ -313,7 +313,11 @@ router.post('/students', async (req, res) => {
   }
   try {
     const { rows } = await pool.query(
-      'INSERT INTO students (surname, first_name, middle_name, admission_no, class) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      `INSERT INTO students (surname, first_name, middle_name, admission_no, class)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, surname, first_name, middle_name,
+                 CONCAT(surname, ' ', first_name, CASE WHEN middle_name IS NOT NULL AND middle_name != '' THEN CONCAT(' ', middle_name) ELSE '' END) AS name,
+                 admission_no, class, photo_url`,
       [surname.trim(), first_name.trim(), middle_name ? middle_name.trim() : null, admission_no.trim(), className]
     );
     res.json({ student: rows[0] });
@@ -336,7 +340,6 @@ router.delete('/students/:id', async (req, res) => {
 
 /**
  * PUT /api/exam-office/students/:id
- * Edit a student's surname, first_name, middle_name, admission number, or class without deleting/re-adding them.
  */
 router.put('/students/:id', async (req, res) => {
   const { surname, first_name, middle_name, admission_no, class: className } = req.body;
@@ -352,7 +355,9 @@ router.put('/students/:id', async (req, res) => {
          admission_no = COALESCE($4, admission_no),
          class = COALESCE($5, class)
        WHERE id = $6
-       RETURNING *`,
+       RETURNING id, surname, first_name, middle_name,
+                 CONCAT(surname, ' ', first_name, CASE WHEN middle_name IS NOT NULL AND middle_name != '' THEN CONCAT(' ', middle_name) ELSE '' END) AS name,
+                 admission_no, class, photo_url`,
       [
         surname?.trim() || null,
         first_name?.trim() || null,
@@ -373,8 +378,6 @@ router.put('/students/:id', async (req, res) => {
 
 /**
  * POST /api/exam-office/students/bulk-import
- * Upload an Excel (.xlsx) or CSV file supporting separate columns for Surname, First Name, Middle Name, Admission No, Class.
- * Also handles legacy "Name" or "Full Name" columns by splitting them automatically if separate name columns aren't provided.
  */
 router.post('/students/bulk-import', upload.single('file'), async (req, res) => {
   if (!req.file) {
@@ -415,11 +418,6 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
     const admissionNo = extractField(row, ['admissionno', 'admno', 'admissionnumber']);
     const className = extractField(row, ['class']);
 
-    // Fallback: If separate surname/first_name columns aren't found, check for generic "name" or "full name" and split it
-    if ((!surname || !firstName) && !admissionNo) {
-      // Check if admission number can still be extracted
-    }
-    
     if (!surname || !firstName) {
       const fullName = extractField(row, ['name', 'studentname', 'fullname']);
       if (fullName) {
