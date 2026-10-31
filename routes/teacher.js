@@ -115,13 +115,15 @@ router.get('/roster', async (req, res) => {
       return res.status(403).json({ error: 'You are not assigned to this subject for this class' });
     }
     const { rows } = await pool.query(
-      `SELECT s.id AS student_id, s.name, s.admission_no, s.photo_url,
+      `SELECT s.id AS student_id, s.surname, s.first_name, s.middle_name,
+              CONCAT(s.surname, ' ', s.first_name, CASE WHEN s.middle_name IS NOT NULL AND s.middle_name != '' THEN CONCAT(' ', s.middle_name) ELSE '' END) AS name,
+              s.admission_no, s.photo_url,
               m.assignment_score, m.test_score, m.status AS mid_term_status
        FROM students s
        LEFT JOIN mid_term_results m
          ON m.student_id = s.id AND m.subject_id = $2 AND m.term = $3 AND m.session = $4
        WHERE s.class = $1
-       ORDER BY s.name ASC`,
+       ORDER BY s.surname ASC`,
       [className, subject_id, term, session]
     );
 
@@ -229,7 +231,9 @@ router.get('/fullterm-roster', async (req, res) => {
       return res.status(403).json({ error: 'You are not assigned to this subject for this class' });
     }
     const { rows } = await pool.query(
-      `SELECT s.id AS student_id, s.name, s.admission_no,
+      `SELECT s.id AS student_id, s.surname, s.first_name, s.middle_name,
+              CONCAT(s.surname, ' ', s.first_name, CASE WHEN s.middle_name IS NOT NULL AND s.middle_name != '' THEN CONCAT(' ', s.middle_name) ELSE '' END) AS name,
+              s.admission_no,
               m.assignment_score, m.test_score,
               r.exam_score, r.manual_ca_override, r.status AS result_status
        FROM students s
@@ -238,7 +242,7 @@ router.get('/fullterm-roster', async (req, res) => {
        LEFT JOIN results r
          ON r.student_id = s.id AND r.subject_id = $2 AND r.term = $3 AND r.session = $4
        WHERE s.class = $1
-       ORDER BY s.name ASC`,
+       ORDER BY s.surname ASC`,
       [className, subject_id, term, session]
     );
 
