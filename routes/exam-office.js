@@ -53,13 +53,17 @@ router.post('/term-records', async (req, res) => {
     return res.status(400).json({ error: 'student_id, term, session, and principal_comment are required' });
   }
   try {
+    // Fetch student's class to satisfy any table requirements safely
+    const studentRes = await pool.query('SELECT class FROM students WHERE id = $1', [student_id]);
+    const studentClass = studentRes.rows[0]?.class || null;
+
     const { rows } = await pool.query(
-      `INSERT INTO term_records (student_id, term, session, principal_comment, updated_at)
-       VALUES ($1, $2, $3, $4, NOW())
+      `INSERT INTO term_records (student_id, class, term, session, principal_comment, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
        ON CONFLICT (student_id, term, session)
-       DO UPDATE SET principal_comment = $4, updated_at = NOW()
+       DO UPDATE SET principal_comment = $5, class = COALESCE(EXCLUDED.class, term_records.class), updated_at = NOW()
        RETURNING *`,
-      [student_id, term, session, principal_comment]
+      [student_id, studentClass, term, session, principal_comment]
     );
     res.json({ termRecord: rows[0] });
   } catch (err) {
