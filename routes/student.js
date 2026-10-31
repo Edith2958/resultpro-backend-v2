@@ -16,6 +16,26 @@ function getPrincipalComment(average) {
 }
 
 /**
+ * Helper to fetch global school settings
+ */
+async function getSchoolSettings() {
+  try {
+    const { rows } = await pool.query('SELECT * FROM school_settings WHERE id = 1');
+    return rows[0] || {
+      school_name: 'ResultPro Academy',
+      school_address: '',
+      school_phone: '',
+      school_email: '',
+      logo_url: '',
+      motto: ''
+    };
+  } catch (err) {
+    console.error('Failed to fetch school settings:', err);
+    return { school_name: 'ResultPro Academy' };
+  }
+}
+
+/**
  * POST /api/student/login
  */
 router.post('/login', async (req, res) => {
@@ -52,7 +72,11 @@ router.get('/midterm-result', async (req, res) => {
   }
 
   try {
-    const studentRes = await pool.query('SELECT * FROM students WHERE id = $1', [student_id]);
+    const [studentRes, schoolSettings] = await Promise.all([
+      pool.query('SELECT * FROM students WHERE id = $1', [student_id]),
+      getSchoolSettings()
+    ]);
+
     if (studentRes.rows.length === 0) {
       return res.status(404).json({ error: 'Student not found' });
     }
@@ -77,6 +101,7 @@ router.get('/midterm-result', async (req, res) => {
     });
 
     res.json({
+      school: schoolSettings,
       student: { 
         id: student.id, 
         surname: student.surname,
@@ -108,10 +133,12 @@ router.get('/result', async (req, res) => {
   }
 
   try {
-    const settingsRes = await pool.query(
-      'SELECT result_release_at FROM term_settings WHERE term = $1 AND session = $2',
-      [term, session]
-    );
+    const [settingsRes, feeRes, schoolSettings] = await Promise.all([
+      pool.query('SELECT result_release_at FROM term_settings WHERE term = $1 AND session = $2', [term, session]),
+      pool.query('SELECT cleared FROM fee_status WHERE student_id = $1 AND term = $2 AND session = $3', [student_id, term, session]),
+      getSchoolSettings()
+    ]);
+
     const releaseAt = settingsRes.rows[0]?.result_release_at;
     if (releaseAt && new Date(releaseAt) > new Date()) {
       return res.status(403).json({
@@ -120,10 +147,6 @@ router.get('/result', async (req, res) => {
       });
     }
 
-    const feeRes = await pool.query(
-      'SELECT cleared FROM fee_status WHERE student_id = $1 AND term = $2 AND session = $3',
-      [student_id, term, session]
-    );
     if (feeRes.rows.length > 0 && feeRes.rows[0].cleared === false) {
       return res.status(403).json({
         error: 'Your result is on hold due to an outstanding balance. Please contact the school\'s accounts office.',
@@ -236,6 +259,7 @@ router.get('/result', async (req, res) => {
     const principalComment = termRecord?.principal_comment || getPrincipalComment(average);
 
     res.json({
+      school: schoolSettings,
       student: { 
         id: student.id, 
         surname: student.surname,

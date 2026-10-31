@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<title>Greenfield Secondary School — Form Teacher</title>
+<title id="pageTitle">Form Teacher — Roster &amp; Broadsheet</title>
 <style>
   :root {
     --navy: #58CC02;
@@ -41,7 +41,9 @@
     display: flex; align-items: center; justify-content: center;
     font-weight: bold; font-size: 16px;
     margin: 0 auto 10px;
+    overflow: hidden;
   }
+  .school-header .crest img { width: 100%; height: 100%; object-fit: cover; }
   .school-header h1 { font-size: 20px; margin: 0; font-weight: 800; font-family: "Baloo 2", sans-serif; }
   .school-header p { font-size: 12px; color: var(--text-soft); margin: 4px 0 0; }
 
@@ -225,8 +227,8 @@
 <!-- LOGIN SCREEN -->
 <div class="wrap narrow" id="loginWrap">
   <div class="school-header">
-    <div class="crest">GS</div>
-    <h1>Greenfield Secondary School</h1>
+    <div class="crest" id="loginCrest">GS</div>
+    <h1 id="loginSchoolName">School Portal</h1>
     <p>Form teacher login</p>
   </div>
   <div class="card">
@@ -246,8 +248,8 @@
 <div class="wrap" id="appWrap" style="display:none;">
 
   <div class="school-header">
-    <div class="crest">GS</div>
-    <h1>Greenfield Secondary School</h1>
+    <div class="crest" id="appCrest">GS</div>
+    <h1 id="appSchoolName">School Portal</h1>
     <p>Attendance, comments &amp; student photos</p>
   </div>
 
@@ -323,6 +325,31 @@
   let teacher = null;
   let myClass = null;
   let currentRoster = [];
+
+  async function fetchInitialSchoolSettings() {
+    try {
+      const res = await fetch(`${API_BASE}/api/settings`);
+      const data = await res.json();
+      if (data.settings && data.settings.school_name) {
+        const s = data.settings;
+        document.getElementById('loginSchoolName').textContent = s.school_name;
+        document.getElementById('appSchoolName').textContent = s.school_name;
+        document.getElementById('pageTitle').textContent = `${s.school_name} — Form Teacher Panel`;
+        
+        [document.getElementById('loginCrest'), document.getElementById('appCrest')].forEach(crestEl => {
+          if (!crestEl) return;
+          if (s.logo_url) {
+            crestEl.innerHTML = `<img src="${s.logo_url.startsWith('http') ? s.logo_url : API_BASE + s.logo_url}" alt="Logo" />`;
+          } else {
+            crestEl.textContent = s.school_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Could not load school settings for header:', err);
+    }
+  }
+  fetchInitialSchoolSettings();
 
   const saved = sessionStorage.getItem('resultpro_teacher');
   if (saved) {

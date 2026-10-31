@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <!-- QR Code Library CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<title>Greenfield Secondary School — Check Your Result</title>
+<title>ResultPro — Check Your Result</title>
 <style>
   :root {
     --navy: #58CC02;
@@ -47,14 +47,16 @@
   }
 
   .school-header .crest {
-    width: 48px; height: 48px;
+    width: 56px; height: 56px;
     background: var(--navy);
     color: var(--gold);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-weight: bold; font-size: 18px;
     margin: 0 auto 12px;
+    overflow: hidden;
   }
+  .school-header .crest img { width: 100%; height: 100%; object-fit: cover; }
 
   .school-header h1 {
     font-size: 22px;
@@ -275,9 +277,9 @@
 <div class="wrap">
 
   <div class="school-header">
-    <div class="crest">GS</div>
-    <h1>Greenfield Secondary School</h1>
-    <p>Student result portal</p>
+    <div class="crest" id="headerCrest">GS</div>
+    <h1 id="headerSchoolName">ResultPro Academy</h1>
+    <p id="headerSchoolMotto">Student result portal</p>
   </div>
 
   <!-- LOGIN VIEW -->
@@ -393,6 +395,36 @@
 <script>
   const API_BASE = window.location.origin;
   let releaseCountdownInterval;
+
+  // Fetch school settings on load to update header branding dynamically
+  async function fetchInitialSchoolSettings() {
+    try {
+      const res = await fetch(`${API_BASE}/api/settings`);
+      const data = await res.json();
+      if (data.settings) {
+        updateSchoolHeader(data.settings);
+      }
+    } catch (err) {
+      console.error('Could not load school settings for header:', err);
+    }
+  }
+  fetchInitialSchoolSettings();
+
+  function updateSchoolHeader(school) {
+    if (!school) return;
+    if (school.school_name) {
+      document.getElementById('headerSchoolName').textContent = school.school_name;
+    }
+    if (school.motto) {
+      document.getElementById('headerSchoolMotto').textContent = school.motto;
+    }
+    const crestEl = document.getElementById('headerCrest');
+    if (school.logo_url) {
+      crestEl.innerHTML = `<img src="${getPhotoUrl(school.logo_url)}" alt="Logo" />`;
+    } else if (school.school_name) {
+      crestEl.textContent = school.school_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    }
+  }
 
   function getInitials(name) {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -534,6 +566,11 @@
         document.getElementById('emptyState').style.display = 'block';
         document.getElementById('loginView').style.display = 'block';
         return;
+      }
+
+      // Update header using school details returned in result payload
+      if (resultData.school) {
+        updateSchoolHeader(resultData.school);
       }
 
       if (resultType === 'midterm') {

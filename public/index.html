@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<title>ResultPro — Greenfield Secondary School</title>
+<title id="pageTitle">ResultPro</title>
 <style>
   :root {
     --navy: #58CC02;
@@ -43,7 +43,9 @@
     margin: 0 auto 16px;
     font-family: 'Baloo 2', sans-serif;
     box-shadow: 0 6px 0 var(--navy-light);
+    overflow: hidden;
   }
+  .hero .crest img { width: 100%; height: 100%; object-fit: cover; }
   .hero h1 {
     font-family: 'Baloo 2', sans-serif;
     font-size: 28px;
@@ -126,9 +128,9 @@
 <div class="wrap">
 
   <div class="hero">
-    <div class="crest">GS</div>
-    <h1>ResultPro</h1>
-    <p>Greenfield Secondary School — pick where you're headed</p>
+    <div class="crest" id="headerCrest">RP</div>
+    <h1 id="headerSchoolName">ResultPro</h1>
+    <p id="headerSchoolSub">Pick where you're headed</p>
   </div>
 
   <div class="grid">
@@ -163,8 +165,36 @@
     </a>
   </div>
 
-  <p class="footer-note">ResultPro &middot; built for Greenfield Secondary School</p>
+  <p class="footer-note" id="footerNote">ResultPro</p>
 
 </div>
+
+<script>
+  const API_BASE = window.location.origin;
+
+  async function loadSchoolSettings() {
+    try {
+      const res = await fetch(`${API_BASE}/api/settings`);
+      const data = await res.json();
+      if (data.settings && data.settings.school_name) {
+        const s = data.settings;
+        document.getElementById('headerSchoolName').textContent = s.school_name;
+        document.getElementById('headerSchoolSub').textContent = `${s.school_name} — pick where you're headed`;
+        document.getElementById('pageTitle').textContent = `ResultPro — ${s.school_name}`;
+        document.getElementById('footerNote').textContent = `ResultPro · built for ${s.school_name}`;
+        
+        const crestEl = document.getElementById('headerCrest');
+        if (s.logo_url) {
+          crestEl.innerHTML = `<img src="${s.logo_url.startsWith('http') ? s.logo_url : API_BASE + s.logo_url}" alt="Logo" />`;
+        } else {
+          crestEl.textContent = s.school_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load school settings:', err);
+    }
+  }
+  loadSchoolSettings();
+</script>
 </body>
 </html>

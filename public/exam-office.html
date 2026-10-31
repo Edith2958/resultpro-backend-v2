@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<title>Greenfield Secondary School — Exam Office</title>
+<title id="pageTitle">Exam Office Control Panel</title>
 <style>
   :root {
     --navy: #58CC02;
@@ -35,13 +35,15 @@
 
   .school-header { text-align: center; margin-bottom: 22px; }
   .school-header .crest {
-    width: 44px; height: 44px;
+    width: 52px; height: 52px;
     background: var(--navy); color: var(--gold);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-weight: bold; font-size: 16px;
     margin: 0 auto 10px;
+    overflow: hidden;
   }
+  .school-header .crest img { width: 100%; height: 100%; object-fit: cover; }
   .school-header h1 { font-size: 20px; margin: 0; font-weight: 800; font-family: "Baloo 2", sans-serif; }
   .school-header p { font-size: 12px; color: var(--text-soft); margin: 4px 0 0; }
 
@@ -210,8 +212,8 @@
 <!-- LOGIN -->
 <div class="wrap narrow" id="loginWrap">
   <div class="school-header">
-    <div class="crest">GS</div>
-    <h1>Greenfield Secondary School</h1>
+    <div class="crest" id="loginCrest">GS</div>
+    <h1 id="loginSchoolName">Exam Office</h1>
     <p>Exam office login</p>
   </div>
   <div class="card">
@@ -230,8 +232,8 @@
 <!-- MAIN APP -->
 <div class="wrap" id="appWrap" style="display:none;">
   <div class="school-header">
-    <div class="crest">GS</div>
-    <h1>Greenfield Secondary School</h1>
+    <div class="crest" id="appCrest">GS</div>
+    <h1 id="appSchoolName">Exam Office Control Panel</h1>
     <p>Exam office control panel</p>
   </div>
 
@@ -460,47 +462,48 @@
     <!-- SETTINGS / SCHOOL CONFIGURATION -->
     <div id="tab-settings" style="display:none;">
       <p class="section-title">School Configuration &amp; Branding</p>
-      <p class="empty-note" style="text-align:left; padding:0 0 10px;">Update school identity, contact information, and branding details globally across result sheets.</p>
+      <p class="empty-note" style="text-align:left; padding:0 0 10px;">Update school identity, contact information, and upload your official school logo.</p>
       
-      <div style="margin-bottom:14px;">
-        <label for="schoolName">School Name</label>
-        <input type="text" id="schoolName" placeholder="e.g. Greenfield Secondary School" autocomplete="off" />
-      </div>
-
-      <div style="margin-bottom:14px;">
-        <label for="schoolMotto">School Motto</label>
-        <input type="text" id="schoolMotto" placeholder="e.g. Knowledge & Discipline" autocomplete="off" />
-      </div>
-
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;">
-        <div>
-          <label for="schoolEmail">School Email</label>
-          <input type="email" id="schoolEmail" placeholder="info@school.com" autocomplete="off" />
+      <form id="schoolSettingsForm">
+        <div style="margin-bottom:14px;">
+          <label for="schoolName">School Name</label>
+          <input type="text" id="schoolName" placeholder="e.g. Greenfield Secondary School" required autocomplete="off" />
         </div>
-        <div>
-          <label for="schoolPhone">School Phone</label>
-          <input type="text" id="schoolPhone" placeholder="+234..." autocomplete="off" />
+
+        <div style="margin-bottom:14px;">
+          <label for="schoolMotto">School Motto</label>
+          <input type="text" id="schoolMotto" placeholder="e.g. Knowledge & Discipline" autocomplete="off" />
         </div>
-      </div>
 
-      <div style="margin-bottom:14px;">
-        <label for="schoolAddress">School Address</label>
-        <textarea id="schoolAddress" rows="2" placeholder="Full physical street address" style="margin-top:4px;"></textarea>
-      </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;">
+          <div>
+            <label for="schoolEmail">School Email</label>
+            <input type="email" id="schoolEmail" placeholder="info@school.com" autocomplete="off" />
+          </div>
+          <div>
+            <label for="schoolPhone">School Phone</label>
+            <input type="text" id="schoolPhone" placeholder="+234..." autocomplete="off" />
+          </div>
+        </div>
 
-      <div style="margin-bottom:18px;">
-        <label for="logoUrl">Logo URL</label>
-        <input type="text" id="logoUrl" placeholder="https://example.com/logo.png" autocomplete="off" />
-      </div>
+        <div style="margin-bottom:14px;">
+          <label for="schoolAddress">School Address</label>
+          <textarea id="schoolAddress" rows="2" placeholder="Full physical street address" style="margin-top:4px;"></textarea>
+        </div>
 
-      <button class="primary" onclick="saveSchoolSettings()">Save Settings</button>
+        <div style="margin-bottom:18px;">
+          <label for="logoFile">Upload School Logo Image</label>
+          <input type="file" id="logoFile" accept="image/*" style="padding:6px;" />
+        </div>
+
+        <button type="submit" class="primary">Save Settings</button>
+      </form>
     </div>
 
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
-
 
 <script>
   const API_BASE = window.location.origin; 
@@ -522,6 +525,38 @@
   if (saved) {
     officer = JSON.parse(saved);
     boot();
+  }
+
+  // Fetch school settings on load
+  async function fetchInitialSchoolSettings() {
+    try {
+      const res = await fetch(`${API_BASE}/api/settings`);
+      const data = await res.json();
+      if (data.settings) {
+        updateSchoolHeader(data.settings);
+      }
+    } catch (err) {
+      console.error('Could not load school settings for header:', err);
+    }
+  }
+  fetchInitialSchoolSettings();
+
+  function updateSchoolHeader(school) {
+    if (!school) return;
+    if (school.school_name) {
+      document.getElementById('loginSchoolName').textContent = school.school_name;
+      document.getElementById('appSchoolName').textContent = school.school_name;
+      document.getElementById('pageTitle').textContent = `${school.school_name} — Exam Office`;
+    }
+    const crests = [document.getElementById('loginCrest'), document.getElementById('appCrest')];
+    crests.forEach(crestEl => {
+      if (!crestEl) return;
+      if (school.logo_url) {
+        crestEl.innerHTML = `<img src="${school.logo_url.startsWith('http') ? school.logo_url : API_BASE + school.logo_url}" alt="Logo" />`;
+      } else if (school.school_name) {
+        crestEl.textContent = school.school_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      }
+    });
   }
 
   function showToast(message) {
@@ -1146,41 +1181,44 @@
         document.getElementById('schoolEmail').value = data.settings.school_email || '';
         document.getElementById('schoolPhone').value = data.settings.school_phone || '';
         document.getElementById('schoolAddress').value = data.settings.school_address || '';
-        document.getElementById('logoUrl').value = data.settings.logo_url || '';
       }
     } catch (err) {
       console.error('Failed to load settings:', err);
     }
   }
 
-  async function saveSchoolSettings() {
-    const payload = {
-      school_name: document.getElementById('schoolName').value.trim(),
-      motto: document.getElementById('schoolMotto').value.trim(),
-      school_email: document.getElementById('schoolEmail').value.trim(),
-      school_phone: document.getElementById('schoolPhone').value.trim(),
-      school_address: document.getElementById('schoolAddress').value.trim(),
-      logo_url: document.getElementById('logoUrl').value.trim()
-    };
-
-    if (!payload.school_name) return showToast('School name is required.');
+  document.getElementById('schoolSettingsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('school_name', document.getElementById('schoolName').value.trim());
+    formData.append('motto', document.getElementById('schoolMotto').value.trim());
+    formData.append('school_email', document.getElementById('schoolEmail').value.trim());
+    formData.append('school_phone', document.getElementById('schoolPhone').value.trim());
+    formData.append('school_address', document.getElementById('schoolAddress').value.trim());
+    
+    const logoFileInput = document.getElementById('logoFile');
+    if (logoFileInput.files[0]) {
+      formData.append('logo_file', logoFileInput.files[0]);
+    }
 
     try {
       const res = await fetch(`${API_BASE}/api/settings`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: formData
       });
       const result = await res.json();
       if (res.ok) {
         showToast('School settings saved successfully!');
+        if (result.settings) {
+          updateSchoolHeader(result.settings);
+        }
       } else {
         showToast(result.error || 'Failed to update settings');
       }
     } catch (err) {
       showToast('An error occurred while saving settings.');
     }
-  }
+  });
 
   function toDatetimeLocal(isoString) {
     if (!isoString) return '';

@@ -18,7 +18,7 @@
   .wrap { max-width: 760px; margin: 0 auto; }
   .wrap.narrow { max-width: 420px; }
   .header { text-align:center; margin-bottom:22px; }
-  .header .crest { width:44px; height:44px; background:var(--navy); color:var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; margin:0 auto 10px; }
+  .header .crest { width:44px; height:44px; background:var(--navy); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; margin:0 auto 10px; }
   .header h1 { font-size:20px; margin:0; font-weight:800; font-family: "Baloo 2", sans-serif; }
   .header p { font-size:12px; color:var(--text-soft); margin:4px 0 0; }
   .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:20px; margin-bottom:18px; }
@@ -57,17 +57,17 @@
 <!-- LOGIN -->
 <div class="wrap narrow" id="loginWrap">
   <div class="header">
-    <div class="crest">RP</div>
+    <div class="crest">⚡</div>
     <h1>ResultPro</h1>
-    <p>Developer panel</p>
+    <p>Developer control panel</p>
   </div>
   <div class="card">
     <div class="error-msg" id="loginError"></div>
     <label for="devEmail">Email</label>
-    <input type="email" id="devEmail" />
+    <input type="email" id="devEmail" autocomplete="email" />
     <label for="devPassword" style="margin-top:12px;">Password</label>
     <div style="position:relative; margin-bottom:16px;">
-      <input type="password" id="devPassword" style="padding-right:64px;" />
+      <input type="password" id="devPassword" autocomplete="current-password" style="padding-right:64px;" />
       <button type="button" onclick="togglePasswordVisibility('devPassword', this)" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); width:auto; padding:4px 10px; font-size:10px; background:var(--cream); color:var(--navy); box-shadow:none; border:1px solid var(--border); border-radius:8px; text-transform:none; font-family:'Nunito',Arial,sans-serif; font-weight:700;">Show</button>
     </div>
     <button class="primary" style="width:100%;" onclick="login()">Log in</button>
@@ -77,9 +77,9 @@
 <!-- MAIN APP -->
 <div class="wrap" id="appWrap" style="display:none;">
   <div class="header">
-    <div class="crest">RP</div>
+    <div class="crest">⚡</div>
     <h1>ResultPro</h1>
-    <p>Developer panel — PIN generation</p>
+    <p>Developer panel — PIN management</p>
   </div>
 
   <div class="card">
@@ -129,7 +129,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const API_BASE = window.location.origin; // always same-origin — this server serves both the pages and the API
+  const API_BASE = window.location.origin;
   let admin = null;
 
   const saved = sessionStorage.getItem('resultpro_developer');
