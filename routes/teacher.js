@@ -49,8 +49,8 @@ router.get('/my-subjects', async (req, res) => {
     const { rows } = await pool.query(
       `SELECT ts.class, ts.subject_id, sub.name AS subject_name
        FROM teacher_subjects ts
-       JOIN subjects sub ON sub.id = ts.subject_id
-       WHERE ts.teacher_id = $1
+       JOIN subjects sub ON sub.id = ts.subject_id::integer
+       WHERE ts.teacher_id::integer = $1
        ORDER BY ts.class ASC, sub.name ASC`,
       [teacher_id]
     );
@@ -65,7 +65,7 @@ async function isAssigned(teacherId, className, subjectId) {
   const tId = parseInt(teacherId, 10);
   const sId = parseInt(subjectId, 10);
   const { rows } = await pool.query(
-    `SELECT 1 FROM teacher_subjects WHERE teacher_id = $1 AND class = $2 AND subject_id = $3`,
+    `SELECT 1 FROM teacher_subjects WHERE teacher_id::integer = $1 AND class = $2 AND subject_id::integer = $3`,
     [tId, className, sId]
   );
   return rows.length > 0;
@@ -83,7 +83,7 @@ async function checkDeadlineAllowsSave(teacherId, className, term, session) {
   }
 
   const overrideRes = await pool.query(
-    'SELECT 1 FROM deadline_overrides WHERE teacher_id = $1 AND class = $2 AND term = $3 AND session = $4',
+    'SELECT 1 FROM deadline_overrides WHERE teacher_id::integer = $1 AND class = $2 AND term = $3 AND session = $4',
     [tId, className, term, session]
   );
   if (overrideRes.rows.length > 0) {
@@ -111,8 +111,9 @@ router.get('/roster', async (req, res) => {
               s.admission_no, s.photo_url,
               m.assignment_score, m.test_score, m.status AS mid_term_status
        FROM students s
+       LEFT JOIN student_term_enrollments ste ON ste.student_id::integer = s.id::integer AND ste.term = $3 AND ste.session = $4
        LEFT JOIN mid_term_results m
-         ON m.student_id = s.id AND m.subject_id = $2 AND m.term = $3 AND m.session = $4
+         ON m.student_id::integer = s.id::integer AND m.subject_id::integer = $2 AND m.term = $3 AND m.session = $4
        WHERE s.class = $1
        ORDER BY s.surname ASC`,
       [className, subject_id, term, session]
@@ -226,10 +227,11 @@ router.get('/fullterm-roster', async (req, res) => {
               m.assignment_score, m.test_score,
               r.exam_score, r.manual_ca_override, r.status AS result_status
        FROM students s
+       LEFT JOIN student_term_enrollments ste ON ste.student_id::integer = s.id::integer AND ste.term = $3 AND ste.session = $4
        LEFT JOIN mid_term_results m
-         ON m.student_id = s.id AND m.subject_id = $2 AND m.term = $3 AND m.session = $4
+         ON m.student_id::integer = s.id::integer AND m.subject_id::integer = $2 AND m.term = $3 AND m.session = $4
        LEFT JOIN results r
-         ON r.student_id = s.id AND r.subject_id = $2 AND r.term = $3 AND r.session = $4
+         ON r.student_id::integer = s.id::integer AND r.subject_id::integer = $2 AND r.term = $3 AND r.session = $4
        WHERE s.class = $1
        ORDER BY s.surname ASC`,
       [className, subject_id, term, session]
