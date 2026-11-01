@@ -706,7 +706,7 @@ router.get('/form-teachers', async (req, res) => {
     const { rows } = await pool.query(
       `SELECT ftc.id, ftc.class, t.id AS teacher_id, t.name AS teacher_name
        FROM form_teacher_classes ftc
-       JOIN teachers t ON t.id = ftc.teacher_id
+       JOIN teachers t ON t.id = ftc.teacher_id::integer
        ORDER BY ftc.class ASC`
     );
     res.json({ formTeachers: rows });
