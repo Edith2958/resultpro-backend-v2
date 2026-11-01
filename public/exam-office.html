@@ -256,6 +256,7 @@
         <button onclick="switchTab('termSettings', 'Deadlines')">⏳ Deadlines</button>
         <button onclick="switchTab('fees', 'Fees')">💳 Fees</button>
         <button onclick="switchTab('pins', 'PINs')">🔑 PINs</button>
+        <button onclick="switchTab('activeSession', 'Active Session')">📅 Active Session &amp; Term</button>
         <button onclick="switchTab('settings', 'Settings')">⚙️ Settings</button>
       </div>
     </div>
@@ -273,8 +274,8 @@
       </div>
 
       <div style="border: 2px dashed var(--border); border-radius: 14px; padding: 14px; margin-bottom: 18px;">
-        <p style="font-size:12px; font-weight:700; margin:0 0 4px;">Bulk add from Excel/CSV</p>
-        <p class="empty-note" style="text-align:left; padding:0 0 10px;">File needs columns: <strong>Surname</strong>, <strong>First Name</strong>, <strong>Middle Name</strong> (optional), <strong>Admission No</strong>, <strong>Class</strong> (e.g. JSS1A). Legacy single "Name" column also supported.</p>
+        <p style="font-size:12px; font-weight:700; margin:0 0 4px;">Bulk add from Excel/CSV (Smart Upsert)</p>
+        <p class="empty-note" style="text-align:left; padding:0 0 10px;">File needs columns: <strong>Surname</strong>, <strong>First Name</strong>, <strong>Middle Name</strong> (optional), <strong>Admission No</strong>, <strong>Class</strong> (e.g. JSS1A or SS1 Science A). Existing students will have their classes updated seamlessly.</p>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
           <input type="file" id="bulkImportFile" accept=".xlsx,.xls,.csv" style="flex:1; min-width:200px; padding:6px;" />
           <button class="primary" onclick="bulkImportStudents()">Upload</button>
@@ -317,7 +318,7 @@
 
     <!-- CLASSES -->
     <div id="tab-classes" style="display:none;">
-      <p class="section-title">Classes</p>
+      <p class="section-title">Classes &amp; Departments</p>
       <div class="add-form">
         <div>
           <label>Level</label>
@@ -327,9 +328,12 @@
           </select>
         </div>
         <div>
-          <label>Arm</label>
+          <label>Arm / Department</label>
           <select id="newClassArm">
             <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+            <option>Science A</option><option>Science B</option>
+            <option>Art A</option><option>Art B</option>
+            <option>Commercial A</option>
           </select>
         </div>
         <button class="primary" onclick="addClass()">Add class</button>
@@ -371,7 +375,7 @@
             <option>First Term</option><option>Second Term</option><option>Third Term</option>
           </select>
         </div>
-        <div><label>Session</label><input type="text" id="commentSession" value="2025/2026" /></div>
+        <div><label>Session</label><input type="text" id="commentSession" value="2026/2027" /></div>
         <button class="primary" onclick="lookupStudentCommentRecord()">Find Student</button>
       </div>
       <div id="commentEditorWrap" style="display:none; background:var(--cream); padding:14px; border-radius:12px; border:1px solid var(--border); margin-top:14px;">
@@ -391,7 +395,7 @@
             <option>First Term</option><option>Second Term</option><option>Third Term</option>
           </select>
         </div>
-        <div><label>Session</label><input type="text" id="tsSession" value="2025/2026" onchange="loadTermSettings()" /></div>
+        <div><label>Session</label><input type="text" id="tsSession" value="2026/2027" onchange="loadTermSettings()" /></div>
         <div></div>
       </div>
 
@@ -426,7 +430,7 @@
             <option>First Term</option><option>Second Term</option><option>Third Term</option>
           </select>
         </div>
-        <div><label>Session</label><input type="text" id="feeSession" value="2025/2026" onchange="searchFeeStatus()" /></div>
+        <div><label>Session</label><input type="text" id="feeSession" value="2026/2027" onchange="searchFeeStatus()" /></div>
         <div></div>
       </div>
       <div class="add-form" style="border-bottom:none; padding-bottom:0; margin-bottom:14px;">
@@ -457,6 +461,28 @@
       </div>
       <div id="officePinsList"></div>
       <div id="officePinsPager" style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:12px; color:var(--text-soft);"></div>
+    </div>
+
+    <!-- ACTIVE SESSION CONFIGURATION -->
+    <div id="tab-activeSession" style="display:none;">
+      <p class="section-title">Active Academic Session &amp; Term</p>
+      <p class="empty-note" style="text-align:left; padding:0 0 10px;">Set the global active term and session. This dictates where newly added students and bulk imports are automatically enrolled.</p>
+      
+      <div class="card" style="background:var(--cream); border:1px solid var(--border); box-shadow:none;">
+        <div style="margin-bottom:14px;">
+          <label>Current Active Term</label>
+          <select id="activeTermInput">
+            <option>First Term</option>
+            <option>Second Term</option>
+            <option>Third Term</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label>Current Active Session</label>
+          <input type="text" id="activeSessionInput" placeholder="e.g. 2026/2027" autocomplete="off" />
+        </div>
+        <button class="primary" onclick="saveActiveSchoolSettings()">Update Active Session</button>
+      </div>
     </div>
 
     <!-- SETTINGS / SCHOOL CONFIGURATION -->
@@ -614,7 +640,7 @@
   }
 
   function switchTab(tab, label) {
-    ['students', 'subjects', 'teachers', 'classes', 'assignments', 'formTeachers', 'comments', 'termSettings', 'fees', 'pins', 'settings'].forEach(t => {
+    ['students', 'subjects', 'teachers', 'classes', 'assignments', 'formTeachers', 'comments', 'termSettings', 'fees', 'pins', 'activeSession', 'settings'].forEach(t => {
       document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
     });
     document.querySelectorAll('.tab-menu button').forEach(b => b.classList.remove('active'));
@@ -629,6 +655,7 @@
     if (tab === 'termSettings') loadTermSettings();
     if (tab === 'fees') searchFeeStatus();
     if (tab === 'pins') searchOfficePins();
+    if (tab === 'activeSession') loadActiveSchoolSettings();
     if (tab === 'settings') loadSchoolSettings();
   }
 
@@ -785,7 +812,7 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      let html = `<p style="font-size:12px; font-weight:700; color:var(--pass); margin:0 0 6px;">${data.inserted} student${data.inserted === 1 ? '' : 's'} added successfully.</p>`;
+      let html = `<p style="font-size:12px; font-weight:700; color:var(--pass); margin:0 0 6px;">${data.processed} student record${data.processed === 1 ? '' : 's'} processed successfully.</p>`;
       if (data.skipped && data.skipped.length > 0) {
         html += `<p style="font-size:11px; color:var(--fail); margin:0 0 4px;">${data.skipped.length} row${data.skipped.length === 1 ? '' : 's'} skipped:</p>`;
         html += `<div style="font-size:11px; color:var(--text-soft); max-height:120px; overflow-y:auto; background:#fff; padding:6px; border-radius:6px; border:1px solid var(--border);">${data.skipped.map(s => `Row ${s.row}: ${s.reason}`).join('<br>')}</div>`;
@@ -819,7 +846,7 @@
       document.getElementById('newStudentAdmissionNo').value = '';
       studentPage = 1;
       await loadStudents();
-      showToast('Student added.');
+      showToast('Student saved successfully.');
     } catch (err) { showToast(err.message || 'Could not add student.'); }
   }
 
@@ -1168,6 +1195,38 @@
       showToast(cleared ? 'Marked cleared.' : 'Marked not cleared.');
     } catch (err) {
       showToast(err.message || 'Could not update status.');
+    }
+  }
+
+  async function loadActiveSchoolSettings() {
+    try {
+      const res = await fetch(`${API_BASE}/api/exam-office/settings`);
+      const data = await res.json();
+      if (data.settings) {
+        document.getElementById('activeTermInput').value = data.settings.current_term || 'First Term';
+        document.getElementById('activeSessionInput').value = data.settings.current_session || '2026/2027';
+      }
+    } catch (err) {
+      console.error('Failed to load active settings:', err);
+    }
+  }
+
+  async function saveActiveSchoolSettings() {
+    const current_term = document.getElementById('activeTermInput').value;
+    const current_session = document.getElementById('activeSessionInput').value.trim();
+    if (!current_session) return showToast('Enter a valid session.');
+
+    try {
+      const res = await fetch(`${API_BASE}/api/exam-office/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ current_term, current_session })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      showToast('Active term and session updated successfully!');
+    } catch (err) {
+      showToast(err.message || 'Could not save active settings.');
     }
   }
 

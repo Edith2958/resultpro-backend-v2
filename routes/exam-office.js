@@ -41,6 +41,59 @@ function friendlyDeleteError(err, whatYoureDeleting) {
   return `Failed to delete ${whatYoureDeleting}`;
 }
 
+/* ---------------------------- SCHOOL SETTINGS (Active Term & Session) ---------------------------- */
+
+/**
+ * GET /api/exam-office/settings
+ * Fetches the current active term and session.
+ */
+router.get('/settings', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT current_term, current_session FROM school_settings ORDER BY id DESC LIMIT 1');
+    if (rows.length === 0) {
+      return res.json({ settings: { current_term: 'First Term', current_session: '2026/2027' } });
+    }
+    res.json({ settings: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load school settings' });
+  }
+});
+
+/**
+ * POST /api/exam-office/settings
+ * Updates or sets the current active term and session.
+ */
+router.post('/settings', async (req, res) => {
+  const { current_term, current_session } = req.body;
+  if (!current_term || !current_session) {
+    return res.status(400).json({ error: 'current_term and current_session are required' });
+  }
+  try {
+    const checkRes = await pool.query('SELECT id FROM school_settings LIMIT 1');
+    
+    let rows;
+    if (checkRes.rows.length > 0) {
+      const updateRes = await pool.query(
+        `UPDATE school_settings SET current_term = $1, current_session = $2, updated_at = NOW() WHERE id = $3 RETURNING current_term, current_session`,
+        [current_term, current_session, checkRes.rows[0].id]
+      );
+      rows = updateRes.rows;
+    } else {
+      const insertRes = await pool.query(
+        `INSERT INTO school_settings (current_term, current_session) VALUES ($1, $2) RETURNING current_term, current_session`,
+        [current_term, current_session]
+      );
+      rows = insertRes.rows;
+    }
+
+    res.json({ success: true, settings: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update school settings' });
+  }
+});
+
 /* ---------------------------- TERM RECORDS & OVERRIDES ---------------------------- */
 
 /**
@@ -53,7 +106,6 @@ router.post('/term-records', async (req, res) => {
     return res.status(400).json({ error: 'student_id, term, session, and principal_comment are required' });
   }
   try {
-    // Fetch student's class to satisfy any table requirements safely
     const studentRes = await pool.query('SELECT class FROM students WHERE id = $1', [student_id]);
     const studentClass = studentRes.rows[0]?.class || null;
 
@@ -310,25 +362,72 @@ router.get('/students', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/exam-office/students
+ * Adds a new student or updates/rejects if already in class.
+ */
 router.post('/students', async (req, res) => {
-  const { surname, first_name, middle_name, admission_no, class: className } = req.body;
+  let { surname, first_name, middle_name, admission_no, class: className, term, session } = req.body;
   if (!surname || !first_name || !admission_no || !className) {
     return res.status(400).json({ error: 'surname, first_name, admission_no and class are required' });
   }
+
+  const client = await pool.connect();
   try {
-    const { rows } = await pool.query(
+    await client.query('BEGIN');
+
+    // Check if student already exists and is already in this exact class
+    const existingRes = await client.query('SELECT class FROM students WHERE admission_no = $1', [admission_no.trim()]);
+    if (existingRes.rows.length > 0 && existingRes.rows[0].class === className) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: `Student with admission number ${admission_no} is already in ${className}` });
+    }
+
+    // Fallback to active school settings if term/session are missing
+    if (!term || !session) {
+      const settingsRes = await client.query('SELECT current_term, current_session FROM school_settings ORDER BY id DESC LIMIT 1');
+      if (settingsRes.rows.length > 0) {
+        term = term || settingsRes.rows[0].current_term;
+        session = session || settingsRes.rows[0].current_session;
+      }
+    }
+
+    // Upsert into main students table using admission_no conflict check
+    const studentRes = await client.query(
       `INSERT INTO students (surname, first_name, middle_name, admission_no, class)
        VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (admission_no) 
+       DO UPDATE SET 
+         surname = EXCLUDED.surname, 
+         first_name = EXCLUDED.first_name, 
+         middle_name = EXCLUDED.middle_name, 
+         class = EXCLUDED.class
        RETURNING id, surname, first_name, middle_name,
                  CONCAT(surname, ' ', first_name, CASE WHEN middle_name IS NOT NULL AND middle_name != '' THEN CONCAT(' ', middle_name) ELSE '' END) AS name,
                  admission_no, class, photo_url`,
       [surname.trim(), first_name.trim(), middle_name ? middle_name.trim() : null, admission_no.trim(), className]
     );
-    res.json({ student: rows[0] });
+    const student = studentRes.rows[0];
+
+    // Log their term enrollment history
+    if (term && session) {
+      await client.query(
+        `INSERT INTO student_term_enrollments (student_id, class, term, session, status)
+         VALUES ($1, $2, $3, $4, 'ACTIVE')
+         ON CONFLICT (student_id, term, session) 
+         DO UPDATE SET class = $2, status = 'ACTIVE'`,
+        [student.id, className, term, session]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.json({ student, message: 'Student saved successfully' });
   } catch (err) {
-    if (err.code === '23505') return res.status(400).json({ error: 'A student with that admission number already exists' });
+    await client.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: 'Failed to add student' });
+    res.status(500).json({ error: 'Failed to save student' });
+  } finally {
+    client.release();
   }
 });
 
@@ -382,6 +481,7 @@ router.put('/students/:id', async (req, res) => {
 
 /**
  * POST /api/exam-office/students/bulk-import
+ * Excel upload that handles new intakes and reshuffling updates, skipping if already in that class.
  */
 router.post('/students/bulk-import', upload.single('file'), async (req, res) => {
   if (!req.file) {
@@ -401,6 +501,17 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
     return res.status(400).json({ error: 'The file has no rows to import.' });
   }
 
+  // Fetch active school settings for fallback
+  let activeTerm = 'First Term';
+  let activeSession = '2026/2027';
+  try {
+    const settingsRes = await pool.query('SELECT current_term, current_session FROM school_settings ORDER BY id DESC LIMIT 1');
+    if (settingsRes.rows.length > 0) {
+      activeTerm = settingsRes.rows[0].current_term;
+      activeSession = settingsRes.rows[0].current_session;
+    }
+  } catch (e) {}
+
   const normalize = (key) => String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
   function extractField(row, candidates) {
     const keys = Object.keys(row);
@@ -410,7 +521,7 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
     return '';
   }
 
-  const results = { inserted: 0, skipped: [] };
+  const results = { processed: 0, skipped: [] };
 
   for (let i = 0; i < rows.length; i++) {
     const rowNum = i + 2;
@@ -429,9 +540,7 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
         if (parts.length >= 2) {
           surname = parts[0];
           firstName = parts[1];
-          if (parts.length > 2) {
-            middleName = parts.slice(2).join(' ');
-          }
+          if (parts.length > 2) middleName = parts.slice(2).join(' ');
         } else if (parts.length === 1) {
           surname = parts[0];
           firstName = '';
@@ -444,18 +553,49 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
       continue;
     }
 
+    const client = await pool.connect();
     try {
-      await pool.query(
-        'INSERT INTO students (surname, first_name, middle_name, admission_no, class) VALUES ($1, $2, $3, $4, $5)',
+      await client.query('BEGIN');
+
+      // Check if student is already in this exact class
+      const existingRes = await client.query('SELECT id, class FROM students WHERE admission_no = $1', [admissionNo]);
+      if (existingRes.rows.length > 0 && existingRes.rows[0].class === className) {
+        await client.query('ROLLBACK');
+        results.skipped.push({ row: rowNum, reason: `Student is already in ${className}` });
+        continue;
+      }
+
+      // Upsert student on admission_no conflict
+      const studentRes = await client.query(
+        `INSERT INTO students (surname, first_name, middle_name, admission_no, class) 
+         VALUES ($1, $2, $3, $4, $5) 
+         ON CONFLICT (admission_no) 
+         DO UPDATE SET 
+           surname = EXCLUDED.surname, 
+           first_name = EXCLUDED.first_name, 
+           middle_name = EXCLUDED.middle_name, 
+           class = EXCLUDED.class 
+         RETURNING id`,
         [surname, firstName, middleName || null, admissionNo, className]
       );
-      results.inserted++;
+      const studentId = studentRes.rows[0].id;
+
+      // Enroll/update in active term session
+      await client.query(
+        `INSERT INTO student_term_enrollments (student_id, class, term, session, status)
+         VALUES ($1, $2, $3, $4, 'ACTIVE')
+         ON CONFLICT (student_id, term, session) 
+         DO UPDATE SET class = $2, status = 'ACTIVE'`,
+        [studentId, className, activeTerm, activeSession]
+      );
+
+      await client.query('COMMIT');
+      results.processed++;
     } catch (err) {
-      if (err.code === '23505') {
-        results.skipped.push({ row: rowNum, reason: `Admission number "${admissionNo}" already exists` });
-      } else {
-        results.skipped.push({ row: rowNum, reason: 'Could not save this row' });
-      }
+      await client.query('ROLLBACK');
+      results.skipped.push({ row: rowNum, reason: 'Could not process this row due to a database error' });
+    } finally {
+      client.release();
     }
   }
 
