@@ -4,15 +4,8 @@ const pool = require('../db/pool');
 const multer = require('multer');
 const XLSX = require('xlsx');
 
-// Memory storage — we only need to parse the uploaded file, never save it to disk.
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
-/**
- * POST /api/exam-office/login
- * NOTE: plain-text password compare for now, same as teacher login. Swap for
- * bcrypt before real deployment.
- * body: { email, password }
- */
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -33,7 +26,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Turns a foreign-key-violation error into a friendly message instead of a raw crash.
 function friendlyDeleteError(err, whatYoureDeleting) {
   if (err.code === '23503') {
     return `Can't delete this ${whatYoureDeleting} — it's already linked to existing records (scores, assignments, etc). Remove those first.`;
@@ -41,12 +33,6 @@ function friendlyDeleteError(err, whatYoureDeleting) {
   return `Failed to delete ${whatYoureDeleting}`;
 }
 
-/* ---------------------------- SCHOOL SETTINGS (Active Term & Session) ---------------------------- */
-
-/**
- * GET /api/exam-office/settings
- * Fetches the current active term and session.
- */
 router.get('/settings', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT current_term, current_session FROM school_settings ORDER BY id DESC LIMIT 1');
@@ -60,10 +46,6 @@ router.get('/settings', async (req, res) => {
   }
 });
 
-/**
- * POST /api/exam-office/settings
- * Updates or sets the current active term and session.
- */
 router.post('/settings', async (req, res) => {
   const { current_term, current_session } = req.body;
   if (!current_term || !current_session) {
@@ -94,17 +76,13 @@ router.post('/settings', async (req, res) => {
   }
 });
 
-/* ---------------------------- TERM RECORDS & OVERRIDES ---------------------------- */
-
-/**
- * POST /api/exam-office/term-records
- * Saves custom principal comment overrides or promotion statuses for a student.
- */
 router.post('/term-records', async (req, res) => {
-  const { student_id, term, session, principal_comment } = req.body;
+  let { student_id, term, session, principal_comment } = req.body;
   if (!student_id || !term || !session || !principal_comment) {
     return res.status(400).json({ error: 'student_id, term, session, and principal_comment are required' });
   }
+  student_id = parseInt(student_id, 10);
+
   try {
     const studentRes = await pool.query('SELECT class FROM students WHERE id = $1', [student_id]);
     const studentClass = studentRes.rows[0]?.class || null;
@@ -124,13 +102,6 @@ router.post('/term-records', async (req, res) => {
   }
 });
 
-/* ---------------------------- FEE STATUS ---------------------------- */
-
-/**
- * GET /api/exam-office/fee-status?term=&session=&class=&search=&page=&pageSize=
- * Lists students with their clearance status for a term+session. Students with
- * no fee_status row are shown as cleared=true (the default).
- */
 router.get('/fee-status', async (req, res) => {
   const { term, session, class: className, search, page = 1, pageSize = 25 } = req.query;
   if (!term || !session) {
@@ -179,16 +150,13 @@ router.get('/fee-status', async (req, res) => {
   }
 });
 
-/**
- * POST /api/exam-office/fee-status
- * Sets (or clears) a student's fee status for a term+session.
- * body: { student_id, term, session, cleared }
- */
 router.post('/fee-status', async (req, res) => {
-  const { student_id, term, session, cleared } = req.body;
+  let { student_id, term, session, cleared } = req.body;
   if (!student_id || !term || !session || typeof cleared !== 'boolean') {
     return res.status(400).json({ error: 'student_id, term, session and cleared (true/false) are required' });
   }
+  student_id = parseInt(student_id, 10);
+
   try {
     const { rows } = await pool.query(
       `INSERT INTO fee_status (student_id, term, session, cleared, updated_at)
@@ -205,12 +173,6 @@ router.post('/fee-status', async (req, res) => {
   }
 });
 
-/* ---------------------------- PINS (read-only) ---------------------------- */
-
-/**
- * GET /api/exam-office/pins?status=&search=&page=&pageSize=
- * Read-only view of PINs generated for this school.
- */
 router.get('/pins', async (req, res) => {
   const { status, search, page = 1, pageSize = 25 } = req.query;
   const limit = Math.min(Number(pageSize) || 25, 100);
@@ -256,11 +218,6 @@ router.get('/pins', async (req, res) => {
   }
 });
 
-/* ---------------------------- DEADLINE OVERRIDES ---------------------------- */
-
-/**
- * GET /api/exam-office/deadline-overrides?term=&session=
- */
 router.get('/deadline-overrides', async (req, res) => {
   const { term, session } = req.query;
   if (!term || !session) {
@@ -282,14 +239,13 @@ router.get('/deadline-overrides', async (req, res) => {
   }
 });
 
-/**
- * POST /api/exam-office/deadline-overrides
- */
 router.post('/deadline-overrides', async (req, res) => {
-  const { teacher_id, class: className, term, session } = req.body;
+  let { teacher_id, class: className, term, session } = req.body;
   if (!teacher_id || !className || !term || !session) {
     return res.status(400).json({ error: 'teacher_id, class, term and session are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
+
   try {
     const { rows } = await pool.query(
       `INSERT INTO deadline_overrides (teacher_id, class, term, session) VALUES ($1, $2, $3, $4)
@@ -303,12 +259,10 @@ router.post('/deadline-overrides', async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/exam-office/deadline-overrides/:id
- */
 router.delete('/deadline-overrides/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
   try {
-    await pool.query('DELETE FROM deadline_overrides WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM deadline_overrides WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -316,11 +270,6 @@ router.delete('/deadline-overrides/:id', async (req, res) => {
   }
 });
 
-/* ---------------------------- STUDENTS ---------------------------- */
-
-/**
- * GET /api/exam-office/students
- */
 router.get('/students', async (req, res) => {
   const { search, class: className, page = 1, pageSize = 25 } = req.query;
   const limit = Math.min(Number(pageSize) || 25, 100);
@@ -362,10 +311,6 @@ router.get('/students', async (req, res) => {
   }
 });
 
-/**
- * POST /api/exam-office/students
- * Adds a new student or updates/rejects if already in class.
- */
 router.post('/students', async (req, res) => {
   let { surname, first_name, middle_name, admission_no, class: className, term, session } = req.body;
   if (!surname || !first_name || !admission_no || !className) {
@@ -376,14 +321,12 @@ router.post('/students', async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // Check if student already exists and is already in this exact class
     const existingRes = await client.query('SELECT class FROM students WHERE admission_no = $1', [admission_no.trim()]);
     if (existingRes.rows.length > 0 && existingRes.rows[0].class === className) {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: `Student with admission number ${admission_no} is already in ${className}` });
     }
 
-    // Fallback to active school settings if term/session are missing
     if (!term || !session) {
       const settingsRes = await client.query('SELECT current_term, current_session FROM school_settings ORDER BY id DESC LIMIT 1');
       if (settingsRes.rows.length > 0) {
@@ -392,7 +335,6 @@ router.post('/students', async (req, res) => {
       }
     }
 
-    // Upsert into main students table using admission_no conflict check
     const studentRes = await client.query(
       `INSERT INTO students (surname, first_name, middle_name, admission_no, class)
        VALUES ($1, $2, $3, $4, $5)
@@ -409,7 +351,6 @@ router.post('/students', async (req, res) => {
     );
     const student = studentRes.rows[0];
 
-    // Log their term enrollment history
     if (term && session) {
       await client.query(
         `INSERT INTO student_term_enrollments (student_id, class, term, session, status)
@@ -432,8 +373,9 @@ router.post('/students', async (req, res) => {
 });
 
 router.delete('/students/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
   try {
-    await pool.query('DELETE FROM students WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM students WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -441,10 +383,8 @@ router.delete('/students/:id', async (req, res) => {
   }
 });
 
-/**
- * PUT /api/exam-office/students/:id
- */
 router.put('/students/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
   const { surname, first_name, middle_name, admission_no, class: className } = req.body;
   if (!surname && !first_name && !middle_name && !admission_no && !className) {
     return res.status(400).json({ error: 'Provide at least one student field to update' });
@@ -467,7 +407,7 @@ router.put('/students/:id', async (req, res) => {
         middle_name !== undefined ? (middle_name ? middle_name.trim() : null) : null,
         admission_no?.trim() || null,
         className || null,
-        req.params.id
+        id
       ]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Student not found' });
@@ -479,10 +419,6 @@ router.put('/students/:id', async (req, res) => {
   }
 });
 
-/**
- * POST /api/exam-office/students/bulk-import
- * Excel upload that handles new intakes and reshuffling updates, skipping if already in that class.
- */
 router.post('/students/bulk-import', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file received. Upload an .xlsx or .csv file.' });
@@ -501,7 +437,6 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
     return res.status(400).json({ error: 'The file has no rows to import.' });
   }
 
-  // Fetch active school settings for fallback
   let activeTerm = 'First Term';
   let activeSession = '2026/2027';
   try {
@@ -557,7 +492,6 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
     try {
       await client.query('BEGIN');
 
-      // Check if student is already in this exact class
       const existingRes = await client.query('SELECT id, class FROM students WHERE admission_no = $1', [admissionNo]);
       if (existingRes.rows.length > 0 && existingRes.rows[0].class === className) {
         await client.query('ROLLBACK');
@@ -565,7 +499,6 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
         continue;
       }
 
-      // Upsert student on admission_no conflict
       const studentRes = await client.query(
         `INSERT INTO students (surname, first_name, middle_name, admission_no, class) 
          VALUES ($1, $2, $3, $4, $5) 
@@ -580,7 +513,6 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
       );
       const studentId = studentRes.rows[0].id;
 
-      // Enroll/update in active term session
       await client.query(
         `INSERT INTO student_term_enrollments (student_id, class, term, session, status)
          VALUES ($1, $2, $3, $4, 'ACTIVE')
@@ -601,8 +533,6 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
 
   res.json(results);
 });
-
-/* ---------------------------- SUBJECTS ---------------------------- */
 
 router.get('/subjects', async (req, res) => {
   try {
@@ -631,16 +561,15 @@ router.post('/subjects', async (req, res) => {
 });
 
 router.delete('/subjects/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
   try {
-    await pool.query('DELETE FROM subjects WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM subjects WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: friendlyDeleteError(err, 'subject') });
   }
 });
-
-/* ---------------------------- TEACHERS ---------------------------- */
 
 router.get('/teachers', async (req, res) => {
   try {
@@ -671,16 +600,15 @@ router.post('/teachers', async (req, res) => {
 });
 
 router.delete('/teachers/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
   try {
-    await pool.query('DELETE FROM teachers WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM teachers WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: friendlyDeleteError(err, 'teacher') });
   }
 });
-
-/* ---------------------------- CLASSES ---------------------------- */
 
 const VALID_LEVELS = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
 const VALID_ARMS = ['A', 'B', 'C', 'D', 'E'];
@@ -715,16 +643,15 @@ router.post('/classes', async (req, res) => {
 });
 
 router.delete('/classes/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
   try {
-    await pool.query('DELETE FROM classes WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM classes WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: friendlyDeleteError(err, 'class') });
   }
 });
-
-/* ---------------------- TEACHER-SUBJECT ASSIGNMENTS ---------------------- */
 
 router.get('/assignments', async (req, res) => {
   try {
@@ -743,10 +670,13 @@ router.get('/assignments', async (req, res) => {
 });
 
 router.post('/assignments', async (req, res) => {
-  const { teacher_id, subject_id, class: className } = req.body;
+  let { teacher_id, subject_id, class: className } = req.body;
   if (!teacher_id || !subject_id || !className) {
     return res.status(400).json({ error: 'teacher_id, subject_id and class are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
+  subject_id = parseInt(subject_id, 10);
+
   try {
     const { rows } = await pool.query(
       'INSERT INTO teacher_subjects (teacher_id, subject_id, class) VALUES ($1, $2, $3) RETURNING *',
@@ -761,16 +691,15 @@ router.post('/assignments', async (req, res) => {
 });
 
 router.delete('/assignments/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
   try {
-    await pool.query('DELETE FROM teacher_subjects WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM teacher_subjects WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: friendlyDeleteError(err, 'assignment') });
   }
 });
-
-/* ---------------------------- FORM TEACHERS ---------------------------- */
 
 router.get('/form-teachers', async (req, res) => {
   try {
@@ -788,10 +717,12 @@ router.get('/form-teachers', async (req, res) => {
 });
 
 router.post('/form-teachers', async (req, res) => {
-  const { teacher_id, class: className } = req.body;
+  let { teacher_id, class: className } = req.body;
   if (!teacher_id || !className) {
     return res.status(400).json({ error: 'teacher_id and class are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
+
   try {
     const { rows } = await pool.query(
       'INSERT INTO form_teacher_classes (teacher_id, class) VALUES ($1, $2) RETURNING *',
@@ -806,8 +737,9 @@ router.post('/form-teachers', async (req, res) => {
 });
 
 router.delete('/form-teachers/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
   try {
-    await pool.query('DELETE FROM form_teacher_classes WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM form_teacher_classes WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);

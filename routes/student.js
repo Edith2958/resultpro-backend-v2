@@ -3,10 +3,6 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { getGrade, rankByTotal, ordinal } = require('../utils/grading');
 
-/**
- * Automated principal comment based on student average
- * (Outstanding is set to start from 90+)
- */
 function getPrincipalComment(average) {
   if (average >= 90) return "An outstanding performance! Keep up the brilliant work.";
   if (average >= 75) return "Very good result. Consistency will bring even greater success.";
@@ -15,9 +11,6 @@ function getPrincipalComment(average) {
   return "Poor performance. Immediate consultation with teachers and parents is required.";
 }
 
-/**
- * Helper to fetch global school settings
- */
 async function getSchoolSettings() {
   try {
     const { rows } = await pool.query('SELECT * FROM school_settings WHERE id = 1');
@@ -35,9 +28,6 @@ async function getSchoolSettings() {
   }
 }
 
-/**
- * POST /api/student/login
- */
 router.post('/login', async (req, res) => {
   const { admission_no, surname } = req.body;
   if (!admission_no || !surname) {
@@ -62,14 +52,12 @@ router.post('/login', async (req, res) => {
   }
 });
 
-/**
- * GET /api/student/midterm-result
- */
 router.get('/midterm-result', async (req, res) => {
-  const { student_id, term, session } = req.query;
+  let { student_id, term, session } = req.query;
   if (!student_id || !term || !session) {
     return res.status(400).json({ error: 'student_id, term and session are required' });
   }
+  student_id = parseInt(student_id, 10);
 
   try {
     const [studentRes, schoolSettings] = await Promise.all([
@@ -120,17 +108,15 @@ router.get('/midterm-result', async (req, res) => {
   }
 });
 
-/**
- * GET /api/student/result
- */
 router.get('/result', async (req, res) => {
-  const { student_id, term, session, pin_code } = req.query;
+  let { student_id, term, session, pin_code } = req.query;
   if (!student_id || !term || !session) {
     return res.status(400).json({ error: 'student_id, term and session are required' });
   }
   if (!pin_code) {
     return res.status(400).json({ error: 'A result PIN is required to view the full-term result', pin_required: true });
   }
+  student_id = parseInt(student_id, 10);
 
   try {
     const [settingsRes, feeRes, schoolSettings] = await Promise.all([
@@ -255,7 +241,6 @@ router.get('/result', async (req, res) => {
     const termRecord = termRecordRes.rows[0] || null;
     const pinData = pinUpdateRes.rows[0];
 
-    // Priority: Custom exam-office comment overrides automated average comment
     const principalComment = termRecord?.principal_comment || getPrincipalComment(average);
 
     res.json({

@@ -2,11 +2,8 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
 const { getGrade, rankByTotal, ordinal } = require('../utils/grading');
-const { upload } = require('../config/cloudinary'); // Import Cloudinary upload middleware
+const { upload } = require('../config/cloudinary');
 
-/**
- * Helper to fetch global school settings
- */
 async function getSchoolSettings() {
   try {
     const { rows } = await pool.query('SELECT * FROM school_settings WHERE id = 1');
@@ -24,14 +21,10 @@ async function getSchoolSettings() {
   }
 }
 
-/**
- * GET /api/form-teacher/my-class
- * Returns the class this teacher is the form teacher for, if any.
- * Query params: teacher_id
- */
 router.get('/my-class', async (req, res) => {
-  const { teacher_id } = req.query;
+  let { teacher_id } = req.query;
   if (!teacher_id) return res.status(400).json({ error: 'teacher_id is required' });
+  teacher_id = parseInt(teacher_id, 10);
 
   try {
     const { rows } = await pool.query(
@@ -46,21 +39,20 @@ router.get('/my-class', async (req, res) => {
 });
 
 async function isFormTeacherOf(teacherId, className) {
+  const tId = parseInt(teacherId, 10);
   const { rows } = await pool.query(
     `SELECT 1 FROM form_teacher_classes WHERE teacher_id = $1 AND class = $2`,
-    [teacherId, className]
+    [tId, className]
   );
   return rows.length > 0;
 }
 
-/**
- * GET /api/form-teacher/broadsheet?class=JSS1A&term=First Term&session=2025/2026&teacher_id=1
- */
 router.get('/broadsheet', async (req, res) => {
-  const { class: className, term, session, teacher_id } = req.query;
+  let { class: className, term, session, teacher_id } = req.query;
   if (!className || !term || !session || !teacher_id) {
     return res.status(400).json({ error: 'class, term, session and teacher_id are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
 
   try {
     if (!(await isFormTeacherOf(teacher_id, className))) {
@@ -153,14 +145,12 @@ router.get('/broadsheet', async (req, res) => {
   }
 });
 
-/**
- * GET /api/form-teacher/class-result-slips
- */
 router.get('/class-result-slips', async (req, res) => {
-  const { class: className, term, session, teacher_id } = req.query;
+  let { class: className, term, session, teacher_id } = req.query;
   if (!className || !term || !session || !teacher_id) {
     return res.status(400).json({ error: 'class, term, session and teacher_id are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
 
   try {
     if (!(await isFormTeacherOf(teacher_id, className))) {
@@ -289,14 +279,12 @@ router.get('/class-result-slips', async (req, res) => {
   }
 });
 
-/**
- * GET /api/form-teacher/roster
- */
 router.get('/roster', async (req, res) => {
-  const { class: className, term, session, teacher_id } = req.query;
+  let { class: className, term, session, teacher_id } = req.query;
   if (!className || !term || !session || !teacher_id) {
     return res.status(400).json({ error: 'class, term, session and teacher_id are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
 
   try {
     if (!(await isFormTeacherOf(teacher_id, className))) {
@@ -326,14 +314,12 @@ router.get('/roster', async (req, res) => {
   }
 });
 
-/**
- * POST /api/form-teacher/term-records
- */
 router.post('/term-records', async (req, res) => {
-  const { class: className, term, session, records, teacher_id } = req.body;
+  let { class: className, term, session, records, teacher_id } = req.body;
   if (!className || !term || !session || !teacher_id || !Array.isArray(records)) {
     return res.status(400).json({ error: 'class, term, session, teacher_id and records[] are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
 
   if (!(await isFormTeacherOf(teacher_id, className))) {
     return res.status(403).json({ error: 'You are not the form teacher for this class' });
@@ -344,6 +330,7 @@ router.post('/term-records', async (req, res) => {
     await client.query('BEGIN');
 
     for (const r of records) {
+      const studentIdInt = parseInt(r.student_id, 10);
       await client.query(
         `INSERT INTO term_records
            (student_id, class, term, session, times_present, times_absent, total_days,
@@ -357,7 +344,7 @@ router.post('/term-records', async (req, res) => {
            form_teacher_comment = COALESCE(EXCLUDED.form_teacher_comment, term_records.form_teacher_comment),
            principal_comment = COALESCE(EXCLUDED.principal_comment, term_records.principal_comment)`,
         [
-          r.student_id, className, term, session,
+          studentIdInt, className, term, session,
           r.times_present ?? null, r.times_absent ?? null, r.total_days ?? null,
           r.form_teacher_comment ?? null, r.principal_comment ?? null,
         ]
@@ -375,11 +362,6 @@ router.post('/term-records', async (req, res) => {
   }
 });
 
-/**
- * POST /api/form-teacher/upload-photo
- * multipart/form-data with fields: student_id, class, teacher_id, and a file field named "photo"
- * Uploads directly to Cloudinary and updates students.photo_url with the secure cloud URL.
- */
 router.post('/upload-photo', (req, res, next) => {
   upload.single('photo')(req, res, async (err) => {
     if (err) {
@@ -387,7 +369,7 @@ router.post('/upload-photo', (req, res, next) => {
       return res.status(500).json({ error: 'Upload failed: ' + (err.message || err) });
     }
 
-    const { student_id, class: className, teacher_id } = req.body;
+    let { student_id, class: className, teacher_id } = req.body;
 
     if (!student_id || !className || !teacher_id) {
       return res.status(400).json({ error: 'student_id, class and teacher_id are required' });
@@ -395,6 +377,9 @@ router.post('/upload-photo', (req, res, next) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No photo file received. Make sure the form field name is "photo".' });
     }
+
+    student_id = parseInt(student_id, 10);
+    teacher_id = parseInt(teacher_id, 10);
 
     try {
       if (!(await isFormTeacherOf(teacher_id, className))) {

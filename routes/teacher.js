@@ -3,18 +3,12 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { getGrade, getMidTermRemark } = require('../utils/grading');
 
-/**
- * Helper to validate and parse scores:
- * - Ensures numbers are within the allowed range (0 to maxLimit).
- * - Handles explicit clearing (empty string or null sets value to null).
- * - Preserves existing values if the field is omitted (undefined).
- */
 function parseScore(val, maxLimit, fieldName) {
   if (val === undefined) {
     return { provided: false, value: null };
   }
   if (val === null || String(val).trim() === '') {
-    return { provided: true, value: null }; // Explicitly cleared by user
+    return { provided: true, value: null };
   }
   const num = Number(val);
   if (isNaN(num) || num < 0 || num > maxLimit) {
@@ -23,9 +17,6 @@ function parseScore(val, maxLimit, fieldName) {
   return { provided: true, value: num };
 }
 
-/**
- * POST /api/teacher/login
- */
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -47,14 +38,12 @@ router.post('/login', async (req, res) => {
   }
 });
 
-/**
- * GET /api/teacher/my-subjects
- */
 router.get('/my-subjects', async (req, res) => {
-  const { teacher_id } = req.query;
+  let { teacher_id } = req.query;
   if (!teacher_id) {
     return res.status(400).json({ error: 'teacher_id is required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
 
   try {
     const { rows } = await pool.query(
@@ -73,14 +62,17 @@ router.get('/my-subjects', async (req, res) => {
 });
 
 async function isAssigned(teacherId, className, subjectId) {
+  const tId = parseInt(teacherId, 10);
+  const sId = parseInt(subjectId, 10);
   const { rows } = await pool.query(
     `SELECT 1 FROM teacher_subjects WHERE teacher_id = $1 AND class = $2 AND subject_id = $3`,
-    [teacherId, className, subjectId]
+    [tId, className, sId]
   );
   return rows.length > 0;
 }
 
 async function checkDeadlineAllowsSave(teacherId, className, term, session) {
+  const tId = parseInt(teacherId, 10);
   const settingsRes = await pool.query(
     'SELECT teacher_deadline FROM term_settings WHERE term = $1 AND session = $2',
     [term, session]
@@ -92,7 +84,7 @@ async function checkDeadlineAllowsSave(teacherId, className, term, session) {
 
   const overrideRes = await pool.query(
     'SELECT 1 FROM deadline_overrides WHERE teacher_id = $1 AND class = $2 AND term = $3 AND session = $4',
-    [teacherId, className, term, session]
+    [tId, className, term, session]
   );
   if (overrideRes.rows.length > 0) {
     return null;
@@ -101,14 +93,13 @@ async function checkDeadlineAllowsSave(teacherId, className, term, session) {
   return 'The deadline for submitting scores has passed. Contact the exam office for an extension.';
 }
 
-/**
- * GET /api/teacher/roster
- */
 router.get('/roster', async (req, res) => {
-  const { class: className, subject_id, term, session, teacher_id } = req.query;
+  let { class: className, subject_id, term, session, teacher_id } = req.query;
   if (!className || !subject_id || !term || !session || !teacher_id) {
     return res.status(400).json({ error: 'class, subject_id, term, session and teacher_id are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
+  subject_id = parseInt(subject_id, 10);
 
   try {
     if (!(await isAssigned(teacher_id, className, subject_id))) {
@@ -152,14 +143,13 @@ router.get('/roster', async (req, res) => {
   }
 });
 
-/**
- * POST /api/teacher/midterm-scores
- */
 router.post('/midterm-scores', async (req, res) => {
-  const { teacher_id, class: className, subject_id, term, session, scores } = req.body;
+  let { teacher_id, class: className, subject_id, term, session, scores } = req.body;
   if (!className || !subject_id || !term || !session || !teacher_id || !Array.isArray(scores)) {
     return res.status(400).json({ error: 'class, subject_id, term, session, teacher_id and scores[] are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
+  subject_id = parseInt(subject_id, 10);
 
   if (!(await isAssigned(teacher_id, className, subject_id))) {
     return res.status(403).json({ error: 'You are not assigned to this subject for this class' });
@@ -175,7 +165,7 @@ router.post('/midterm-scores', async (req, res) => {
     await client.query('BEGIN');
 
     for (const s of scores) {
-      // Validate and parse scores (Assignment: 0–15, Mid-term Test: 0–15)
+      const studentIdInt = parseInt(s.student_id, 10);
       const assignParsed = parseScore(s.assignment_score, 15, 'Assignment score');
       const testParsed = parseScore(s.test_score, 15, 'Mid-term score');
 
@@ -191,7 +181,7 @@ router.post('/midterm-scores', async (req, res) => {
             teacher_id = EXCLUDED.teacher_id,
             updated_at = NOW()`,
         [
-          s.student_id,
+          studentIdInt,
           subject_id,
           teacher_id,
           className,
@@ -217,14 +207,13 @@ router.post('/midterm-scores', async (req, res) => {
   }
 });
 
-/**
- * GET /api/teacher/fullterm-roster
- */
 router.get('/fullterm-roster', async (req, res) => {
-  const { class: className, subject_id, term, session, teacher_id } = req.query;
+  let { class: className, subject_id, term, session, teacher_id } = req.query;
   if (!className || !subject_id || !term || !session || !teacher_id) {
     return res.status(400).json({ error: 'class, subject_id, term, session and teacher_id are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
+  subject_id = parseInt(subject_id, 10);
 
   try {
     if (!(await isAssigned(teacher_id, className, subject_id))) {
@@ -282,14 +271,13 @@ router.get('/fullterm-roster', async (req, res) => {
   }
 });
 
-/**
- * POST /api/teacher/fullterm-scores
- */
 router.post('/fullterm-scores', async (req, res) => {
-  const { teacher_id, class: className, subject_id, term, session, scores } = req.body;
+  let { teacher_id, class: className, subject_id, term, session, scores } = req.body;
   if (!className || !subject_id || !term || !session || !teacher_id || !Array.isArray(scores)) {
     return res.status(400).json({ error: 'class, subject_id, term, session, teacher_id and scores[] are required' });
   }
+  teacher_id = parseInt(teacher_id, 10);
+  subject_id = parseInt(subject_id, 10);
 
   if (!(await isAssigned(teacher_id, className, subject_id))) {
     return res.status(403).json({ error: 'You are not assigned to this subject for this class' });
@@ -305,7 +293,7 @@ router.post('/fullterm-scores', async (req, res) => {
     await client.query('BEGIN');
 
     for (const s of scores) {
-      // Validate and parse Exam score (0–70) and manual CA override if applicable (0–30)
+      const studentIdInt = parseInt(s.student_id, 10);
       const examParsed = parseScore(s.exam_score, 70, 'Exam score');
       const caOverrideParsed = parseScore(s.manual_ca_override, 30, 'Manual CA override');
 
@@ -321,7 +309,7 @@ router.post('/fullterm-scores', async (req, res) => {
             teacher_id = EXCLUDED.teacher_id,
             updated_at = NOW()`,
         [
-          s.student_id,
+          studentIdInt,
           subject_id,
           teacher_id,
           className,
