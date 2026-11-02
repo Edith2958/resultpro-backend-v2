@@ -38,7 +38,7 @@ router.post('/login', async (req, res) => {
     const { rows } = await pool.query(
       `SELECT id, surname, first_name, middle_name, admission_no, class, photo_url FROM students
        WHERE admission_no = $1 AND surname ILIKE $2`,
-      [admission_no, `%${surname}%`]
+      [admission_no.trim(), `%${surname.trim()}%`]
     );
 
     if (rows.length === 0) {
@@ -61,7 +61,7 @@ router.get('/midterm-result', async (req, res) => {
 
   try {
     const [studentRes, schoolSettings] = await Promise.all([
-      pool.query('SELECT * FROM students WHERE id = $1', [student_id]),
+      pool.query('SELECT * FROM students WHERE id::integer = $1', [student_id]),
       getSchoolSettings()
     ]);
 
@@ -73,8 +73,8 @@ router.get('/midterm-result', async (req, res) => {
     const { rows } = await pool.query(
       `SELECT sub.id AS subject_id, sub.name AS subject_name, m.assignment_score, m.test_score
        FROM mid_term_results m
-       JOIN subjects sub ON sub.id = m.subject_id
-       WHERE m.student_id = $1 AND m.term = $2 AND m.session = $3
+       JOIN subjects sub ON sub.id = m.subject_id::integer
+       WHERE m.student_id::integer = $1 AND m.term = $2 AND m.session = $3
        ORDER BY sub.name ASC`,
       [student_id, term, session]
     );
@@ -121,7 +121,7 @@ router.get('/result', async (req, res) => {
   try {
     const [settingsRes, feeRes, schoolSettings] = await Promise.all([
       pool.query('SELECT result_release_at FROM term_settings WHERE term = $1 AND session = $2', [term, session]),
-      pool.query('SELECT cleared FROM fee_status WHERE student_id = $1 AND term = $2 AND session = $3', [student_id, term, session]),
+      pool.query('SELECT cleared FROM fee_status WHERE student_id::integer = $1 AND term = $2 AND session = $3', [student_id, term, session]),
       getSchoolSettings()
     ]);
 
@@ -143,11 +143,11 @@ router.get('/result', async (req, res) => {
     const pinUpdateRes = await pool.query(
       `UPDATE result_pins
        SET uses_count = uses_count + 1,
-           student_id = COALESCE(student_id, $2),
+           student_id = COALESCE(student_id::integer, $2),
            first_used_at = COALESCE(first_used_at, NOW())
        WHERE code = $1
          AND uses_count < max_uses
-         AND (student_id IS NULL OR student_id = $2)
+         AND (student_id IS NULL OR student_id::integer = $2)
        RETURNING *`,
       [pin_code, student_id]
     );
@@ -167,7 +167,7 @@ router.get('/result', async (req, res) => {
       return res.status(403).json({ error: 'This PIN could not be used. Please check the code and try again.' });
     }
 
-    const studentRes = await pool.query('SELECT * FROM students WHERE id = $1', [student_id]);
+    const studentRes = await pool.query('SELECT * FROM students WHERE id::integer = $1', [student_id]);
     if (studentRes.rows.length === 0) {
       return res.status(404).json({ error: 'Student not found' });
     }
@@ -178,10 +178,10 @@ router.get('/result', async (req, res) => {
               m.assignment_score, m.test_score,
               r.exam_score, r.manual_ca_override
        FROM results r
-       JOIN subjects sub ON sub.id = r.subject_id
+       JOIN subjects sub ON sub.id = r.subject_id::integer
        LEFT JOIN mid_term_results m
-         ON m.student_id = r.student_id AND m.subject_id = r.subject_id AND m.term = r.term AND m.session = r.session
-       WHERE r.student_id = $1 AND r.term = $2 AND r.session = $3
+         ON m.student_id::integer = r.student_id::integer AND m.subject_id::integer = r.subject_id::integer AND m.term = r.term AND m.session = r.session
+       WHERE r.student_id::integer = $1 AND r.term = $2 AND r.session = $3
        ORDER BY sub.name ASC`,
       [student_id, term, session]
     );
@@ -209,8 +209,8 @@ router.get('/result', async (req, res) => {
                 COALESCE(m.assignment_score,0) + COALESCE(m.test_score,0) + COALESCE(r.exam_score,0) AS total
          FROM results r
          LEFT JOIN mid_term_results m
-           ON m.student_id = r.student_id AND m.subject_id = r.subject_id AND m.term = r.term AND m.session = r.session
-         WHERE r.class = $1 AND r.subject_id = $2 AND r.term = $3 AND r.session = $4`,
+           ON m.student_id::integer = r.student_id::integer AND m.subject_id::integer = r.subject_id::integer AND m.term = r.term AND m.session = r.session
+         WHERE r.class = $1 AND r.subject_id::integer = $2 AND r.term = $3 AND r.session = $4`,
         [student.class, s.subject_id, term, session]
       );
       const entries = classScoresRes.rows.map((r) => ({ studentId: r.student_id, total: Number(r.total) }));
@@ -225,7 +225,7 @@ router.get('/result', async (req, res) => {
               SUM(COALESCE(m.assignment_score,0) + COALESCE(m.test_score,0) + COALESCE(r.exam_score,0)) AS total
        FROM results r
        LEFT JOIN mid_term_results m
-         ON m.student_id = r.student_id AND m.subject_id = r.subject_id AND m.term = r.term AND m.session = r.session
+         ON m.student_id::integer = r.student_id::integer AND m.subject_id::integer = r.subject_id::integer AND m.term = r.term AND m.session = r.session
        WHERE r.class = $1 AND r.term = $2 AND r.session = $3
        GROUP BY r.student_id`,
       [student.class, term, session]
@@ -235,7 +235,7 @@ router.get('/result', async (req, res) => {
     const myClassRank = classRanked.find((e) => e.studentId === student.id);
 
     const termRecordRes = await pool.query(
-      `SELECT * FROM term_records WHERE student_id = $1 AND term = $2 AND session = $3`,
+      `SELECT * FROM term_records WHERE student_id::integer = $1 AND term = $2 AND session = $3`,
       [student_id, term, session]
     );
     const termRecord = termRecordRes.rows[0] || null;
