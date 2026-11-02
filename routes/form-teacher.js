@@ -3,7 +3,21 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { getGrade, rankByTotal, ordinal } = require('../utils/grading');
 const { upload } = require('../config/cloudinary');
-
+// GET active session and term set by the Exam Office
+router.get('/active-session', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT current_session AS session, current_term AS term FROM school_settings LIMIT 1`
+    );
+    if (rows.length === 0) {
+      return res.json({ session: '2026/2027', term: 'First Term' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch active session and term' });
+  }
+});
 async function getSchoolSettings() {
   try {
     const { rows } = await pool.query('SELECT * FROM school_settings WHERE id = 1');

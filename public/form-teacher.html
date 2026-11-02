@@ -270,7 +270,7 @@
       </div>
       <div>
         <label for="sessionInput">Session</label>
-        <input type="text" id="sessionInput" value="2025/2026" />
+        <input type="text" id="sessionInput" />
       </div>
     </div>
 
@@ -353,6 +353,21 @@
   }
   fetchInitialSchoolSettings();
 
+  async function loadActiveSession() {
+    try {
+      const res = await fetch(`${API_BASE}/api/form-teacher/active-session`);
+      const data = await res.json();
+      if (data.session) {
+        document.getElementById('sessionInput').value = data.session;
+      }
+      if (data.term) {
+        document.getElementById('termSelect').value = data.term;
+      }
+    } catch (err) {
+      console.error('Could not load active session/term:', err);
+    }
+  }
+
   const saved = sessionStorage.getItem('resultpro_teacher');
   if (saved) {
     teacher = JSON.parse(saved);
@@ -425,6 +440,9 @@
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
     document.getElementById('whoAmI').textContent = `Logged in as ${teacher.name}`;
+
+    // Automatically load active session and term set by Exam Office
+    await loadActiveSession();
 
     try {
       const res = await fetch(`${API_BASE}/api/form-teacher/my-class?teacher_id=${teacher.id}`);
@@ -583,7 +601,6 @@
         ? `<img src="${getPhotoUrl(s.photo_url)}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
         : getInitials(s.name);
 
-      // Build official school header for each printed slip
       let schoolHeaderHtml = '';
       if (globalSchoolSettings) {
         const gs = globalSchoolSettings;
