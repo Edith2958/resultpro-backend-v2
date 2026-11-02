@@ -17,6 +17,22 @@ function parseScore(val, maxLimit, fieldName) {
   return { provided: true, value: num };
 }
 
+// GET active session and term set by the Exam Office
+router.get('/active-session', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT current_session AS session, current_term AS term FROM school_settings LIMIT 1`
+    );
+    if (rows.length === 0) {
+      return res.json({ session: '2026/2027', term: 'First Term' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch active session and term' });
+  }
+});
+
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {

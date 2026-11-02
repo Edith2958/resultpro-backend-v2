@@ -330,7 +330,7 @@
       </div>
       <div>
         <label for="sessionInput">Session</label>
-        <input type="text" id="sessionInput" value="2025/2026" onchange="checkDeadlineCountdown()" oninput="checkDeadlineCountdown()" />
+        <input type="text" id="sessionInput" onchange="checkDeadlineCountdown()" oninput="checkDeadlineCountdown()" />
       </div>
     </div>
 
@@ -399,6 +399,21 @@
   }
   fetchInitialSchoolSettings();
 
+  async function loadActiveSession() {
+    try {
+      const res = await fetch(`${API_BASE}/api/teacher/active-session`);
+      const data = await res.json();
+      if (data.session) {
+        document.getElementById('sessionInput').value = data.session;
+      }
+      if (data.term) {
+        document.getElementById('termSelect').value = data.term;
+      }
+    } catch (err) {
+      console.error('Could not load active session/term:', err);
+    }
+  }
+
   const saved = sessionStorage.getItem('resultpro_teacher');
   if (saved) {
     teacher = JSON.parse(saved);
@@ -459,6 +474,9 @@
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
     document.getElementById('whoAmI').textContent = `Logged in as ${teacher.name}`;
+
+    // Automatically load active session and term set by Exam Office
+    await loadActiveSession();
 
     try {
       const res = await fetch(`${API_BASE}/api/teacher/my-subjects?teacher_id=${teacher.id}`);
