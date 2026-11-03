@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { getGrade, rankByTotal, ordinal } = require('../utils/grading');
 const { upload } = require('../config/cloudinary');
+
 // GET active session and term set by the Exam Office
 router.get('/active-session', async (req, res) => {
   try {
@@ -18,6 +19,7 @@ router.get('/active-session', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch active session and term' });
   }
 });
+
 async function getSchoolSettings() {
   try {
     const { rows } = await pool.query('SELECT * FROM school_settings WHERE id = 1');
@@ -42,7 +44,7 @@ router.get('/my-class', async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `SELECT class FROM form_teacher_classes WHERE teacher_id = $1`,
+      `SELECT class FROM form_teacher_classes WHERE teacher_id::integer = $1`,
       [teacher_id]
     );
     res.json({ class: rows[0]?.class || null });
@@ -55,7 +57,7 @@ router.get('/my-class', async (req, res) => {
 async function isFormTeacherOf(teacherId, className) {
   const tId = parseInt(teacherId, 10);
   const { rows } = await pool.query(
-    `SELECT 1 FROM form_teacher_classes WHERE teacher_id = $1 AND class = $2`,
+    `SELECT 1 FROM form_teacher_classes WHERE teacher_id::integer = $1 AND class = $2`,
     [tId, className]
   );
   return rows.length > 0;
@@ -76,7 +78,7 @@ router.get('/broadsheet', async (req, res) => {
     const subjectsRes = await pool.query(
       `SELECT DISTINCT sub.id, sub.name
        FROM teacher_subjects ts
-       JOIN subjects sub ON sub.id = ts.subject_id
+       JOIN subjects sub ON sub.id = ts.subject_id::integer
        WHERE ts.class = $1
        ORDER BY sub.name ASC`,
       [className]
@@ -97,7 +99,10 @@ router.get('/broadsheet', async (req, res) => {
               m.assignment_score, m.test_score, r.exam_score, r.manual_ca_override
        FROM results r
        LEFT JOIN mid_term_results m
-         ON m.student_id = r.student_id AND m.subject_id = r.subject_id AND m.term = r.term AND m.session = r.session
+         ON m.student_id::integer = r.student_id::integer 
+        AND m.subject_id::integer = r.subject_id::integer 
+        AND m.term = r.term 
+        AND m.session = r.session
        WHERE r.class = $1 AND r.term = $2 AND r.session = $3`,
       [className, term, session]
     );
@@ -176,7 +181,7 @@ router.get('/class-result-slips', async (req, res) => {
       pool.query(
         `SELECT DISTINCT sub.id, sub.name
          FROM teacher_subjects ts
-         JOIN subjects sub ON sub.id = ts.subject_id
+         JOIN subjects sub ON sub.id = ts.subject_id::integer
          WHERE ts.class = $1
          ORDER BY sub.name ASC`,
         [className]
@@ -195,7 +200,10 @@ router.get('/class-result-slips', async (req, res) => {
               m.assignment_score, m.test_score, r.exam_score, r.manual_ca_override
        FROM results r
        LEFT JOIN mid_term_results m
-         ON m.student_id = r.student_id AND m.subject_id = r.subject_id AND m.term = r.term AND m.session = r.session
+         ON m.student_id::integer = r.student_id::integer 
+        AND m.subject_id::integer = r.subject_id::integer 
+        AND m.term = r.term 
+        AND m.session = r.session
        WHERE r.class = $1 AND r.term = $2 AND r.session = $3`,
       [className, term, session]
     );
@@ -252,7 +260,7 @@ router.get('/class-result-slips', async (req, res) => {
         .map((sub) => {
           const cell = scoreMap[`${s.id}-${sub.id}`];
           if (!cell) return null;
-          const rank = subjectRankings[sub.id][s.id] || { highest: null, position: '-' };
+          const rank = subjectRankings[sub.id]?.[s.id] || { highest: null, position: '-' };
           return {
             subject_name: sub.name,
             ca: cell.ca, exam: cell.exam, total: cell.total, grade: cell.grade,
@@ -310,7 +318,7 @@ router.get('/roster', async (req, res) => {
               t.form_teacher_comment, t.principal_comment
        FROM students s
        LEFT JOIN term_records t
-         ON t.student_id = s.id AND t.term = $2 AND t.session = $3
+         ON t.student_id::integer = s.id::integer AND t.term = $2 AND t.session = $3
        WHERE s.class = $1
        ORDER BY s.surname ASC`,
       [className, term, session]
@@ -405,7 +413,7 @@ router.post('/upload-photo', (req, res, next) => {
         throw new Error('Cloudinary did not return a file path.');
       }
 
-      await pool.query('UPDATE students SET photo_url = $1 WHERE id = $2', [cloudUrl, student_id]);
+      await pool.query('UPDATE students SET photo_url = $1 WHERE id::integer = $2', [cloudUrl, student_id]);
 
       return res.json({ success: true, photo_url: cloudUrl });
     } catch (dbOrLogicErr) {
