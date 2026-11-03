@@ -133,7 +133,7 @@ router.get('/broadsheet', async (req, res) => {
     ranked.forEach(r => { rankMap[r.studentId] = r.position; });
 
     const rows = students.map((s) => {
-      const totals = studentTotals.find(t => t.studentId === s.id);
+      const totals = studentTotals.find(t => t.studentId === s.id) || { total: 0, subjectCount: 0 };
       const maxObtainable = totals.subjectCount * 100;
       const average = maxObtainable ? Number(((totals.total / maxObtainable) * 100).toFixed(1)) : 0;
 
@@ -152,8 +152,8 @@ router.get('/broadsheet', async (req, res) => {
         total_score: totals.total,
         max_obtainable: maxObtainable,
         average,
-        class_position: ordinal(rankMap[s.id]),
-        class_position_rank: rankMap[s.id],
+        class_position: ordinal(rankMap[s.id] || 1),
+        class_position_rank: rankMap[s.id] || 1,
       };
     });
 
@@ -282,7 +282,7 @@ router.get('/class-result-slips', async (req, res) => {
           total_score: totalScore,
           max_obtainable: maxObtainable,
           average,
-          class_position: ordinal(classRankMap[s.id]),
+          class_position: ordinal(classRankMap[s.id] || 1),
           class_size: students.length,
         },
         attendance: termRecord
@@ -404,7 +404,7 @@ router.post('/upload-photo', (req, res, next) => {
     teacher_id = parseInt(teacher_id, 10);
 
     try {
-      if (!(await isFormTeacherOf(teacher_id, className))) {
+      if (!(await isFormTeacher_teacher_of(teacher_id, className))) {
         return res.status(403).json({ error: 'You are not the form teacher for this class' });
       }
 
