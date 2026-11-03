@@ -28,10 +28,16 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Generates a random, human-typeable PIN like "482-193-627" — grouped for readability.
+// Generates a secure, world-standard alphanumeric PIN without hyphens (e.g., "K9X4M2P8")
 function generatePinCode() {
-  const digits = crypto.randomInt(0, 1000000000).toString().padStart(9, '0');
-  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 9)}`;
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes confusing characters like I, O, 0, 1
+  let code = '';
+  const bytes = crypto.randomBytes(9);
+  for (let i = 0; i < 9; i++) {
+    code += chars[bytes[i] % chars.length];
+  }
+  // Format into standard readable blocks or single string (e.g., 9 alphanumeric characters: 3-3-3 blocks without dashes or continuous)
+  return `${code.slice(0, 3)}${code.slice(3, 6)}${code.slice(6, 9)}`;
 }
 
 /**
