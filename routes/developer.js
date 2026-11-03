@@ -28,16 +28,15 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Generates a secure, world-standard alphanumeric PIN without hyphens (e.g., "K9X4M2P8")
+// Generates a secure, world-standard 9-character alphanumeric PIN without hyphens (e.g., "K9X4M2P8Q")
 function generatePinCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes confusing characters like I, O, 0, 1
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes ambiguous chars like I, O, 0, 1
   let code = '';
   const bytes = crypto.randomBytes(9);
   for (let i = 0; i < 9; i++) {
     code += chars[bytes[i] % chars.length];
   }
-  // Format into standard readable blocks or single string (e.g., 9 alphanumeric characters: 3-3-3 blocks without dashes or continuous)
-  return `${code.slice(0, 3)}${code.slice(3, 6)}${code.slice(6, 9)}`;
+  return code;
 }
 
 /**
@@ -56,25 +55,27 @@ router.post('/pins/generate', async (req, res) => {
   try {
     await client.query('BEGIN');
     const generated = [];
-    // Loop with a retry-on-collision approach, since codes are random and unique.
-    for (let i = 0; i < howMany; i++) {
-      let inserted = false;
-      let attempts = 0;
-      while (!inserted && attempts < 5) {
-        attempts++;
-        const code = generatePinCode();
-        try {
-          const { rows } = await client.query(
-            `INSERT INTO result_pins (code, max_uses, generated_by) VALUES ($1, $2, $3) RETURNING *`,
-            [code, max_uses, generated_by || null]
-          );
-          generated.push(rows[0]);
-          inserted = true;
-        } catch (err) {
-          if (err.code !== '23505') throw err; // only retry on a duplicate code collision
-        }
+
+    // Pre-generate unique PIN codes in memory to avoid DB transaction aborts
+    const uniqueCodes = new Set();
+    while (uniqueCodes.size < howMany) {
+      uniqueCodes.add(generatePinCode());
+    }
+
+    for (const code of uniqueCodes) {
+      const { rows } = await client.query(
+        `INSERT INTO result_pins (code, max_uses, generated_by) 
+         VALUES ($1, $2, $3) 
+         ON CONFLICT (code) DO NOTHING 
+         RETURNING *`,
+        [code, max_uses, generated_by || null]
+      );
+
+      if (rows.length > 0) {
+        generated.push(rows[0]);
       }
     }
+
     await client.query('COMMIT');
     res.json({ pins: generated });
   } catch (err) {
@@ -110,12 +111,11 @@ router.get('/pins', async (req, res) => {
 
   try {
     const countRes = await pool.query(
-      `SELECT COUNT(*) FROM result_pins p LEFT JOIN students s ON s.id = p.student_id ${whereClause}`,
+      `SELECT COUNT(*) FROM result_pins p LEFT JOIN students s ON s.id::integer = p.student_id::integer ${whereClause}`,
       params
     );
     const total = Number(countRes.rows[0].count);
 
-    // Push limit and offset parameters correctly
     params.push(limit, offset);
     const limitIndex = params.length - 1;
     const offsetIndex = params.length;
@@ -124,7 +124,7 @@ router.get('/pins', async (req, res) => {
       `SELECT p.id, p.code, p.max_uses, p.uses_count, p.created_at, p.first_used_at,
               s.surname AS student_name, s.admission_no AS student_admission_no
        FROM result_pins p
-       LEFT JOIN students s ON s.id = p.student_id
+       LEFT JOIN students s ON s.id::integer = p.student_id::integer
        ${whereClause}
        ORDER BY p.created_at DESC
        LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
