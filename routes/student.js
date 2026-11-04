@@ -206,7 +206,7 @@ router.get('/result', async (req, res) => {
     for (const s of subjects) {
       const classScoresRes = await pool.query(
         `SELECT r.student_id,
-                COALESCE(m.assignment_score,0) + COALESCE(m.test_score,0) + COALESCE(r.exam_score,0) AS total
+                COALESCE(m.assignment_score::numeric,0) + COALESCE(m.test_score::numeric,0) + COALESCE(r.exam_score::numeric,0) AS total
          FROM results r
          LEFT JOIN mid_term_results m
            ON m.student_id::integer = r.student_id::integer AND m.subject_id::integer = r.subject_id::integer AND m.term = r.term AND m.session = r.session
@@ -222,7 +222,7 @@ router.get('/result', async (req, res) => {
 
     const classTotalsRes = await pool.query(
       `SELECT r.student_id,
-              SUM(COALESCE(m.assignment_score,0) + COALESCE(m.test_score,0) + COALESCE(r.exam_score,0)) AS total
+              SUM(COALESCE(m.assignment_score::numeric,0) + COALESCE(m.test_score::numeric,0) + COALESCE(r.exam_score::numeric,0)) AS total
        FROM results r
        LEFT JOIN mid_term_results m
          ON m.student_id::integer = r.student_id::integer AND m.subject_id::integer = r.subject_id::integer AND m.term = r.term AND m.session = r.session
