@@ -27,6 +27,11 @@
   --shadow-md: 0 12px 34px rgba(24, 55, 39, .075);
   --radius-card: 18px;
   --radius-control: 11px;
+
+  /* motion tokens */
+  --ease-out-expo: cubic-bezier(.16,1,.3,1);
+  --ease-out-back: cubic-bezier(.34,1.56,.64,1);
+  --ease-spring: cubic-bezier(.21,.98,.42,1);
 }
 * { box-sizing: border-box; }
 html { min-height: 100%; scroll-behavior: smooth; }
@@ -48,10 +53,36 @@ button { -webkit-tap-highlight-color: transparent; }
 .wrap { width: min(100%, 900px); margin: 0 auto; }
 .wrap.narrow { width: min(100%, 440px); }
 
+/* ============================================
+   ENTRANCE CHOREOGRAPHY
+   ============================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes crestPop {
+  0%   { opacity: 0; transform: scale(.6) rotate(-8deg); }
+  60%  { opacity: 1; transform: scale(1.06) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
 .school-header {
   text-align: center;
   margin: 0 auto 25px;
   padding: 5px 12px 0;
+  animation: fadeUp .55s var(--ease-out-expo) both;
 }
 .school-header .crest {
   width: 58px;
@@ -69,6 +100,13 @@ button { -webkit-tap-highlight-color: transparent; }
   font-family: 'Baloo 2', sans-serif;
   font-size: 19px;
   font-weight: 800;
+  animation: crestPop .6s var(--ease-out-back) both;
+  animation-delay: .1s;
+  transition: transform .3s var(--ease-out-back), box-shadow .3s ease;
+}
+.school-header .crest:hover {
+  transform: scale(1.06) rotate(-3deg);
+  box-shadow: 0 10px 24px rgba(16, 77, 54, .28);
 }
 .school-header .crest img { width: 100%; height: 100%; object-fit: cover; }
 .school-header h1 {
@@ -79,6 +117,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 800;
   letter-spacing: -.35px;
   line-height: 1.2;
+  animation: fadeUp .5s var(--ease-out-expo) .15s both;
 }
 .school-header p {
   margin: 6px 0 0;
@@ -86,6 +125,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 12px;
   font-weight: 700;
   letter-spacing: .35px;
+  animation: fadeUp .5s var(--ease-out-expo) .22s both;
 }
 
 .card {
@@ -95,6 +135,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: var(--radius-card);
   background: var(--card);
   box-shadow: var(--shadow-md);
+  animation: fadeUp .5s var(--ease-out-expo) .28s both;
 }
 #loginWrap .card { padding: 30px; }
 #loginWrap .school-header { margin-bottom: 26px; }
@@ -125,6 +166,81 @@ button { -webkit-tap-highlight-color: transparent; }
 .topbar button:hover { background: #eaf4ed; border-color: #bcd8c6; }
 .topbar button:active { transform: translateY(1px); }
 
+/* ============================================
+   PERSONALISED GREETING — the hero moment
+   ============================================ */
+.dash-greeting {
+  margin: 0 0 18px;
+  padding: 18px 22px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #eef8f2 0%, #e2f1e9 55%, #f3f9f5 100%);
+  border: 1px solid #d4e7da;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 4px 14px rgba(23, 99, 69, .07);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+  position: relative;
+  overflow: hidden;
+  animation: greetArrive .65s var(--ease-out-back) both;
+}
+@keyframes greetArrive {
+  0%   { opacity: 0; transform: translateY(-12px) scale(.96); }
+  60%  { opacity: 1; transform: translateY(2px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+/* subtle ambient sheen that sweeps once */
+.dash-greeting::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg,
+    transparent 30%,
+    rgba(255,255,255,.35) 50%,
+    transparent 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s var(--ease-out-expo) .35s 1 both;
+  pointer-events: none;
+}
+.dash-greeting .greet-line {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: clamp(18px, 2.6vw, 22px);
+  font-weight: 800;
+  color: #183d2d;
+  letter-spacing: -.3px;
+  line-height: 1.22;
+  animation: fadeUp .5s var(--ease-out-expo) .3s both;
+}
+.dash-greeting .greet-sub {
+  color: #4e6a5b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  white-space: nowrap;
+  animation: fadeUp .5s var(--ease-out-expo) .42s both;
+}
+.dash-greeting .greet-sub .dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2b8960;
+  margin-right: 6px;
+  vertical-align: middle;
+  animation: dotPulse 2.4s ease-in-out infinite;
+  animation-delay: .6s;
+}
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(43,137,96,.22); transform: scale(1); }
+  50%      { box-shadow: 0 0 0 6px rgba(43,137,96,.06); transform: scale(1.1); }
+}
+
+/* ============================================
+   FORMS & CONTROLS
+   ============================================ */
 label {
   display: block;
   margin: 0 0 6px;
@@ -147,7 +263,10 @@ input, select, textarea {
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  transition: border-color .2s var(--ease-out-expo),
+              box-shadow .2s var(--ease-out-expo),
+              background .2s var(--ease-out-expo),
+              transform .2s var(--ease-out-back);
 }
 input::placeholder, textarea::placeholder { color: #a1ada5; font-weight: 500; }
 input:hover, select:hover, textarea:hover { border-color: #bdcfc2; }
@@ -155,6 +274,7 @@ input:focus, select:focus, textarea:focus {
   border-color: #31835d;
   background: #fff;
   box-shadow: 0 0 0 3px rgba(49, 131, 93, .12);
+  transform: translateY(-1px);
 }
 input:disabled, select:disabled, textarea:disabled {
   cursor: not-allowed;
@@ -170,6 +290,9 @@ textarea { min-height: 66px; resize: vertical; line-height: 1.5; }
 }
 .filters > div { min-width: 0; }
 
+/* ============================================
+   BUTTONS — with press feedback
+   ============================================ */
 button.primary, button.ghost, button.small {
   display: inline-flex;
   align-items: center;
@@ -181,7 +304,12 @@ button.primary, button.ghost, button.small {
   font-weight: 900;
   letter-spacing: .25px;
   cursor: pointer;
-  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease;
+  transition: transform .18s var(--ease-out-back),
+              box-shadow .18s var(--ease-out-expo),
+              background .18s ease,
+              border-color .18s ease;
+  position: relative;
+  overflow: hidden;
 }
 button.primary {
   padding: 11px 19px;
@@ -190,14 +318,23 @@ button.primary {
   background: linear-gradient(135deg, #237b55, #145b3d);
   color: #fff;
   box-shadow: 0 4px 10px rgba(23, 99, 69, .16);
-  text-transform: none;
 }
+button.primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,.25), transparent 60%);
+  opacity: 0;
+  transition: opacity .35s ease;
+  pointer-events: none;
+}
+button.primary:active::after { opacity: 1; transition: opacity 0s; }
 button.primary:hover {
   background: linear-gradient(135deg, #2b8960, #176345);
-  box-shadow: 0 6px 14px rgba(23, 99, 69, .2);
-  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(23, 99, 69, .26);
+  transform: translateY(-2px);
 }
-button.primary:active { transform: translateY(0); box-shadow: 0 2px 5px rgba(23, 99, 69, .15); }
+button.primary:active { transform: translateY(0) scale(.98); box-shadow: 0 2px 5px rgba(23, 99, 69, .15); }
 button.ghost {
   padding: 9px 15px;
   border: 1px solid #c9ddcf;
@@ -205,7 +342,8 @@ button.ghost {
   background: #f7fbf8;
   color: var(--navy);
 }
-button.ghost:hover { border-color: #8eb99c; background: #edf6ef; }
+button.ghost:hover { border-color: #8eb99c; background: #edf6ef; transform: translateY(-1px); }
+button.ghost:active { transform: translateY(0) scale(.97); }
 button.small {
   min-height: 30px;
   padding: 5px 10px;
@@ -215,7 +353,8 @@ button.small {
   color: var(--navy);
   font-size: 11px;
 }
-button.small:hover { border-color: #8eb99c; background: #edf6ef; }
+button.small:hover { border-color: #8eb99c; background: #edf6ef; transform: translateY(-1px); }
+button.small:active { transform: translateY(0) scale(.96); }
 button:focus-visible {
   outline: 3px solid rgba(49, 131, 93, .28);
   outline-offset: 2px;
@@ -233,6 +372,12 @@ button:focus-visible {
   color: var(--fail);
   font-size: 12px;
   font-weight: 800;
+  animation: shake .4s var(--ease-out-expo);
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
 }
 .empty-note {
   padding: 38px 16px;
@@ -243,14 +388,24 @@ button:focus-visible {
   font-size: 13px;
   font-weight: 700;
   text-align: center;
+  animation: fadeUp .5s var(--ease-out-expo) both;
 }
 
+/* ============================================
+   STUDENT ROWS — staggered reveal
+   ============================================ */
 .student-row {
   display: flex;
   align-items: flex-start;
   gap: 16px;
   padding: 19px 0;
   border-bottom: 1px solid #edf1ee;
+  animation: rowArrive .45s var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+@keyframes rowArrive {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .student-row:first-child { padding-top: 5px; }
 .student-row:last-child { border-bottom: none; padding-bottom: 4px; }
@@ -268,7 +423,9 @@ button:focus-visible {
   color: #176345;
   font-size: 16px;
   font-weight: 900;
+  transition: transform .25s var(--ease-out-back), box-shadow .25s ease;
 }
+.avatar:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(23,99,69,.15); }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .photo-input { display: none; }
 .photo-btn {
@@ -279,6 +436,7 @@ button:focus-visible {
   font-weight: 900;
   text-align: center;
   cursor: pointer;
+  transition: color .15s ease;
 }
 .photo-btn:hover { color: #0e4932; text-decoration: underline; }
 .student-fields { flex: 1; min-width: 0; }
@@ -299,6 +457,9 @@ button:focus-visible {
 .attendance-row input { padding: 8px 10px; font-size: 12px; }
 .student-fields textarea { margin-bottom: 7px; }
 
+/* ============================================
+   TOAST — animated in/out with progress bar
+   ============================================ */
 .toast {
   position: fixed;
   z-index: 1000;
@@ -308,19 +469,60 @@ button:focus-visible {
   width: fit-content;
   max-width: min(520px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 13px 19px;
-  border: 1px solid rgba(255,255,255,.15);
+  padding: 14px 20px 14px;
+  border: 1px solid rgba(255,255,255,.12);
   border-radius: 12px;
   background: #183f2e;
   color: #fff;
-  box-shadow: 0 12px 30px rgba(14, 48, 31, .24);
+  box-shadow: 0 16px 40px rgba(14, 48, 31, .28);
   font-size: 13px;
   font-weight: 800;
   text-align: center;
+  overflow: hidden;
+  display: none;
+}
+.toast.show {
+  display: block;
+  animation: toastIn .45s var(--ease-out-back) both;
+}
+.toast.hide {
+  animation: toastOut .3s var(--ease-out-expo) both;
+}
+@keyframes toastIn {
+  0%   { opacity: 0; transform: translateY(24px) scale(.92); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toastOut {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(12px) scale(.96); }
+}
+.toast::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: rgba(255,255,255,.35);
+  transform-origin: left;
+  animation: toastTimer 2.5s linear both;
+}
+@keyframes toastTimer {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
 }
 
-/* Broadsheet and result-slip content generated by the existing script */
+/* ============================================
+   BROADSHEET & SLIPS (unchanged semantics)
+   ============================================ */
 #broadsheetCard, #allSlipsCard { overflow: hidden; }
+#broadsheetCard.view-enter, #allSlipsCard.view-enter, #rosterCard.view-enter {
+  animation: viewSwap .5s var(--ease-out-expo) both;
+}
+@keyframes viewSwap {
+  from { opacity: 0; transform: translateY(16px) scale(.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 #broadsheetTable {
   width: 100%;
   border-collapse: separate;
@@ -354,6 +556,8 @@ button:focus-visible {
   background: #fff;
   color: #24352a;
   box-shadow: var(--shadow-sm);
+  animation: rowArrive .5s var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
 }
 .result-slip-page table {
   width: 100%;
@@ -394,6 +598,8 @@ button:focus-visible {
   #broadsheetCard { padding: 14px; }
   #broadsheetTable { min-width: 620px; }
   .result-slip-page { padding: 15px; }
+  .dash-greeting { flex-direction: column; align-items: flex-start; padding: 14px 16px; gap: 4px; }
+  .dash-greeting .greet-sub { white-space: normal; }
 }
 @media (max-width: 390px) {
   body { padding-right: 9px; padding-left: 9px; }
@@ -425,7 +631,7 @@ button:focus-visible {
     -webkit-print-color-adjust: exact;
   }
   .wrap { width: 100% !important; max-width: none !important; }
-  #loginWrap, .topbar, .filters, .load-btn-row, #rosterCard, #emptyNote, .toast {
+  #loginWrap, .topbar, .filters, .load-btn-row, #rosterCard, #emptyNote, .toast, .dash-greeting {
     display: none !important;
   }
   #broadsheetCard, #allSlipsCard {
@@ -457,12 +663,10 @@ button:focus-visible {
     color: #111 !important;
   }
 }
-
 </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
 <div class="wrap narrow" id="loginWrap">
   <div class="school-header">
     <div class="crest" id="loginCrest">GS</div>
@@ -482,7 +686,6 @@ button:focus-visible {
   </div>
 </div>
 
-<!-- MAIN APP -->
 <div class="wrap" id="appWrap" style="display:none;">
 
   <div class="school-header">
@@ -492,6 +695,11 @@ button:focus-visible {
   </div>
 
   <div class="card">
+    <div class="dash-greeting" id="dashGreeting">
+      <span class="greet-line" id="greetLine">Welcome back</span>
+      <span class="greet-sub" id="greetSub"><span class="dot"></span>Logged in as <span id="whoAmISubtle">—</span></span>
+    </div>
+
     <div class="topbar">
       <span class="who" id="whoAmI"></span>
       <button onclick="logout()">Log out</button>
@@ -563,8 +771,80 @@ button:focus-visible {
   let teacher = null;
   let myClass = null;
   let currentRoster = [];
-  let globalSchoolSettings = null; // Store school settings globally for slips
+  let globalSchoolSettings = null;
+  let greetingClockTimer = null;
 
+  /* ==========================================================
+     GREETING — computed from local time, updates live
+     ========================================================== */
+  function getGreetingFor(hour) {
+    if (hour >= 5  && hour < 12) return 'Good morning';
+    if (hour >= 12 && hour < 17) return 'Good afternoon';
+    if (hour >= 17 && hour < 22) return 'Good evening';
+    return 'Welcome back';
+  }
+
+  function updateGreeting() {
+    if (!teacher || !teacher.name) return;
+    const firstName = teacher.name.trim().split(/\s+/)[0];
+    const phrase = getGreetingFor(new Date().getHours());
+
+    const lineEl = document.getElementById('greetLine');
+    const subtleEl = document.getElementById('whoAmISubtle');
+    const whoEl = document.getElementById('whoAmI');
+
+    const newLine = `${phrase}, ${firstName}!`;
+    // Only re-animate when the phrase actually changes
+    if (lineEl && lineEl.textContent !== newLine) {
+      lineEl.textContent = newLine;
+      lineEl.style.animation = 'none';
+      void lineEl.offsetWidth;
+      lineEl.style.animation = '';
+    }
+    if (subtleEl) subtleEl.textContent = teacher.name;
+    if (whoEl) whoEl.textContent = `Logged in as ${teacher.name}`;
+  }
+
+  function startGreetingClock() {
+    updateGreeting();
+    if (greetingClockTimer) clearInterval(greetingClockTimer);
+    // Check every 60s — cheap, and catches the hour boundary
+    greetingClockTimer = setInterval(updateGreeting, 60_000);
+  }
+
+  /* ==========================================================
+     TOAST — queued, animated, self-cleaning
+     ========================================================== */
+  let toastHideTimer = null;
+  let toastResetTimer = null;
+
+  function showToast(message) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+
+    // cancel any in-flight hide/reset
+    clearTimeout(toastHideTimer);
+    clearTimeout(toastResetTimer);
+
+    t.textContent = message;
+    t.classList.remove('hide', 'show');
+    // force reflow so the animation restarts cleanly
+    void t.offsetWidth;
+    t.classList.add('show');
+
+    toastHideTimer = setTimeout(() => {
+      t.classList.remove('show');
+      t.classList.add('hide');
+      toastResetTimer = setTimeout(() => {
+        t.classList.remove('hide');
+        t.style.display = 'none';
+      }, 320);
+    }, 2500);
+  }
+
+  /* ==========================================================
+     SCHOOL SETTINGS / SESSION
+     ========================================================== */
   async function fetchInitialSchoolSettings() {
     try {
       const res = await fetch(`${API_BASE}/api/settings`);
@@ -575,7 +855,7 @@ button:focus-visible {
         document.getElementById('loginSchoolName').textContent = s.school_name;
         document.getElementById('appSchoolName').textContent = s.school_name;
         document.getElementById('pageTitle').textContent = `${s.school_name} — Form Teacher Panel`;
-        
+
         [document.getElementById('loginCrest'), document.getElementById('appCrest')].forEach(crestEl => {
           if (!crestEl) return;
           if (s.logo_url) {
@@ -595,12 +875,8 @@ button:focus-visible {
     try {
       const res = await fetch(`${API_BASE}/api/form-teacher/active-session`);
       const data = await res.json();
-      if (data.session) {
-        document.getElementById('sessionInput').value = data.session;
-      }
-      if (data.term) {
-        document.getElementById('termSelect').value = data.term;
-      }
+      if (data.session) document.getElementById('sessionInput').value = data.session;
+      if (data.term)   document.getElementById('termSelect').value = data.term;
     } catch (err) {
       console.error('Could not load active session/term:', err);
     }
@@ -612,31 +888,26 @@ button:focus-visible {
     boot();
   }
 
-  function showToast(message) {
-    const t = document.getElementById('toast');
-    t.textContent = message;
-    t.style.display = 'block';
-    setTimeout(() => { t.style.display = 'none'; }, 2500);
-  }
-
+  /* ==========================================================
+     HELPERS
+     ========================================================== */
   function getInitials(name) {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   }
-
   function getPhotoUrl(photoUrl) {
     if (!photoUrl) return '';
-    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
-      return photoUrl; 
-    }
-    return `${API_BASE}${photoUrl}`; 
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) return photoUrl;
+    return `${API_BASE}${photoUrl}`;
   }
-
   function togglePasswordVisibility(inputId, btn) {
     const input = document.getElementById(inputId);
-    if (input.type === "password") { input.type = "text"; btn.textContent = "Hide"; }
-    else { input.type = "password"; btn.textContent = "Show"; }
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
+    else { input.type = 'password'; btn.textContent = 'Show'; }
   }
 
+  /* ==========================================================
+     AUTH
+     ========================================================== */
   async function login() {
     const email = document.getElementById('teacherEmail').value.trim();
     const password = document.getElementById('teacherPassword').value;
@@ -669,6 +940,7 @@ button:focus-visible {
 
   function logout() {
     sessionStorage.removeItem('resultpro_teacher');
+    if (greetingClockTimer) clearInterval(greetingClockTimer);
     teacher = null;
     document.getElementById('appWrap').style.display = 'none';
     document.getElementById('loginWrap').style.display = 'block';
@@ -677,23 +949,34 @@ button:focus-visible {
   async function boot() {
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
-    document.getElementById('whoAmI').textContent = `Logged in as ${teacher.name}`;
+    startGreetingClock();
 
-    // Automatically load active session and term set by Exam Office
     await loadActiveSession();
 
     try {
       const res = await fetch(`${API_BASE}/api/form-teacher/my-class?teacher_id=${teacher.id}`);
       const data = await res.json();
       myClass = data.class;
-      if (!myClass) {
-        document.getElementById('emptyNote').style.display = 'block';
-      }
+      if (!myClass) document.getElementById('emptyNote').style.display = 'block';
     } catch (err) {
       showToast('Could not check your class assignment.');
     }
   }
 
+  /* ==========================================================
+     VIEW SWAP — replays entrance animation for the active card
+     ========================================================== */
+  function enterView(cardId) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    card.classList.remove('view-enter');
+    void card.offsetWidth;
+    card.classList.add('view-enter');
+  }
+
+  /* ==========================================================
+     ROSTER
+     ========================================================== */
   async function loadRoster() {
     if (!myClass) { showToast('You are not assigned as a form teacher for any class.'); return; }
     const term = document.getElementById('termSelect').value;
@@ -715,6 +998,7 @@ button:focus-visible {
       }
       document.getElementById('emptyNote').style.display = 'none';
       renderRoster();
+      enterView('rosterCard');
     } catch (err) {
       showToast(err.message || 'Could not load class.');
     }
@@ -725,7 +1009,7 @@ button:focus-visible {
     const list = document.getElementById('studentList');
 
     list.innerHTML = currentRoster.map((s, i) => `
-      <div class="student-row">
+      <div class="student-row" style="--i:${i}">
         <div class="avatar-wrap">
           <div class="avatar" id="avatar-${i}">
             ${s.photo_url ? `<img src="${getPhotoUrl(s.photo_url)}" alt="${s.name}" />` : getInitials(s.name)}
@@ -758,18 +1042,14 @@ button:focus-visible {
   }
 
   function calculateAttendance(i) {
-    const totalInput = document.getElementById(`total-${i}`);
-    const presentInput = document.getElementById(`present-${i}`);
-    const absentInput = document.getElementById(`absent-${i}`);
-
-    const total = parseInt(totalInput.value, 10);
-    const present = parseInt(presentInput.value, 10);
-
+    const total = parseInt(document.getElementById(`total-${i}`).value, 10);
+    const present = parseInt(document.getElementById(`present-${i}`).value, 10);
+    const absentEl = document.getElementById(`absent-${i}`);
     if (!isNaN(total) && !isNaN(present)) {
       const absent = total - present;
-      absentInput.value = absent >= 0 ? absent : 0;
+      absentEl.value = absent >= 0 ? absent : 0;
     } else {
-      absentInput.value = '';
+      absentEl.value = '';
     }
   }
 
@@ -800,8 +1080,9 @@ button:focus-visible {
     }
   }
 
-  let lastBroadsheetData = null;
-
+  /* ==========================================================
+     RESULT SLIPS
+     ========================================================== */
   async function loadAllResultSlips() {
     if (!myClass) { showToast('You are not assigned as a form teacher for any class.'); return; }
     const term = document.getElementById('termSelect').value;
@@ -826,6 +1107,7 @@ button:focus-visible {
       document.getElementById('allSlipsCard').style.display = 'block';
       document.getElementById('allSlipsTitle').textContent = `${data.class} — ${data.term}, ${data.session} — ${data.slips.length} students`;
       renderAllResultSlips(data);
+      enterView('allSlipsCard');
     } catch (err) {
       showToast(err.message || 'Could not load result slips.');
     }
@@ -833,7 +1115,7 @@ button:focus-visible {
 
   function renderAllResultSlips(data) {
     const container = document.getElementById('allSlipsContainer');
-    container.innerHTML = data.slips.map((slip) => {
+    container.innerHTML = data.slips.map((slip, idx) => {
       const s = slip.student;
       const avatar = s.photo_url
         ? `<img src="${getPhotoUrl(s.photo_url)}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
@@ -842,10 +1124,10 @@ button:focus-visible {
       let schoolHeaderHtml = '';
       if (globalSchoolSettings) {
         const gs = globalSchoolSettings;
-        const crest = gs.logo_url 
-          ? `<img src="${getPhotoUrl(gs.logo_url)}" alt="Logo" style="width:100%;height:100%;object-fit:cover;" />` 
+        const crest = gs.logo_url
+          ? `<img src="${getPhotoUrl(gs.logo_url)}" alt="Logo" style="width:100%;height:100%;object-fit:cover;" />`
           : getInitials(gs.school_name);
-        
+
         let detailsParts = [];
         if (gs.school_address) detailsParts.push(gs.school_address);
         if (gs.school_phone) detailsParts.push(`Phone: ${gs.school_phone}`);
@@ -878,9 +1160,9 @@ button:focus-visible {
         </div>` : '';
 
       return `
-        <div class="result-slip-page" style="border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px;">
+        <div class="result-slip-page" style="--i:${idx}; border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px;">
           ${schoolHeaderHtml}
-          
+
           <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--border);">
             <div style="width:48px; height:48px; border-radius:50%; background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; overflow:hidden; flex-shrink:0;">${avatar}</div>
             <div>
@@ -916,6 +1198,9 @@ button:focus-visible {
     }).join('');
   }
 
+  /* ==========================================================
+     BROADSHEET
+     ========================================================== */
   async function loadBroadsheet() {
     if (!myClass) { showToast('You are not assigned as a form teacher for any class.'); return; }
     const term = document.getElementById('termSelect').value;
@@ -941,10 +1226,13 @@ button:focus-visible {
       document.getElementById('broadsheetCard').style.display = 'block';
       document.getElementById('broadsheetTitle').textContent = `${data.class} — ${data.term}, ${data.session}`;
       renderBroadsheet(data);
+      enterView('broadsheetCard');
     } catch (err) {
       showToast(err.message || 'Could not load broadsheet.');
     }
   }
+
+  let lastBroadsheetData = null;
 
   function resortBroadsheet() {
     if (!lastBroadsheetData) return;
@@ -988,16 +1276,19 @@ button:focus-visible {
     table.innerHTML = headerRow + bodyRows;
   }
 
+  /* ==========================================================
+     SAVE
+     ========================================================== */
   async function saveAll() {
     const term = document.getElementById('termSelect').value;
     const session = document.getElementById('sessionInput').value.trim();
 
     const records = currentRoster.map((s, i) => ({
       student_id: s.student_id,
-      times_present: document.getElementById(`present-${i}`).value === '' ? null : Number(document.getElementById(`present-${i}`).value),
-      times_absent: document.getElementById(`absent-${i}`).value === '' ? null : Number(document.getElementById(`absent-${i}`).value),
-      total_days: document.getElementById(`total-${i}`).value === '' ? null : Number(document.getElementById(`total-${i}`).value),
-      form_teacher_comment: document.getElementById(`comment-${i}`).value.trim() || null,
+      times_present: document.getElementById('present-' + i).value === '' ? null : Number(document.getElementById('present-' + i).value),
+      times_absent: document.getElementById('absent-' + i).value === '' ? null : Number(document.getElementById('absent-' + i).value),
+      total_days: document.getElementById('total-' + i).value === '' ? null : Number(document.getElementById('total-' + i).value),
+      form_teacher_comment: document.getElementById('comment-' + i).value.trim() || null,
     }));
 
     try {
