@@ -28,7 +28,6 @@ async function getSchoolSettings() {
   }
 }
 
-// NEW: reads the active term/session set by the exam office, with a safe fallback
 async function getActiveTermSession() {
   try {
     const { rows } = await pool.query(
@@ -69,6 +68,64 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Returns every (term, session) pair that has scores for this student,
+// plus the current active term/session and the release status of each.
+router.get('/available-terms', async (req, res) => {
+  let { student_id } = req.query;
+  if (!student_id) {
+    return res.status(400).json({ error: 'student_id is required' });
+  }
+  student_id = parseInt(student_id, 10);
+  if (isNaN(student_id)) {
+    return res.status(400).json({ error: 'student_id must be a number' });
+  }
+
+  try {
+    const [studentRes, active] = await Promise.all([
+      pool.query('SELECT id, class FROM students WHERE id = $1', [student_id]),
+      getActiveTermSession()
+    ]);
+
+    if (studentRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT DISTINCT term, session
+       FROM results
+       WHERE student_id = $1
+       ORDER BY session DESC, term ASC`,
+      [student_id]
+    );
+
+    const terms = [];
+    for (const r of rows) {
+      const settingsRes = await pool.query(
+        'SELECT result_release_at FROM term_settings WHERE term = $1 AND session = $2',
+        [r.term, r.session]
+      );
+      const releaseAt = settingsRes.rows[0]?.result_release_at || null;
+      const isReleased = !releaseAt || new Date(releaseAt) <= new Date();
+
+      terms.push({
+        term: r.term,
+        session: r.session,
+        is_released: isReleased,
+        result_release_at: releaseAt,
+        is_active: r.term === active.term && r.session === active.session
+      });
+    }
+
+    res.json({
+      active: { term: active.term, session: active.session },
+      terms
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load available terms' });
+  }
+});
+
 router.get('/midterm-result', async (req, res) => {
   let { student_id, term, session } = req.query;
   if (!student_id) {
@@ -79,7 +136,6 @@ router.get('/midterm-result', async (req, res) => {
     return res.status(400).json({ error: 'student_id must be a number' });
   }
 
-  // If the student didn't specify a term/session, fall back to the exam office's active one
   if (!term || !session) {
     const active = await getActiveTermSession();
     term = term || active.term;
@@ -150,7 +206,6 @@ router.get('/result', async (req, res) => {
     return res.status(400).json({ error: 'student_id must be a number' });
   }
 
-  // If the student didn't specify a term/session, fall back to the exam office's active one
   if (!term || !session) {
     const active = await getActiveTermSession();
     term = term || active.term;
