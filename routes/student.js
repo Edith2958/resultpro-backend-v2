@@ -71,7 +71,9 @@ router.get('/midterm-result', async (req, res) => {
     const student = studentRes.rows[0];
 
     const { rows } = await pool.query(
-      `SELECT sub.id AS subject_id, sub.name AS subject_name, m.assignment_score, m.test_score
+      `SELECT sub.id AS subject_id, sub.name AS subject_name, 
+              m.assignment_score::numeric AS assignment_score, 
+              m.test_score::numeric AS test_score
        FROM mid_term_results m
        JOIN subjects sub ON sub.id = m.subject_id::integer
        WHERE m.student_id::integer = $1 AND m.term = $2 AND m.session = $3
@@ -175,8 +177,10 @@ router.get('/result', async (req, res) => {
 
     const scoresRes = await pool.query(
       `SELECT sub.id AS subject_id, sub.name AS subject_name,
-              m.assignment_score, m.test_score,
-              r.exam_score, r.manual_ca_override
+              m.assignment_score::numeric AS assignment_score, 
+              m.test_score::numeric AS test_score,
+              r.exam_score::numeric AS exam_score, 
+              r.manual_ca_override::numeric AS manual_ca_override
        FROM results r
        JOIN subjects sub ON sub.id = r.subject_id::integer
        LEFT JOIN mid_term_results m
@@ -187,9 +191,11 @@ router.get('/result', async (req, res) => {
     );
 
     const subjects = scoresRes.rows.map((row) => {
+      const assignment = row.assignment_score !== null ? Number(row.assignment_score) : null;
+      const test = row.test_score !== null ? Number(row.test_score) : null;
       const midTermTotal =
-        row.assignment_score !== null || row.test_score !== null
-          ? Number(row.assignment_score || 0) + Number(row.test_score || 0)
+        assignment !== null || test !== null
+          ? (assignment || 0) + (test || 0)
           : null;
       const ca = midTermTotal !== null ? midTermTotal : Number(row.manual_ca_override || 0);
       const exam = Number(row.exam_score || 0);
