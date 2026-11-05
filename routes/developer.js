@@ -3,11 +3,6 @@ const router = express.Router();
 const pool = require('../db/pool');
 const crypto = require('crypto');
 
-/**
- * POST /api/developer/login
- * NOTE: plain-text password compare for now. Swap for bcrypt before real deployment.
- * body: { email, password }
- */
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -28,9 +23,9 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Generates a secure, world-standard 9-character alphanumeric PIN without hyphens (e.g., "K9X4M2P8Q")
+// 9-character alphanumeric PIN, uppercase, excludes ambiguous chars (I, O, 0, 1)
 function generatePinCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes ambiguous chars like I, O, 0, 1
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
   const bytes = crypto.randomBytes(9);
   for (let i = 0; i < 9; i++) {
@@ -39,11 +34,6 @@ function generatePinCode() {
   return code;
 }
 
-/**
- * POST /api/developer/pins/generate
- * Generates a batch of fresh, unassigned PINs.
- * body: { count, max_uses, generated_by }  (max_uses defaults to 5)
- */
 router.post('/pins/generate', async (req, res) => {
   const { count, max_uses = 5, generated_by } = req.body;
   const howMany = Number(count);
@@ -51,7 +41,6 @@ router.post('/pins/generate', async (req, res) => {
     return res.status(400).json({ error: 'count must be between 1 and 1000' });
   }
 
-  // max_uses is now integer in the DB — coerce explicitly so a bad input fails here, not at the DB
   const maxUsesInt = Number(max_uses);
   if (!Number.isInteger(maxUsesInt) || maxUsesInt < 1) {
     return res.status(400).json({ error: 'max_uses must be a positive integer' });
@@ -62,16 +51,17 @@ router.post('/pins/generate', async (req, res) => {
     await client.query('BEGIN');
     const generated = [];
 
-    // Pre-generate unique PIN codes in memory to avoid DB transaction aborts
     const uniqueCodes = new Set();
     while (uniqueCodes.size < howMany) {
       uniqueCodes.add(generatePinCode());
     }
 
     for (const code of uniqueCodes) {
+      // Explicitly set uses_count = 0 so it can never be NULL, even if the
+      // column DEFAULT gets dropped during a future migration.
       const { rows } = await client.query(
-        `INSERT INTO result_pins (code, max_uses, generated_by) 
-         VALUES ($1, $2, $3) 
+        `INSERT INTO result_pins (code, max_uses, uses_count, generated_by) 
+         VALUES ($1, $2, 0, $3) 
          ON CONFLICT (code) DO NOTHING 
          RETURNING *`,
         [code, maxUsesInt, generated_by || null]
@@ -93,11 +83,6 @@ router.post('/pins/generate', async (req, res) => {
   }
 });
 
-/**
- * GET /api/developer/pins?status=&search=&page=&pageSize=
- * status: 'unused' | 'active' | 'exhausted' | omitted for all
- * search matches the PIN code or a bound student's admission number.
- */
 router.get('/pins', async (req, res) => {
   const { status, search, page = 1, pageSize = 25 } = req.query;
   const limit = Math.min(Number(pageSize) || 25, 100);

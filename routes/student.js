@@ -249,11 +249,11 @@ router.get('/result', async (req, res) => {
 
     const pinUpdateRes = await pool.query(
       `UPDATE result_pins
-       SET uses_count = uses_count + 1,
+       SET uses_count = COALESCE(uses_count, 0) + 1,
            student_id = COALESCE(student_id::integer, $2),
            first_used_at = COALESCE(first_used_at, NOW())
        WHERE code = $1
-         AND uses_count < max_uses
+         AND COALESCE(uses_count, 0) < COALESCE(max_uses, 5)
          AND (student_id IS NULL OR student_id::integer = $2)
        RETURNING *`,
       [pin_code, student_id]
