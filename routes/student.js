@@ -44,6 +44,19 @@ async function getActiveTermSession() {
   }
 }
 
+// Public — used by student.html to prefill the form with the exam office's
+// active term and session, so students land on the right default without
+// having to remember what term the school is in.
+router.get('/active-session', async (req, res) => {
+  try {
+    const active = await getActiveTermSession();
+    res.json(active);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load active session' });
+  }
+});
+
 router.post('/login', async (req, res) => {
   const { admission_no, surname } = req.body;
   if (!admission_no || !surname) {

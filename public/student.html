@@ -413,7 +413,6 @@
   }
   #releaseCountdown { animation: fadeUp .4s var(--ease-out-expo) both; }
 
-  /* Empty state extras */
   .empty-term-btn {
     width: 100%;
     text-align: left;
@@ -610,18 +609,48 @@
   const API_BASE = window.location.origin;
   let releaseCountdownInterval;
 
-  async function fetchInitialSchoolSettings() {
+  // Load school branding AND the exam office's active term/session,
+  // then prefill the form so students land on the right default.
+  async function fetchInitialContext() {
     try {
-      const res = await fetch(`${API_BASE}/api/settings`);
-      const data = await res.json();
-      if (data.settings) {
-        updateSchoolHeader(data.settings);
+      const [settingsRes, activeRes] = await Promise.all([
+        fetch(`${API_BASE}/api/settings`),
+        fetch(`${API_BASE}/api/student/active-session`)
+      ]);
+
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        if (settingsData.settings) updateSchoolHeader(settingsData.settings);
+      }
+
+      if (activeRes.ok) {
+        const active = await activeRes.json();
+        if (active.term) {
+          const termSelect = document.getElementById('termSelect');
+          // Only set if the option exists (defensive against future term names)
+          const matchingOption = Array.from(termSelect.options).find(o => o.value === active.term);
+          if (matchingOption) {
+            termSelect.value = active.term;
+          } else {
+            // If the term isn't one of the three defaults, add it
+            const newOpt = document.createElement('option');
+            newOpt.value = active.term;
+            newOpt.textContent = active.term;
+            termSelect.appendChild(newOpt);
+            termSelect.value = active.term;
+          }
+        }
+        if (active.session) {
+          document.getElementById('sessionInput').value = active.session;
+        }
+        // Now that term/session are set, run the countdown check
+        checkReleaseCountdown();
       }
     } catch (err) {
-      console.error('Could not load school settings for header:', err);
+      console.error('Could not load initial context:', err);
     }
   }
-  fetchInitialSchoolSettings();
+  fetchInitialContext();
 
   function updateSchoolHeader(school) {
     if (!school) return;
