@@ -184,7 +184,10 @@ router.get('/result', async (req, res) => {
        FROM results r
        JOIN subjects sub ON sub.id = r.subject_id::integer
        LEFT JOIN mid_term_results m
-         ON m.student_id::integer = r.student_id::integer AND m.subject_id::integer = r.subject_id::integer AND m.term = r.term AND m.session = r.session
+         ON m.student_id::integer = r.student_id::integer
+        AND m.subject_id::integer = r.subject_id::integer
+        AND m.term::text = r.term::text
+        AND m.session::text = r.session::text
        WHERE r.student_id::integer = $1 AND r.term = $2 AND r.session = $3
        ORDER BY sub.name ASC`,
       [student_id, term, session]
@@ -212,33 +215,46 @@ router.get('/result', async (req, res) => {
     for (const s of subjects) {
       const classScoresRes = await pool.query(
         `SELECT r.student_id,
-                COALESCE(m.assignment_score::numeric,0) + COALESCE(m.test_score::numeric,0) + COALESCE(r.exam_score::numeric,0) AS total
+                (COALESCE(m.assignment_score::numeric, 0)
+                 + COALESCE(m.test_score::numeric, 0)
+                 + COALESCE(r.exam_score::numeric, 0)) AS total
          FROM results r
          LEFT JOIN mid_term_results m
-           ON m.student_id::integer = r.student_id::integer AND m.subject_id::integer = r.subject_id::integer AND m.term = r.term AND m.session = r.session
-         WHERE r.class = $1 AND r.subject_id::integer = $2 AND r.term = $3 AND r.session = $4`,
+           ON m.student_id::integer = r.student_id::integer
+          AND m.subject_id::integer = r.subject_id::integer
+          AND m.term::text = r.term::text
+          AND m.session::text = r.session::text
+         WHERE r.class = $1
+           AND r.subject_id::integer = $2
+           AND r.term = $3
+           AND r.session = $4`,
         [student.class, s.subject_id, term, session]
       );
       const entries = classScoresRes.rows.map((r) => ({ studentId: r.student_id, total: Number(r.total) }));
       const ranked = rankByTotal(entries);
-      const mine = ranked.find((e) => e.studentId === student.id);
+      const mine = ranked.find((e) => String(e.studentId) === String(student.id));
       const highest = ranked.length ? ranked[0].total : null;
       subjectStats[s.subject_id] = { highest, position: mine ? ordinal(mine.position) : '-' };
     }
 
     const classTotalsRes = await pool.query(
       `SELECT r.student_id,
-              SUM(COALESCE(m.assignment_score::numeric,0) + COALESCE(m.test_score::numeric,0) + COALESCE(r.exam_score::numeric,0)) AS total
+              SUM(COALESCE(m.assignment_score::numeric, 0)
+                  + COALESCE(m.test_score::numeric, 0)
+                  + COALESCE(r.exam_score::numeric, 0)) AS total
        FROM results r
        LEFT JOIN mid_term_results m
-         ON m.student_id::integer = r.student_id::integer AND m.subject_id::integer = r.subject_id::integer AND m.term = r.term AND m.session = r.session
+         ON m.student_id::integer = r.student_id::integer
+        AND m.subject_id::integer = r.subject_id::integer
+        AND m.term::text = r.term::text
+        AND m.session::text = r.session::text
        WHERE r.class = $1 AND r.term = $2 AND r.session = $3
        GROUP BY r.student_id`,
       [student.class, term, session]
     );
     const classEntries = classTotalsRes.rows.map((r) => ({ studentId: r.student_id, total: Number(r.total) }));
     const classRanked = rankByTotal(classEntries);
-    const myClassRank = classRanked.find((e) => e.studentId === student.id);
+    const myClassRank = classRanked.find((e) => String(e.studentId) === String(student.id));
 
     const termRecordRes = await pool.query(
       `SELECT * FROM term_records WHERE student_id::integer = $1 AND term = $2 AND session = $3`,
@@ -284,6 +300,8 @@ router.get('/result', async (req, res) => {
       }
     });
   } catch (err) {
+    console.error('FAILED QUERY:', err.query);
+    console.error('FAILED AT POSITION:', err.position);
     console.error(err);
     res.status(500).json({ error: 'Failed to load result' });
   }
