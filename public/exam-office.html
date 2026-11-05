@@ -8,52 +8,132 @@
 <title id="pageTitle">Exam Office Control Panel</title>
 <style>
   :root {
-    --navy: #58CC02;
-    --navy-light: #46A302;
-    --gold: #FFC800;
-    --cream: #F7F7F7;
-    --card: #FFFFFF;
-    --border: #E5E5E5;
-    --text: #3C3C3C;
-    --text-soft: #777777;
-    --pass: #58A700;
-    --pass-bg: #D7FFB8;
-    --fail: #EA2B2B;
-    --fail-bg: #FFDFE0;
+    color-scheme: light;
+    --navy: #176345;
+    --navy-light: #104d36;
+    --gold: #d8ad55;
+    --cream: #f4f7f5;
+    --card: #ffffff;
+    --border: #e2eae5;
+    --text: #1d2c24;
+    --text-soft: #718078;
+    --pass: #18794e;
+    --pass-bg: #e5f5ec;
+    --fail: #b93838;
+    --fail-bg: #fff0ef;
+    --surface-soft: #f8faf8;
+    --shadow-sm: 0 2px 8px rgba(24, 55, 39, .045);
+    --shadow-md: 0 12px 34px rgba(24, 55, 39, .075);
+    --radius-card: 18px;
+    --radius-control: 11px;
+
+    --ease-out-expo: cubic-bezier(.16,1,.3,1);
+    --ease-out-back: cubic-bezier(.34,1.56,.64,1);
   }
   * { box-sizing: border-box; }
+  html { min-height: 100%; scroll-behavior: smooth; }
   body {
     margin: 0;
     font-family: 'Nunito', Arial, sans-serif;
-    background: var(--cream);
+    background:
+      radial-gradient(ellipse at 8% 0%, rgba(23, 99, 69, .06), transparent 32rem),
+      linear-gradient(180deg, #f7faf8 0%, #f0f5f1 100%);
     color: var(--text);
     min-height: 100vh;
-    padding: 24px 16px 60px;
+    padding: 34px 18px 72px;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 900px; margin: 0 auto; }
-  .wrap.narrow { max-width: 420px; }
+  .wrap { width: min(100%, 900px); margin: 0 auto; }
+  .wrap.narrow { width: min(100%, 440px); }
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
 
-  .school-header { text-align: center; margin-bottom: 22px; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes crestPop {
+    0%   { opacity: 0; transform: scale(.6) rotate(-8deg); }
+    60%  { opacity: 1; transform: scale(1.06) rotate(2deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+  }
+  @keyframes rowArrive {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes rowLeave {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(-20px); }
+  }
+  @keyframes viewSwap {
+    from { opacity: 0; transform: translateY(16px) scale(.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes skelShimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .school-header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding: 5px 12px 0;
+    animation: fadeUp .55s var(--ease-out-expo) both;
+  }
   .school-header .crest {
-    width: 52px; height: 52px;
-    background: var(--navy); color: var(--gold);
-    border-radius: 50%;
+    width: 58px; height: 58px;
+    background: linear-gradient(145deg, #247a56, #104b35);
+    color: #f4d58e;
+    border: 3px solid rgba(255,255,255,.92);
+    border-radius: 18px;
     display: flex; align-items: center; justify-content: center;
-    font-weight: bold; font-size: 16px;
-    margin: 0 auto 10px;
+    font-weight: 800; font-size: 19px;
+    margin: 0 auto 12px;
     overflow: hidden;
+    box-shadow: 0 7px 18px rgba(16, 77, 54, .18);
+    font-family: 'Baloo 2', sans-serif;
+    animation: crestPop .6s var(--ease-out-back) both;
+    animation-delay: .1s;
+    transition: transform .3s var(--ease-out-back), box-shadow .3s ease;
+  }
+  .school-header .crest:hover {
+    transform: scale(1.06) rotate(-3deg);
+    box-shadow: 0 10px 24px rgba(16, 77, 54, .28);
   }
   .school-header .crest img { width: 100%; height: 100%; object-fit: cover; }
-  .school-header h1 { font-size: 20px; margin: 0; font-weight: 800; font-family: "Baloo 2", sans-serif; }
-  .school-header p { font-size: 12px; color: var(--text-soft); margin: 4px 0 0; }
+  .school-header h1 {
+    font-size: clamp(21px, 3vw, 27px);
+    margin: 0;
+    font-weight: 800;
+    font-family: "Baloo 2", sans-serif;
+    letter-spacing: -.35px;
+    line-height: 1.2;
+    color: #183d2d;
+    animation: fadeUp .5s var(--ease-out-expo) .15s both;
+  }
+  .school-header p {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin: 6px 0 0;
+    font-weight: 700;
+    letter-spacing: .35px;
+    animation: fadeUp .5s var(--ease-out-expo) .22s both;
+  }
 
   .card {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 20px;
-    margin-bottom: 18px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    border: 1px solid rgba(220, 231, 223, .95);
+    border-radius: var(--radius-card);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-md);
+    animation: fadeUp .5s var(--ease-out-expo) .28s both;
   }
 
   .topbar {
@@ -62,33 +142,103 @@
     align-items: center;
     margin-bottom: 18px;
     font-size: 13px;
+    color: var(--text-soft);
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
   }
-  .topbar .who { color: var(--text-soft); }
+  .topbar .who { color: #53665b; font-weight: 700; }
   .topbar button {
-    background: none; border: none; color: var(--navy);
-    font-weight: bold; cursor: pointer; font-size: 13px;
+    background: #f5faf6;
+    border: 1px solid #dce9e0;
+    border-radius: 9px;
+    color: var(--navy);
+    font-weight: 800;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 7px 12px;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+  }
+  .topbar button:hover { background: #eaf4ed; border-color: #bcd8c6; }
+  .topbar button:active { transform: translateY(1px); }
+
+  /* ============ COMMAND STRIP ============ */
+  .command-strip {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    align-items: center;
+  }
+  .command-strip .search-trigger {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid #dce6df;
+    border-radius: var(--radius-control);
+    background: #fbfdfb;
+    color: var(--text-soft);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+  }
+  .command-strip .search-trigger:hover {
+    border-color: #bdcfc2;
+    background: #fff;
+  }
+  .command-strip .search-trigger:focus-visible {
+    outline: none;
+    border-color: #31835d;
+    box-shadow: 0 0 0 3px rgba(49,131,93,.12);
+  }
+  .command-strip .search-trigger kbd {
+    margin-left: auto;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 800;
+    background: #fff;
+    color: var(--text-soft);
   }
 
-  .hamburger-bar {
-    position: relative;
-    margin-bottom: 18px;
-  }
+  /* ============ HAMBURGER / TAB MENU ============ */
+  .hamburger-bar { position: relative; margin-bottom: 18px; }
   .hamburger-btn {
     width: 100%;
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 12px 14px;
-    border: 2px solid var(--border);
-    border-radius: 14px;
-    background: var(--card);
-    color: var(--text);
+    border: 1px solid #dce9e0;
+    border-radius: 12px;
+    background: #f5faf6;
+    color: var(--navy);
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 800;
     font-family: 'Baloo 2', sans-serif;
     cursor: pointer;
-    box-shadow: none;
+    box-shadow: 0 2px 6px rgba(23, 99, 69, .04);
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
   }
+  .hamburger-btn:hover { background: #eaf4ed; border-color: #bcd8c6; }
+  .hamburger-btn:active { transform: translateY(1px); }
+  .hamburger-btn .shortcut {
+    margin-left: auto;
+    font-family: 'Nunito', Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: #fff;
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+  }
+
   .tab-menu {
     display: none;
     position: absolute;
@@ -96,13 +246,22 @@
     left: 0;
     right: 0;
     background: var(--card);
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: 14px;
     padding: 6px;
     z-index: 20;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    box-shadow: 0 12px 32px rgba(24, 55, 39, .15);
+    max-height: 60vh;
+    overflow-y: auto;
   }
-  .tab-menu.open { display: block; }
+  .tab-menu.open {
+    display: block;
+    animation: tabMenuIn .22s var(--ease-out-expo) both;
+  }
+  @keyframes tabMenuIn {
+    from { opacity: 0; transform: translateY(-4px) scale(.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
   .tab-menu button {
     width: 100%;
     text-align: left;
@@ -116,22 +275,71 @@
     font-family: 'Nunito', Arial, sans-serif;
     cursor: pointer;
     margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background .15s ease, color .15s ease;
+  }
+  .tab-menu button .sc {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-soft);
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: #fff;
   }
   .tab-menu button.active { background: var(--navy); color: #fff; }
+  .tab-menu button.active .sc { background: rgba(255,255,255,.15); color: #fff; border-color: transparent; }
   .tab-menu button:hover:not(.active) { background: var(--cream); }
 
+  /* ============ FORMS ============ */
   label {
-    font-size: 11px; color: var(--text-soft); display: block;
-    margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px;
-    font-weight: 700;
+    font-size: 10px;
+    color: #596c61;
+    display: block;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: .85px;
+    font-weight: 900;
+    line-height: 1.4;
   }
   input, select, textarea {
-    width: 100%; padding: 10px 12px; font-size: 13px;
-    border: 1px solid var(--border); border-radius: 10px;
-    background: var(--cream); color: var(--text); font-family: inherit;
-    transition: outline 0.1s, border-color 0.1s;
+    width: 100%;
+    padding: 11px 13px;
+    font-size: 13px;
+    border: 1px solid #dce6df;
+    border-radius: var(--radius-control);
+    background: #fbfdfb;
+    color: var(--text);
+    font-family: inherit;
+    font-weight: 700;
+    outline: none;
+    transition: border-color .2s var(--ease-out-expo),
+                box-shadow .2s var(--ease-out-expo),
+                background .2s var(--ease-out-expo),
+                transform .2s var(--ease-out-back);
   }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--navy); background: #fff; }
+  input:hover, select:hover, textarea:hover { border-color: #bdcfc2; }
+  input:focus, select:focus, textarea:focus {
+    border-color: #31835d;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(49, 131, 93, .12);
+    transform: translateY(-1px);
+  }
+  input.invalid, select.invalid, textarea.invalid {
+    border-color: var(--fail);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(185,56,56,.08);
+    animation: shake .4s var(--ease-out-expo);
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-4px); }
+    75%      { transform: translateX(4px); }
+  }
+  select { cursor: pointer; }
 
   .add-form {
     display: grid;
@@ -144,70 +352,355 @@
   }
   .add-form.cols-4 { grid-template-columns: 1fr 1fr 1fr auto; }
   .add-form.cols-student { grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto; }
-  @media (max-width: 800px) {
-    .add-form.cols-student { grid-template-columns: 1fr 1fr; }
-  }
+  @media (max-width: 800px) { .add-form.cols-student { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 650px) {
     .add-form, .add-form.cols-4, .add-form.cols-student { grid-template-columns: 1fr; }
   }
 
+  /* ============ BUTTONS ============ */
   button.primary {
-    padding: 10px 16px; font-size: 13px; font-weight: 700;
-    font-family: 'Baloo 2', sans-serif; text-transform: uppercase; letter-spacing: 0.3px;
-    border: none; border-radius: 12px; background: var(--navy);
-    color: #fff; cursor: pointer; white-space: nowrap;
-    box-shadow: 0 4px 0 var(--navy-light);
-    transition: transform 0.05s, box-shadow 0.05s, filter 0.1s;
+    padding: 11px 19px;
+    font-size: 12px;
+    font-weight: 900;
+    font-family: 'Nunito', Arial, sans-serif;
+    letter-spacing: .25px;
+    border: 1px solid var(--navy);
+    border-radius: 11px;
+    background: linear-gradient(135deg, #237b55, #145b3d);
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(23, 99, 69, .16);
+    transition: transform .18s var(--ease-out-back),
+                box-shadow .18s var(--ease-out-expo),
+                background .18s ease,
+                border-color .18s ease;
+    position: relative;
+    overflow: hidden;
   }
-  button.primary:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--navy-light); }
-  button.primary:hover { filter: brightness(1.05); }
-  button.primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-
-  .list-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 13px;
-    gap: 12px;
+  button.primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,.25), transparent 60%);
+    opacity: 0;
+    transition: opacity .35s ease;
+    pointer-events: none;
   }
-  .list-row:last-child { border-bottom: none; }
-  .list-row .meta { color: var(--text-soft); font-size: 12px; }
+  button.primary:active::after { opacity: 1; transition: opacity 0s; }
+  button.primary:hover {
+    background: linear-gradient(135deg, #2b8960, #176345);
+    box-shadow: 0 8px 20px rgba(23, 99, 69, .26);
+    transform: translateY(-2px);
+  }
+  button.primary:active { transform: translateY(0) scale(.98); box-shadow: 0 2px 5px rgba(23, 99, 69, .15); }
+  button.primary:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: 0 2px 6px rgba(23, 99, 69, .1); }
 
   button.delete-btn {
-    background: var(--fail-bg); color: var(--fail); border: none;
-    border-radius: 8px; padding: 6px 12px; font-size: 11px;
-    font-weight: bold; cursor: pointer; white-space: nowrap;
+    background: var(--fail-bg);
+    color: var(--fail);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
   }
+  button.delete-btn:hover { border-color: rgba(185,56,56,.25); transform: translateY(-1px); }
+  button.delete-btn:active { transform: translateY(0) scale(.97); }
 
   button.small {
-    background: var(--cream); color: var(--navy); border: 1px solid var(--border);
-    border-radius: 8px; padding: 6px 12px; font-size: 11px;
-    font-weight: bold; cursor: pointer; white-space: nowrap;
+    background: #f5faf6;
+    color: var(--navy);
+    border: 1px solid #dce9e0;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    white-space: nowrap;
     margin-right: 4px;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+  }
+  button.small:hover { background: #eaf4ed; border-color: #bcd8c6; transform: translateY(-1px); }
+  button.small:active { transform: translateY(0) scale(.97); }
+
+  /* ============ LIST ROWS ============ */
+  .list-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    gap: 12px;
+    animation: rowArrive .45s var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .meta { color: var(--text-soft); font-size: 12px; font-weight: 600; }
+  .list-row.leaving {
+    animation: rowLeave .28s var(--ease-out-expo) forwards;
   }
 
+  /* ============ SKELETONS ============ */
+  .skeleton-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .skeleton-row:last-child { border-bottom: none; }
+  .skeleton-block {
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eef2ef 0%, #f7faf8 40%, #eef2ef 80%);
+    background-size: 200% 100%;
+    animation: skelShimmer 1.4s linear infinite;
+  }
+  .skeleton-block.w-60 { width: 60%; }
+  .skeleton-block.w-30 { width: 30%; }
+  .skeleton-block.w-20 { width: 20%; }
+
+  /* ============ BADGES ============ */
   .badge {
-    padding: 4px 10px; font-size: 11px; font-weight: bold; border-radius: 8px; text-transform: uppercase;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 900;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: .3px;
   }
   .badge-draft { background: var(--cream); color: var(--text-soft); border: 1px solid var(--border); }
   .badge-ready { background: var(--pass-bg); color: var(--pass); }
   .badge-exhausted { background: var(--fail-bg); color: var(--fail); }
 
   .error-msg {
-    font-size: 13px; color: var(--fail); background: var(--fail-bg);
-    border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; display: none;
+    font-size: 12px;
+    color: var(--fail);
+    background: var(--fail-bg);
+    border: 1px solid #f3d0cd;
+    border-radius: 10px;
+    padding: 11px 13px;
+    margin-bottom: 14px;
+    display: none;
+    font-weight: 800;
+    animation: shake .4s var(--ease-out-expo);
   }
 
+  .empty-note {
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 13px;
+    padding: 16px 0;
+    font-weight: 700;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 36px 16px;
+    border: 1px dashed #d5e2d9;
+    border-radius: 13px;
+    background: #fbfdfb;
+    color: var(--text-soft);
+    font-size: 13px;
+    font-weight: 700;
+    animation: fadeUp .5s var(--ease-out-expo) both;
+  }
+  .empty-state .es-title {
+    color: #3c5a48;
+    font-weight: 900;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .empty-state .es-sub { font-weight: 600; }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 800;
+    font-family: 'Baloo 2', sans-serif;
+    margin: 0 0 14px;
+    color: #183d2d;
+  }
+
+  [id^="tab-"].view-enter {
+    animation: viewSwap .45s var(--ease-out-expo) both;
+  }
+
+  /* ============ TOAST ============ */
   .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: #222; color: #fff; padding: 12px 20px;
-    border-radius: 12px; font-size: 13px; display: none; z-index: 9999;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15); font-weight: 600;
+    position: fixed;
+    z-index: 9999;
+    right: 20px;
+    bottom: 22px;
+    left: 20px;
+    width: fit-content;
+    max-width: min(520px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 14px 20px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    background: #183f2e;
+    color: #fff;
+    box-shadow: 0 16px 40px rgba(14, 48, 31, .28);
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
+    overflow: hidden;
+    display: none;
+  }
+  .toast.show { display: block; animation: toastIn .45s var(--ease-out-back) both; }
+  .toast.hide { animation: toastOut .3s var(--ease-out-expo) both; }
+  @keyframes toastIn {
+    0%   { opacity: 0; transform: translateY(24px) scale(.92); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes toastOut {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(12px) scale(.96); }
+  }
+  .toast::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: 0;
+    height: 2px; width: 100%;
+    background: rgba(255,255,255,.35);
+    transform-origin: left;
+    animation: toastTimer 2.5s linear both;
+  }
+  @keyframes toastTimer {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
   }
 
-  .empty-note { text-align: center; color: var(--text-soft); font-size: 13px; padding: 16px 0; }
-  .section-title { font-size: 15px; font-weight: 800; font-family: 'Baloo 2', sans-serif; margin: 0 0 14px; }
+  /* ============ COMMAND PALETTE ============ */
+  .cmdk-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 40, 28, .35);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9998;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 12vh 16px 16px;
+    animation: fadeInBackdrop .2s ease both;
+  }
+  @keyframes fadeInBackdrop {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .cmdk-backdrop.open { display: flex; }
+  .cmdk-panel {
+    width: min(100%, 520px);
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 30px 80px rgba(14, 48, 31, .3);
+    overflow: hidden;
+    animation: cmdkIn .28s var(--ease-out-back) both;
+  }
+  @keyframes cmdkIn {
+    0%   { opacity: 0; transform: translateY(-8px) scale(.97); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .cmdk-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 16px 18px;
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 700;
+    color: var(--text);
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmdk-input::placeholder { color: #a1ada5; font-weight: 500; }
+  .cmdk-results {
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 6px;
+  }
+  .cmdk-result {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+  }
+  .cmdk-result.active { background: var(--navy); color: #fff; }
+  .cmdk-result .meta { color: var(--text-soft); font-size: 11px; font-weight: 600; margin-left: auto; }
+  .cmdk-result.active .meta { color: rgba(255,255,255,.7); }
+  .cmdk-empty {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .cmdk-footer {
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-soft);
+    font-weight: 700;
+    display: flex;
+    gap: 14px;
+  }
+  .cmdk-footer kbd {
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 10px;
+    background: #fbfdfb;
+  }
+
+  /* ============ MISC ============ */
+  .stale-note {
+    font-size: 11px;
+    color: var(--text-soft);
+    font-weight: 700;
+    margin-left: 6px;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 20px 12px 56px; }
+    .school-header .crest { width: 52px; height: 52px; border-radius: 16px; }
+    .school-header h1 { font-size: 22px; }
+    .card { padding: 17px; margin-bottom: 14px; border-radius: 15px; }
+  }
+  @media (max-width: 390px) {
+    body { padding-right: 9px; padding-left: 9px; }
+    .card { padding: 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      transition-duration: .01ms !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
 </style>
 </head>
 <body>
+
+<a href="#mainApp" class="visually-hidden">Skip to main content</a>
 
 <!-- LOGIN -->
 <div class="wrap narrow" id="loginWrap">
@@ -217,7 +710,7 @@
     <p>Exam office login</p>
   </div>
   <div class="card">
-    <div class="error-msg" id="loginError"></div>
+    <div class="error-msg" id="loginError" role="alert"></div>
     <label for="officerEmail">Email</label>
     <input type="email" id="officerEmail" autocomplete="email" />
     <label for="officerPassword" style="margin-top:12px;">Password</label>
@@ -230,52 +723,64 @@
 </div>
 
 <!-- MAIN APP -->
-<div class="wrap" id="appWrap" style="display:none;">
+<div class="wrap" id="mainApp" style="display:none;">
   <div class="school-header">
     <div class="crest" id="appCrest">GS</div>
     <h1 id="appSchoolName">Exam Office Control Panel</h1>
     <p>Exam office control panel</p>
   </div>
 
-  <div class="card">
+  <div class="card" id="appWrap">
     <div class="topbar">
       <span class="who" id="whoAmI"></span>
       <button onclick="logout()">Log out</button>
     </div>
 
+    <!-- COMMAND STRIP -->
+    <div class="command-strip">
+      <button class="search-trigger" onclick="openCommandPalette()" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
+        <span>🔍</span>
+        <span>Search students, subjects, classes…</span>
+        <kbd id="cmdkShortcutLabel">⌘K</kbd>
+      </button>
+    </div>
+
     <div class="hamburger-bar">
-      <button class="hamburger-btn" onclick="toggleTabMenu()">☰ <span id="currentTabLabel">Students</span></button>
-      <div class="tab-menu" id="tabMenu">
-        <button class="active" onclick="switchTab('students', 'Students')">👥 Students</button>
-        <button onclick="switchTab('subjects', 'Subjects')">📚 Subjects</button>
-        <button onclick="switchTab('teachers', 'Teachers')">🧑‍🏫 Teachers</button>
-        <button onclick="switchTab('classes', 'Classes')">🏷️ Classes</button>
-        <button onclick="switchTab('assignments', 'Assign subjects')">🔗 Assign subjects</button>
-        <button onclick="switchTab('formTeachers', 'Form teachers')">🎓 Form teachers</button>
-        <button onclick="switchTab('comments', 'Principal Comments')">💬 Principal Comments &amp; Overrides</button>
-        <button onclick="switchTab('termSettings', 'Deadlines')">⏳ Deadlines</button>
-        <button onclick="switchTab('fees', 'Fees')">💳 Fees</button>
-        <button onclick="switchTab('pins', 'PINs')">🔑 PINs</button>
-        <button onclick="switchTab('activeSession', 'Active Session')">📅 Active Session &amp; Term</button>
-        <button onclick="switchTab('settings', 'Settings')">⚙️ Settings</button>
+      <button class="hamburger-btn" onclick="toggleTabMenu()" aria-haspopup="menu" aria-expanded="false" id="hamburgerBtn">
+        ☰ <span id="currentTabLabel">Students</span>
+        <span class="shortcut" id="tabShortcutHint">Press ?</span>
+      </button>
+      <div class="tab-menu" id="tabMenu" role="menu" aria-label="Sections">
+        <button role="menuitem" class="active" onclick="switchTab('students', 'Students', event)" data-shortcut="s">👥 Students <span class="sc">S</span></button>
+        <button role="menuitem" onclick="switchTab('subjects', 'Subjects', event)" data-shortcut="b">📚 Subjects <span class="sc">B</span></button>
+        <button role="menuitem" onclick="switchTab('teachers', 'Teachers', event)" data-shortcut="t">🧑‍🏫 Teachers <span class="sc">T</span></button>
+        <button role="menuitem" onclick="switchTab('classes', 'Classes', event)" data-shortcut="c">🏷️ Classes <span class="sc">C</span></button>
+        <button role="menuitem" onclick="switchTab('assignments', 'Assign subjects', event)" data-shortcut="a">🔗 Assign subjects <span class="sc">A</span></button>
+        <button role="menuitem" onclick="switchTab('formTeachers', 'Form teachers', event)" data-shortcut="f">🎓 Form teachers <span class="sc">F</span></button>
+        <button role="menuitem" onclick="switchTab('comments', 'Principal Comments', event)" data-shortcut="p">💬 Principal Comments &amp; Overrides <span class="sc">P</span></button>
+        <button role="menuitem" onclick="switchTab('termSettings', 'Deadlines', event)" data-shortcut="d">⏳ Deadlines <span class="sc">D</span></button>
+        <button role="menuitem" onclick="switchTab('fees', 'Fees', event)" data-shortcut="e">💳 Fees <span class="sc">E</span></button>
+        <button role="menuitem" onclick="switchTab('pins', 'PINs', event)" data-shortcut="k">🔑 PINs <span class="sc">K</span></button>
+        <button role="menuitem" onclick="switchTab('activeSession', 'Active Session', event)" data-shortcut="n">📅 Active Session &amp; Term <span class="sc">N</span></button>
+        <button role="menuitem" onclick="switchTab('settings', 'Settings', event)" data-shortcut="g">⚙️ Settings <span class="sc">G</span></button>
       </div>
     </div>
 
     <!-- STUDENTS -->
     <div id="tab-students">
       <p class="section-title">Students</p>
-      <div class="add-form cols-student">
-        <div><label>Surname</label><input type="text" id="newStudentSurname" placeholder="e.g. Johnson" autocomplete="off" /></div>
-        <div><label>First name</label><input type="text" id="newStudentFirstName" placeholder="e.g. Amaka" autocomplete="off" /></div>
+      <div class="add-form cols-student" id="addStudentForm">
+        <div><label>Surname</label><input type="text" id="newStudentSurname" placeholder="e.g. Johnson" autocomplete="off" data-required /></div>
+        <div><label>First name</label><input type="text" id="newStudentFirstName" placeholder="e.g. Amaka" autocomplete="off" data-required /></div>
         <div><label>Middle name</label><input type="text" id="newStudentMiddleName" placeholder="e.g. Chioma" autocomplete="off" /></div>
-        <div><label>Admission no.</label><input type="text" id="newStudentAdmissionNo" placeholder="e.g. 246" autocomplete="off" /></div>
-        <div><label>Class</label><select id="newStudentClass"></select></div>
+        <div><label>Admission no.</label><input type="text" id="newStudentAdmissionNo" placeholder="e.g. 246" autocomplete="off" data-required /></div>
+        <div><label>Class</label><select id="newStudentClass" data-required></select></div>
         <button class="primary" onclick="addStudent()">Add student</button>
       </div>
 
       <div style="border: 2px dashed var(--border); border-radius: 14px; padding: 14px; margin-bottom: 18px;">
-        <p style="font-size:12px; font-weight:700; margin:0 0 4px;">Bulk add from Excel/CSV (Smart Upsert)</p>
-        <p class="empty-note" style="text-align:left; padding:0 0 10px;">File needs columns: <strong>Surname</strong>, <strong>First Name</strong>, <strong>Middle Name</strong> (optional), <strong>Admission No</strong>, <strong>Class</strong> (e.g. JSS1A or SS1 Science A). Existing students will have their classes updated seamlessly.</p>
+        <p style="font-size:12px; font-weight:800; margin:0 0 4px;">Bulk add from Excel/CSV (Smart Upsert)</p>
+        <p class="empty-note" style="text-align:left; padding:0 0 10px; font-weight:600;">File needs columns: <strong>Surname</strong>, <strong>First Name</strong>, <strong>Middle Name</strong> (optional), <strong>Admission No</strong>, <strong>Class</strong> (e.g. JSS1A or SS1 Science A). Existing students will have their classes updated seamlessly.</p>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
           <input type="file" id="bulkImportFile" accept=".xlsx,.xls,.csv" style="flex:1; min-width:200px; padding:6px;" />
           <button class="primary" onclick="bulkImportStudents()">Upload</button>
@@ -289,7 +794,7 @@
         <div></div>
       </div>
 
-      <div id="studentsList"></div>
+      <div id="studentsList" aria-live="polite"></div>
       <div class="pager" id="studentsPager" style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:12px; color:var(--text-soft);"></div>
     </div>
 
@@ -297,23 +802,23 @@
     <div id="tab-subjects" style="display:none;">
       <p class="section-title">Subjects</p>
       <div class="add-form">
-        <div><label>Subject name</label><input type="text" id="newSubjectName" placeholder="e.g. Geography" autocomplete="off" /></div>
+        <div><label>Subject name</label><input type="text" id="newSubjectName" placeholder="e.g. Geography" autocomplete="off" data-required /></div>
         <div></div>
         <button class="primary" onclick="addSubject()">Add subject</button>
       </div>
-      <div id="subjectsList"></div>
+      <div id="subjectsList" aria-live="polite"></div>
     </div>
 
     <!-- TEACHERS -->
     <div id="tab-teachers" style="display:none;">
       <p class="section-title">Teachers</p>
       <div class="add-form cols-4">
-        <div><label>Full name</label><input type="text" id="newTeacherName" placeholder="e.g. Mr. Okoro" autocomplete="off" /></div>
-        <div><label>Email</label><input type="email" id="newTeacherEmail" placeholder="e.g. okoro@school.com" autocomplete="off" /></div>
-        <div><label>Password</label><input type="text" id="newTeacherPassword" placeholder="temporary password" /></div>
+        <div><label>Full name</label><input type="text" id="newTeacherName" placeholder="e.g. Mr. Okoro" autocomplete="off" data-required /></div>
+        <div><label>Email</label><input type="email" id="newTeacherEmail" placeholder="e.g. okoro@school.com" autocomplete="off" data-required /></div>
+        <div><label>Password</label><input type="text" id="newTeacherPassword" placeholder="temporary password" data-required /></div>
         <button class="primary" onclick="addTeacher()">Add teacher</button>
       </div>
-      <div id="teachersList"></div>
+      <div id="teachersList" aria-live="polite"></div>
     </div>
 
     <!-- CLASSES -->
@@ -338,7 +843,7 @@
         </div>
         <button class="primary" onclick="addClass()">Add class</button>
       </div>
-      <div id="classesList"></div>
+      <div id="classesList" aria-live="polite"></div>
     </div>
 
     <!-- ASSIGN SUBJECTS -->
@@ -350,7 +855,7 @@
         <div><label>Class</label><select id="assignClass"></select></div>
         <button class="primary" onclick="addAssignment()">Assign</button>
       </div>
-      <div id="assignmentsList"></div>
+      <div id="assignmentsList" aria-live="polite"></div>
     </div>
 
     <!-- FORM TEACHERS -->
@@ -361,13 +866,13 @@
         <div><label>Class</label><select id="ftClass"></select></div>
         <button class="primary" onclick="addFormTeacher()">Assign</button>
       </div>
-      <div id="formTeachersList"></div>
+      <div id="formTeachersList" aria-live="polite"></div>
     </div>
 
     <!-- PRINCIPAL COMMENTS & OVERRIDES -->
     <div id="tab-comments" style="display:none;">
       <p class="section-title">Principal Comments &amp; Promotion Overrides</p>
-      <p class="empty-note" style="text-align:left; padding:0 0 10px;">Lookup a student by admission number to override automated remarks or add custom repetition/promotion statuses.</p>
+      <p class="empty-note" style="text-align:left; padding:0 0 10px; font-weight:600;">Lookup a student by admission number to override automated remarks or add custom repetition/promotion statuses.</p>
       <div class="add-form cols-4">
         <div><label>Admission No</label><input type="text" id="commentAdmNo" placeholder="e.g. 246" autocomplete="off" /></div>
         <div><label>Term</label>
@@ -411,13 +916,13 @@
 
       <div style="border-top: 1px solid var(--border); margin-top: 18px; padding-top: 18px;">
         <p class="section-title" style="font-size:13px;">Grant a teacher extra time</p>
-        <p class="empty-note" style="text-align:left; padding:0 0 10px;">Once the deadline passes, a teacher can't save scores anymore — unless you grant them an extension here for a specific class.</p>
+        <p class="empty-note" style="text-align:left; padding:0 0 10px; font-weight:600;">Once the deadline passes, a teacher can't save scores anymore — unless you grant them an extension here for a specific class.</p>
         <div class="add-form">
           <div><label>Teacher</label><select id="doTeacher"></select></div>
           <div><label>Class</label><select id="doClass"></select></div>
           <button class="primary" onclick="grantDeadlineOverride()">Grant extension</button>
         </div>
-        <div id="deadlineOverridesList"></div>
+        <div id="deadlineOverridesList" aria-live="polite"></div>
       </div>
     </div>
 
@@ -438,15 +943,15 @@
         <div><label>Filter by class</label><select id="feeClassFilter" onchange="searchFeeStatus()"><option value="">All classes</option></select></div>
         <div></div>
       </div>
-      <p class="empty-note" style="text-align:left; padding:0 0 10px;">Everyone is cleared by default — toggle to hold a student's result for unpaid fees.</p>
-      <div id="feeList"></div>
+      <p class="empty-note" style="text-align:left; padding:0 0 10px; font-weight:600;">Everyone is cleared by default — toggle to hold a student's result for unpaid fees.</p>
+      <div id="feeList" aria-live="polite"></div>
       <div id="feePager" style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:12px; color:var(--text-soft);"></div>
     </div>
 
-    <!-- PINS (read-only) -->
+    <!-- PINS -->
     <div id="tab-pins" style="display:none;">
       <p class="section-title">Result PINs</p>
-      <p class="empty-note" style="text-align:left; padding:0 0 10px;">These are generated by ResultPro — hand these codes to students to check their full-term result. You can't generate new ones here; contact ResultPro for more.</p>
+      <p class="empty-note" style="text-align:left; padding:0 0 10px; font-weight:600;">These are generated by ResultPro — hand these codes to students to check their full-term result. You can't generate new ones here; contact ResultPro for more.</p>
       <div class="add-form">
         <div><label>Search</label><input type="text" id="officePinSearch" placeholder="PIN code or admission no." oninput="debouncedOfficePinSearch()" autocomplete="off" /></div>
         <div><label>Status</label>
@@ -459,15 +964,15 @@
         </div>
         <div></div>
       </div>
-      <div id="officePinsList"></div>
+      <div id="officePinsList" aria-live="polite"></div>
       <div id="officePinsPager" style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:12px; color:var(--text-soft);"></div>
     </div>
 
-    <!-- ACTIVE SESSION CONFIGURATION -->
+    <!-- ACTIVE SESSION -->
     <div id="tab-activeSession" style="display:none;">
       <p class="section-title">Active Academic Session &amp; Term</p>
-      <p class="empty-note" style="text-align:left; padding:0 0 10px;">Set the global active term and session. This dictates where newly added students and bulk imports are automatically enrolled.</p>
-      
+      <p class="empty-note" style="text-align:left; padding:0 0 10px; font-weight:600;">Set the global active term and session. This dictates where newly added students and bulk imports are automatically enrolled.</p>
+
       <div class="card" style="background:var(--cream); border:1px solid var(--border); box-shadow:none;">
         <div style="margin-bottom:14px;">
           <label>Current Active Term</label>
@@ -485,11 +990,11 @@
       </div>
     </div>
 
-    <!-- SETTINGS / SCHOOL CONFIGURATION -->
+    <!-- SETTINGS -->
     <div id="tab-settings" style="display:none;">
       <p class="section-title">School Configuration &amp; Branding</p>
-      <p class="empty-note" style="text-align:left; padding:0 0 10px;">Update school identity, contact information, and upload your official school logo.</p>
-      
+      <p class="empty-note" style="text-align:left; padding:0 0 10px; font-weight:600;">Update school identity, contact information, and upload your official school logo.</p>
+
       <form id="schoolSettingsForm">
         <div style="margin-bottom:14px;">
           <label for="schoolName">School Name</label>
@@ -529,12 +1034,26 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- COMMAND PALETTE -->
+<div class="cmdk-backdrop" id="cmdkBackdrop" onclick="if(event.target===this)closeCommandPalette()">
+  <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="Command palette">
+    <input class="cmdk-input" id="cmdkInput" placeholder="Search students, teachers, subjects, classes…" autocomplete="off" />
+    <div class="cmdk-results" id="cmdkResults" role="listbox"></div>
+    <div class="cmdk-footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> select</span>
+      <span><kbd>esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="visually-hidden" id="srAnnouncer" aria-live="polite" aria-atomic="true"></div>
 
 <script>
-  const API_BASE = window.location.origin; 
+  const API_BASE = window.location.origin;
   let officer = null;
-  let cache = { subjects: [], teachers: [], classes: [] };
+  let cache = { subjects: [], teachers: [], classes: [], students: [] };
   let activeCommentStudentId = null;
   let studentPage = 1;
   const STUDENTS_PER_PAGE = 25;
@@ -547,23 +1066,25 @@
   let feeSearchDebounceTimer;
   let lastStudentsList = [];
 
+  /* request tokens — prevent stale responses overwriting fresh ones */
+  const reqTokens = { students: 0, fees: 0, pins: 0 };
+
   const saved = sessionStorage.getItem('resultpro_officer');
-  if (saved) {
-    officer = JSON.parse(saved);
-    boot();
+  if (saved) { officer = JSON.parse(saved); boot(); }
+
+  function announce(msg) {
+    const el = document.getElementById('srAnnouncer');
+    if (!el) return;
+    el.textContent = '';
+    setTimeout(() => { el.textContent = msg; }, 30);
   }
 
-  // Fetch school settings on load
   async function fetchInitialSchoolSettings() {
     try {
       const res = await fetch(`${API_BASE}/api/settings`);
       const data = await res.json();
-      if (data.settings) {
-        updateSchoolHeader(data.settings);
-      }
-    } catch (err) {
-      console.error('Could not load school settings for header:', err);
-    }
+      if (data.settings) updateSchoolHeader(data.settings);
+    } catch (err) { console.error('Could not load school settings for header:', err); }
   }
   fetchInitialSchoolSettings();
 
@@ -585,11 +1106,23 @@
     });
   }
 
+  let toastHideTimer = null;
+  let toastResetTimer = null;
   function showToast(message) {
     const t = document.getElementById('toast');
+    if (!t) return;
+    clearTimeout(toastHideTimer);
+    clearTimeout(toastResetTimer);
     t.textContent = message;
-    t.style.display = 'block';
-    setTimeout(() => { t.style.display = 'none'; }, 2500);
+    t.classList.remove('hide', 'show');
+    void t.offsetWidth;
+    t.classList.add('show');
+    announce(message);
+    toastHideTimer = setTimeout(() => {
+      t.classList.remove('show');
+      t.classList.add('hide');
+      toastResetTimer = setTimeout(() => { t.classList.remove('hide'); t.style.display = 'none'; }, 320);
+    }, 2500);
   }
 
   function togglePasswordVisibility(inputId, btn) {
@@ -598,6 +1131,142 @@
     else { input.type = "password"; btn.textContent = "Show"; }
   }
 
+  /* ============ COMMAND PALETTE ============ */
+  let cmdkIndex = 0;
+  let cmdkItems = [];
+
+  function openCommandPalette() {
+    if (!officer) return;
+    document.getElementById('cmdkBackdrop').classList.add('open');
+    const input = document.getElementById('cmdkInput');
+    input.value = '';
+    input.focus();
+    renderCmdk('');
+  }
+  function closeCommandPalette() {
+    document.getElementById('cmdkBackdrop').classList.remove('open');
+  }
+  function renderCmdk(query) {
+    const q = query.trim().toLowerCase();
+    const results = [];
+    if (!q) {
+      results.push({ kind: 'hint', label: 'Start typing to search students, teachers, subjects or classes', meta: '' });
+      results.push({ kind: 'section', label: 'Sections', meta: '' });
+      [['s','students','Students'],['b','subjects','Subjects'],['t','teachers','Teachers'],['c','classes','Classes'],['a','assignments','Assign subjects'],['f','formTeachers','Form teachers'],['p','comments','Principal Comments'],['d','termSettings','Deadlines'],['e','fees','Fees'],['k','pins','PINs'],['n','activeSession','Active Session'],['g','settings','Settings']].forEach(([k, id, label]) => {
+        results.push({ kind: 'tab', id, label, meta: `Tab · ${k.toUpperCase()}` });
+      });
+    } else {
+      (cache.students || []).forEach(s => {
+        const hay = `${s.surname} ${s.first_name} ${s.middle_name || ''} ${s.admission_no}`.toLowerCase();
+        if (hay.includes(q)) results.push({ kind: 'student', id: s.id, label: `${s.surname}, ${s.first_name}`, meta: `${s.class} · Adm ${s.admission_no}` });
+      });
+      (cache.teachers || []).forEach(t => {
+        if (`${t.name} ${t.email}`.toLowerCase().includes(q)) results.push({ kind: 'teacher', id: t.id, label: t.name, meta: t.email });
+      });
+      (cache.subjects || []).forEach(s => {
+        if (s.name.toLowerCase().includes(q)) results.push({ kind: 'subject', id: s.id, label: s.name, meta: 'Subject' });
+      });
+      (cache.classes || []).forEach(c => {
+        if (c.name.toLowerCase().includes(q)) results.push({ kind: 'class', id: c.id, label: c.name, meta: 'Class' });
+      });
+    }
+
+    cmdkItems = results.filter(r => r.kind !== 'hint' && r.kind !== 'section' || true);
+    const wrap = document.getElementById('cmdkResults');
+    if (!results.length) {
+      wrap.innerHTML = `<div class="cmdk-empty">No matches. Try a different search.</div>`;
+      cmdkIndex = 0;
+      return;
+    }
+    cmdkIndex = Math.min(cmdkIndex, results.length - 1);
+    wrap.innerHTML = results.map((r, i) => {
+      if (r.kind === 'hint') return `<div class="cmdk-empty" style="padding:14px 16px; text-align:left; font-weight:600;">${r.label}</div>`;
+      if (r.kind === 'section') return `<div style="padding:10px 12px 6px; font-size:10px; font-weight:900; letter-spacing:.85px; text-transform:uppercase; color:var(--text-soft);">${r.label}</div>`;
+      return `<button class="cmdk-result${i === cmdkIndex ? ' active' : ''}" data-index="${i}" onclick="chooseCmdkItem(${i})">
+        <span>${r.label}</span><span class="meta">${r.meta || ''}</span>
+      </button>`;
+    }).join('');
+  }
+  function chooseCmdkItem(i) {
+    const item = cmdkItems[i];
+    if (!item) return;
+    if (item.kind === 'tab') {
+      const evt = { currentTarget: document.querySelector(`.tab-menu button[onclick*="'${item.id}'"]`) };
+      switchTab(item.id, item.label, evt);
+    } else if (item.kind === 'student') {
+      switchTab('students', 'Students', { currentTarget: document.querySelector('.tab-menu button[data-shortcut="s"]') });
+      document.getElementById('studentSearch').value = cache.students.find(s => s.id === item.id)?.admission_no || '';
+      searchStudents();
+    } else if (item.kind === 'teacher') {
+      switchTab('teachers', 'Teachers', { currentTarget: document.querySelector('.tab-menu button[data-shortcut="t"]') });
+    } else if (item.kind === 'subject') {
+      switchTab('subjects', 'Subjects', { currentTarget: document.querySelector('.tab-menu button[data-shortcut="b"]') });
+    } else if (item.kind === 'class') {
+      switchTab('classes', 'Classes', { currentTarget: document.querySelector('.tab-menu button[data-shortcut="c"]') });
+    }
+    closeCommandPalette();
+  }
+  document.addEventListener('keydown', (e) => {
+    const cmdkOpen = document.getElementById('cmdkBackdrop').classList.contains('open');
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (cmdkOpen) closeCommandPalette(); else openCommandPalette();
+      return;
+    }
+    if (!cmdkOpen) {
+      // Global shortcuts — only when not typing in an input
+      const tag = (e.target.tagName || '').toLowerCase();
+      const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+      if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const map = { s:'students', b:'subjects', t:'teachers', c:'classes', a:'assignments', f:'formTeachers', p:'comments', d:'termSettings', e:'fees', k:'pins', n:'activeSession', g:'settings' };
+        const tab = map[e.key.toLowerCase()];
+        if (tab && officer) {
+          e.preventDefault();
+          const labelMap = { students:'Students', subjects:'Subjects', teachers:'Teachers', classes:'Classes', assignments:'Assign subjects', formTeachers:'Form teachers', comments:'Principal Comments', termSettings:'Deadlines', fees:'Fees', pins:'PINs', activeSession:'Active Session', settings:'Settings' };
+          const btn = document.querySelector(`.tab-menu button[onclick*="'${tab}'"]`);
+          switchTab(tab, labelMap[tab], { currentTarget: btn });
+        }
+        if (e.key === '?') {
+          e.preventDefault();
+          document.getElementById('tabMenu').classList.toggle('open');
+          document.getElementById('hamburgerBtn').setAttribute('aria-expanded', document.getElementById('tabMenu').classList.contains('open'));
+        }
+      }
+      return;
+    }
+    // cmdk navigation
+    if (e.key === 'Escape') { e.preventDefault(); closeCommandPalette(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); cmdkIndex = Math.min(cmdkIndex + 1, cmdkItems.length - 1); renderCmdk(document.getElementById('cmdkInput').value); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); cmdkIndex = Math.max(cmdkIndex - 1, 0); renderCmdk(document.getElementById('cmdkInput').value); }
+    else if (e.key === 'Enter') { e.preventDefault(); chooseCmdkItem(cmdkIndex); }
+  });
+  document.getElementById('cmdkInput').addEventListener('input', (e) => {
+    cmdkIndex = 0;
+    renderCmdk(e.target.value);
+  });
+
+  /* ============ TAB MENU ============ */
+  function toggleTabMenu() {
+    const menu = document.getElementById('tabMenu');
+    const btn = document.getElementById('hamburgerBtn');
+    const open = menu.classList.toggle('open');
+    btn.setAttribute('aria-expanded', String(open));
+  }
+  document.addEventListener('click', (e) => {
+    const bar = document.querySelector('.hamburger-bar');
+    if (bar && !bar.contains(e.target)) {
+      document.getElementById('tabMenu').classList.remove('open');
+      document.getElementById('hamburgerBtn').setAttribute('aria-expanded', 'false');
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.getElementById('tabMenu').classList.remove('open');
+      document.getElementById('hamburgerBtn').setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  /* ============ LOGIN ============ */
   async function login() {
     const email = document.getElementById('officerEmail').value.trim();
     const password = document.getElementById('officerPassword').value;
@@ -610,8 +1279,7 @@
     }
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
@@ -624,34 +1292,42 @@
       errEl.style.display = 'block';
     }
   }
-
   function logout() {
     sessionStorage.removeItem('resultpro_officer');
     officer = null;
-    document.getElementById('appWrap').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'none';
     document.getElementById('loginWrap').style.display = 'block';
   }
-
   async function boot() {
     document.getElementById('loginWrap').style.display = 'none';
-    document.getElementById('appWrap').style.display = 'block';
+    document.getElementById('mainApp').style.display = 'block';
     document.getElementById('whoAmI').textContent = `Logged in as ${officer.name}`;
     await refreshAll();
   }
 
-  function switchTab(tab, label) {
-    ['students', 'subjects', 'teachers', 'classes', 'assignments', 'formTeachers', 'comments', 'termSettings', 'fees', 'pins', 'activeSession', 'settings'].forEach(t => {
-      document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
+  /* ============ TAB SWITCH ============ */
+  function switchTab(tab, label, evt) {
+    const all = ['students','subjects','teachers','classes','assignments','formTeachers',
+                 'comments','termSettings','fees','pins','activeSession','settings'];
+    all.forEach(t => {
+      const el = document.getElementById(`tab-${t}`);
+      if (!el) return;
+      if (t === tab) {
+        el.style.display = 'block';
+        el.classList.remove('view-enter');
+        void el.offsetWidth;
+        el.classList.add('view-enter');
+      } else {
+        el.style.display = 'none';
+        el.classList.remove('view-enter');
+      }
     });
     document.querySelectorAll('.tab-menu button').forEach(b => b.classList.remove('active'));
-    
-    const clickedBtn = event ? event.currentTarget : null;
-    if (clickedBtn && clickedBtn.tagName === 'BUTTON') {
-      clickedBtn.classList.add('active');
-    }
-    
+    const clickedBtn = evt ? evt.currentTarget : null;
+    if (clickedBtn && clickedBtn.tagName === 'BUTTON') clickedBtn.classList.add('active');
     document.getElementById('currentTabLabel').textContent = label;
     document.getElementById('tabMenu').classList.remove('open');
+    document.getElementById('hamburgerBtn').setAttribute('aria-expanded', 'false');
     if (tab === 'termSettings') loadTermSettings();
     if (tab === 'fees') searchFeeStatus();
     if (tab === 'pins') searchOfficePins();
@@ -659,17 +1335,7 @@
     if (tab === 'settings') loadSchoolSettings();
   }
 
-  function toggleTabMenu() {
-    document.getElementById('tabMenu').classList.toggle('open');
-  }
-
-  document.addEventListener('click', (e) => {
-    const bar = document.querySelector('.hamburger-bar');
-    if (bar && !bar.contains(e.target)) {
-      document.getElementById('tabMenu').classList.remove('open');
-    }
-  });
-
+  /* ============ LOAD ============ */
   async function refreshAll() {
     await Promise.all([loadStudents(), loadSubjects(), loadTeachers(), loadClasses()]);
     await Promise.all([loadAssignments(), loadFormTeachers()]);
@@ -677,65 +1343,84 @@
   }
 
   function populateDropdowns() {
-    const classOpts = cache.classes.length ? cache.classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('') : '<option value="">No classes available</option>';
+    const classOpts = cache.classes.length
+      ? cache.classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('')
+      : '<option value="">No classes available</option>';
     document.getElementById('newStudentClass').innerHTML = classOpts;
     document.getElementById('studentClassFilter').innerHTML = `<option value="">All classes</option>${classOpts}`;
     document.getElementById('feeClassFilter').innerHTML = `<option value="">All classes</option>${classOpts}`;
-    
     document.getElementById('assignTeacher').innerHTML = cache.teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
     document.getElementById('assignSubject').innerHTML = cache.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     document.getElementById('assignClass').innerHTML = classOpts;
-    
     document.getElementById('ftTeacher').innerHTML = cache.teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
     document.getElementById('ftClass').innerHTML = classOpts;
-    
     document.getElementById('doTeacher').innerHTML = cache.teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
     document.getElementById('doClass').innerHTML = classOpts;
   }
 
+  function renderSkeleton(containerEl, rows = 4) {
+    containerEl.innerHTML = Array.from({ length: rows }, () => `
+      <div class="skeleton-row">
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+          <div class="skeleton-block w-60"></div>
+          <div class="skeleton-block w-30"></div>
+        </div>
+        <div class="skeleton-block w-20" style="width:60px;"></div>
+      </div>`).join('');
+  }
+
+  function renderEmpty(containerEl, { title, sub, icon = '📭' }) {
+    containerEl.innerHTML = `
+      <div class="empty-state">
+        <div style="font-size:24px; margin-bottom:6px;">${icon}</div>
+        <div class="es-title">${title}</div>
+        <div class="es-sub">${sub}</div>
+      </div>`;
+  }
+
+  /* ============ STUDENTS ============ */
   function debouncedSearch() {
     clearTimeout(searchDebounceTimer);
-    searchDebounceTimer = setTimeout(searchStudents, 350);
+    searchDebounceTimer = setTimeout(searchStudents, 300);
   }
-
-  function searchStudents() {
-    studentPage = 1;
-    loadStudents();
-  }
-
-  function goToStudentPage(delta) {
-    studentPage = Math.max(1, studentPage + delta);
-    loadStudents();
-  }
+  function searchStudents() { studentPage = 1; loadStudents(); }
+  function goToStudentPage(delta) { studentPage = Math.max(1, studentPage + delta); loadStudents(); }
 
   async function loadStudents() {
+    const myToken = ++reqTokens.students;
     const search = document.getElementById('studentSearch').value.trim();
     const classFilter = document.getElementById('studentClassFilter').value;
-
     const params = new URLSearchParams({ page: studentPage, pageSize: STUDENTS_PER_PAGE });
     if (search) params.set('search', search);
     if (classFilter) params.set('class', classFilter);
 
+    const list = document.getElementById('studentsList');
+    renderSkeleton(list, 3);
+
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/students?${params.toString()}`);
+      if (myToken !== reqTokens.students) return; // stale
       const data = await res.json();
       const students = data.students || [];
       lastStudentsList = students;
+      // merge into cache for cmdk
+      cache.students = [...cache.students.filter(s => !students.find(x => x.id === s.id)), ...students];
 
-      const list = document.getElementById('studentsList');
-      list.innerHTML = students.length
-        ? students.map(s => {
-            const middle = s.middle_name ? ` ${s.middle_name}` : '';
-            return `
-              <div class="list-row" id="student-row-${s.id}">
-                <span><b>${s.surname}</b>, ${s.first_name}${middle} <span class="meta">— ${s.class}, admission no. ${s.admission_no}</span></span>
-                <span>
-                  <button class="small" onclick="startEditStudent(${s.id})">Edit</button>
-                  <button class="delete-btn" onclick="deleteItem('students', ${s.id}, loadStudents)">Delete</button>
-                </span>
-              </div>`;
-          }).join('')
-        : `<p class="empty-note">No students found.</p>`;
+      if (!students.length) {
+        renderEmpty(list, { title: 'No students found', sub: search ? 'Try a different search term or clear the class filter.' : 'Add your first student above, or bulk-import from Excel.', icon: '🎒' });
+      } else {
+        list.innerHTML = students.map((s, i) => {
+          const middle = s.middle_name ? ` ${s.middle_name}` : '';
+          return `
+            <div class="list-row" id="student-row-${s.id}" style="--i:${i}">
+              <span><b>${s.surname}</b>, ${s.first_name}${middle} <span class="meta">— ${s.class}, admission no. ${s.admission_no}</span></span>
+              <span>
+                <button class="small" onclick="startEditStudent(${s.id})">Edit</button>
+                <button class="delete-btn" onclick="deleteItem('students', ${s.id}, loadStudents, 'student-row-${s.id}')">Delete</button>
+              </span>
+            </div>`;
+        }).join('');
+      }
 
       const totalPages = Math.max(1, Math.ceil((data.total || 0) / STUDENTS_PER_PAGE));
       document.getElementById('studentsPager').innerHTML = `
@@ -745,7 +1430,7 @@
           <button class="primary" style="padding:5px 10px;" onclick="goToStudentPage(1)" ${studentPage >= totalPages ? 'disabled' : ''}>Next</button>
         </span>`;
     } catch (err) {
-      showToast('Could not load students.');
+      if (myToken === reqTokens.students) showToast('Could not load students.');
     }
   }
 
@@ -756,11 +1441,11 @@
     const classOptions = cache.classes.map(c => `<option value="${c.name}" ${c.name === s.class ? 'selected' : ''}>${c.name}</option>`).join('');
     row.innerHTML = `
       <div style="display:flex; gap:6px; flex:1; flex-wrap:wrap;">
-        <input type="text" id="edit-surname-${id}" value="${s.surname}" placeholder="Surname" style="flex:1; min-width:90px; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;" />
-        <input type="text" id="edit-firstname-${id}" value="${s.first_name}" placeholder="First name" style="flex:1; min-width:90px; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;" />
-        <input type="text" id="edit-middlename-${id}" value="${s.middle_name || ''}" placeholder="Middle name" style="flex:1; min-width:90px; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;" />
-        <input type="text" id="edit-admno-${id}" value="${s.admission_no}" placeholder="Adm No" style="width:75px; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;" />
-        <select id="edit-class-${id}" style="width:auto; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px;">${classOptions}</select>
+        <input type="text" id="edit-surname-${id}" value="${s.surname}" placeholder="Surname" style="flex:1; min-width:90px; padding:6px 8px; font-size:12px;" />
+        <input type="text" id="edit-firstname-${id}" value="${s.first_name}" placeholder="First name" style="flex:1; min-width:90px; padding:6px 8px; font-size:12px;" />
+        <input type="text" id="edit-middlename-${id}" value="${s.middle_name || ''}" placeholder="Middle name" style="flex:1; min-width:90px; padding:6px 8px; font-size:12px;" />
+        <input type="text" id="edit-admno-${id}" value="${s.admission_no}" placeholder="Adm No" style="width:75px; padding:6px 8px; font-size:12px;" />
+        <select id="edit-class-${id}" style="width:auto; padding:6px 8px; font-size:12px;">${classOptions}</select>
       </div>
       <span>
         <button class="small" onclick="saveEditStudent(${id})">Save</button>
@@ -775,7 +1460,6 @@
     const admission_no = document.getElementById(`edit-admno-${id}`).value.trim();
     const className = document.getElementById(`edit-class-${id}`).value;
     if (!surname || !first_name || !admission_no) return showToast('Surname, first name and admission number cannot be empty.');
-
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/students/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -785,34 +1469,22 @@
       if (!res.ok) throw new Error(data.error);
       await loadStudents();
       showToast('Student updated.');
-    } catch (err) {
-      showToast(err.message || 'Could not update student.');
-    }
+    } catch (err) { showToast(err.message || 'Could not update student.'); }
   }
 
   async function bulkImportStudents() {
     const fileInput = document.getElementById('bulkImportFile');
     const file = fileInput.files[0];
     const resultEl = document.getElementById('bulkImportResult');
-    
-    if (!file) {
-      resultEl.innerHTML = '';
-      return showToast('Choose a file first.');
-    }
-
+    if (!file) { resultEl.innerHTML = ''; return showToast('Choose a file first.'); }
     const formData = new FormData();
     formData.append('file', file);
-
     resultEl.innerHTML = `<p class="empty-note" style="padding:0;">Uploading and parsing file…</p>`;
-
     try {
-      const res = await fetch(`${API_BASE}/api/exam-office/students/bulk-import`, {
-        method: 'POST', body: formData,
-      });
+      const res = await fetch(`${API_BASE}/api/exam-office/students/bulk-import`, { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-
-      let html = `<p style="font-size:12px; font-weight:700; color:var(--pass); margin:0 0 6px;">${data.processed} student record${data.processed === 1 ? '' : 's'} processed successfully.</p>`;
+      let html = `<p style="font-size:12px; font-weight:800; color:var(--pass); margin:0 0 6px;">${data.processed} student record${data.processed === 1 ? '' : 's'} processed successfully.</p>`;
       if (data.skipped && data.skipped.length > 0) {
         html += `<p style="font-size:11px; color:var(--fail); margin:0 0 4px;">${data.skipped.length} row${data.skipped.length === 1 ? '' : 's'} skipped:</p>`;
         html += `<div style="font-size:11px; color:var(--text-soft); max-height:120px; overflow-y:auto; background:#fff; padding:6px; border-radius:6px; border:1px solid var(--border);">${data.skipped.map(s => `Row ${s.row}: ${s.reason}`).join('<br>')}</div>`;
@@ -826,13 +1498,25 @@
     }
   }
 
+  function validateForm(formEl) {
+    let valid = true;
+    formEl.querySelectorAll('[data-required]').forEach(inp => {
+      const val = (inp.value || '').trim();
+      if (!val) { inp.classList.add('invalid'); valid = false; }
+      else { inp.classList.remove('invalid'); }
+      inp.addEventListener('input', () => inp.classList.remove('invalid'), { once: true });
+    });
+    return valid;
+  }
+
   async function addStudent() {
+    const form = document.getElementById('addStudentForm');
+    if (!validateForm(form)) return showToast('Fill in the highlighted fields.');
     const surname = document.getElementById('newStudentSurname').value.trim();
     const first_name = document.getElementById('newStudentFirstName').value.trim();
     const middle_name = document.getElementById('newStudentMiddleName').value.trim();
     const admission_no = document.getElementById('newStudentAdmissionNo').value.trim();
     const className = document.getElementById('newStudentClass').value;
-    if (!surname || !first_name || !admission_no || !className) return showToast('Fill in surname, first name, admission number and class.');
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/students`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -879,8 +1563,7 @@
     if (!principal_comment) return showToast('Enter a comment.');
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/term-records`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ student_id: activeCommentStudentId, term, session, principal_comment })
       });
       if (!res.ok) throw new Error('Failed to save');
@@ -888,27 +1571,31 @@
     } catch (err) { showToast(err.message); }
   }
 
+  /* ============ SUBJECTS / TEACHERS / CLASSES ============ */
   async function loadSubjects() {
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/subjects`);
       const data = await res.json();
       cache.subjects = data.subjects || [];
       const list = document.getElementById('subjectsList');
-      list.innerHTML = cache.subjects.length
-        ? cache.subjects.map(s => `
-          <div class="list-row">
-            <span>${s.name}</span>
-            <button class="delete-btn" onclick="deleteItem('subjects', ${s.id}, loadSubjects)">Delete</button>
-          </div>`).join('')
-        : `<p class="empty-note">No subjects yet.</p>`;
-    } catch(err) {
-      showToast('Could not load subjects.');
-    }
+      if (!cache.subjects.length) {
+        renderEmpty(list, { title: 'No subjects yet', sub: 'Add your first subject above — Geography, French, Further Maths…', icon: '📚' });
+        return;
+      }
+      list.innerHTML = cache.subjects.map((s, i) => `
+        <div class="list-row" id="subject-row-${s.id}" style="--i:${i}">
+          <span>${s.name}</span>
+          <button class="delete-btn" onclick="deleteItem('subjects', ${s.id}, loadSubjects, 'subject-row-${s.id}')">Delete</button>
+        </div>`).join('');
+    } catch (err) { showToast('Could not load subjects.'); }
   }
 
   async function addSubject() {
     const name = document.getElementById('newSubjectName').value.trim();
-    if (!name) return showToast('Enter a subject name.');
+    if (!name) {
+      document.getElementById('newSubjectName').classList.add('invalid');
+      return showToast('Enter a subject name.');
+    }
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/subjects`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -929,23 +1616,28 @@
       const data = await res.json();
       cache.teachers = data.teachers || [];
       const list = document.getElementById('teachersList');
-      list.innerHTML = cache.teachers.length
-        ? cache.teachers.map(t => `
-          <div class="list-row">
-            <span>${t.name} <span class="meta">(${t.email})</span></span>
-            <button class="delete-btn" onclick="deleteItem('teachers', ${t.id}, loadTeachers)">Delete</button>
-          </div>`).join('')
-        : `<p class="empty-note">No teachers yet.</p>`;
-    } catch (err) {
-      showToast('Could not load teachers.');
-    }
+      if (!cache.teachers.length) {
+        renderEmpty(list, { title: 'No teachers yet', sub: 'Add teachers above so you can assign subjects and form classes.', icon: '🧑‍🏫' });
+        return;
+      }
+      list.innerHTML = cache.teachers.map((t, i) => `
+        <div class="list-row" id="teacher-row-${t.id}" style="--i:${i}">
+          <span>${t.name} <span class="meta">(${t.email})</span></span>
+          <button class="delete-btn" onclick="deleteItem('teachers', ${t.id}, loadTeachers, 'teacher-row-${t.id}')">Delete</button>
+        </div>`).join('');
+    } catch (err) { showToast('Could not load teachers.'); }
   }
 
   async function addTeacher() {
     const name = document.getElementById('newTeacherName').value.trim();
     const email = document.getElementById('newTeacherEmail').value.trim();
     const password = document.getElementById('newTeacherPassword').value.trim();
-    if (!name || !email || !password) return showToast('Fill in name, email and password.');
+    if (!name || !email || !password) {
+      ['newTeacherName','newTeacherEmail','newTeacherPassword'].forEach(id => {
+        if (!document.getElementById(id).value.trim()) document.getElementById(id).classList.add('invalid');
+      });
+      return showToast('Fill in the highlighted fields.');
+    }
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/teachers`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -953,9 +1645,7 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      document.getElementById('newTeacherName').value = '';
-      document.getElementById('newTeacherEmail').value = '';
-      document.getElementById('newTeacherPassword').value = '';
+      ['newTeacherName','newTeacherEmail','newTeacherPassword'].forEach(id => document.getElementById(id).value = '');
       await loadTeachers();
       populateDropdowns();
       showToast('Teacher added.');
@@ -968,16 +1658,16 @@
       const data = await res.json();
       cache.classes = data.classes || [];
       const list = document.getElementById('classesList');
-      list.innerHTML = cache.classes.length
-        ? cache.classes.map(c => `
-          <div class="list-row">
-            <span>${c.name}</span>
-            <button class="delete-btn" onclick="deleteItem('classes', ${c.id}, loadClasses)">Delete</button>
-          </div>`).join('')
-        : `<p class="empty-note">No classes yet.</p>`;
-    } catch (err) {
-      showToast('Could not load classes.');
-    }
+      if (!cache.classes.length) {
+        renderEmpty(list, { title: 'No classes yet', sub: 'Add your first class above — JSS1A, SS2 Science A…', icon: '🏷️' });
+        return;
+      }
+      list.innerHTML = cache.classes.map((c, i) => `
+        <div class="list-row" id="class-row-${c.id}" style="--i:${i}">
+          <span>${c.name}</span>
+          <button class="delete-btn" onclick="deleteItem('classes', ${c.id}, loadClasses, 'class-row-${c.id}')">Delete</button>
+        </div>`).join('');
+    } catch (err) { showToast('Could not load classes.'); }
   }
 
   async function addClass() {
@@ -1001,16 +1691,16 @@
       const res = await fetch(`${API_BASE}/api/exam-office/assignments`);
       const data = await res.json();
       const list = document.getElementById('assignmentsList');
-      list.innerHTML = (data.assignments || []).length
-        ? data.assignments.map(a => `
-          <div class="list-row">
-            <span>${a.teacher_name} <span class="meta">— ${a.subject_name}, ${a.class}</span></span>
-            <button class="delete-btn" onclick="deleteItem('assignments', ${a.id}, loadAssignments)">Remove</button>
-          </div>`).join('')
-        : `<p class="empty-note">No assignments yet.</p>`;
-    } catch (err) {
-      showToast('Could not load assignments.');
-    }
+      if (!(data.assignments || []).length) {
+        renderEmpty(list, { title: 'No assignments yet', sub: 'Pair a teacher with a subject and a class above.', icon: '🔗' });
+        return;
+      }
+      list.innerHTML = data.assignments.map((a, i) => `
+        <div class="list-row" id="assignment-row-${a.id}" style="--i:${i}">
+          <span>${a.teacher_name} <span class="meta">— ${a.subject_name}, ${a.class}</span></span>
+          <button class="delete-btn" onclick="deleteItem('assignments', ${a.id}, loadAssignments, 'assignment-row-${a.id}')">Remove</button>
+        </div>`).join('');
+    } catch (err) { showToast('Could not load assignments.'); }
   }
 
   async function addAssignment() {
@@ -1035,16 +1725,16 @@
       const res = await fetch(`${API_BASE}/api/exam-office/form-teachers`);
       const data = await res.json();
       const list = document.getElementById('formTeachersList');
-      list.innerHTML = (data.formTeachers || []).length
-        ? data.formTeachers.map(f => `
-          <div class="list-row">
-            <span>${f.teacher_name} <span class="meta">— ${f.class}</span></span>
-            <button class="delete-btn" onclick="deleteItem('form-teachers', ${f.id}, loadFormTeachers)">Remove</button>
-          </div>`).join('')
-        : `<p class="empty-note">No form teachers assigned yet.</p>`;
-    } catch (err) {
-      showToast('Could not load form teachers.');
-    }
+      if (!(data.formTeachers || []).length) {
+        renderEmpty(list, { title: 'No form teachers yet', sub: 'Assign a teacher to oversee a class above.', icon: '🎓' });
+        return;
+      }
+      list.innerHTML = data.formTeachers.map((f, i) => `
+        <div class="list-row" id="ft-row-${f.id}" style="--i:${i}">
+          <span>${f.teacher_name} <span class="meta">— ${f.class}</span></span>
+          <button class="delete-btn" onclick="deleteItem('form-teachers', ${f.id}, loadFormTeachers, 'ft-row-${f.id}')">Remove</button>
+        </div>`).join('');
+    } catch (err) { showToast('Could not load form teachers.'); }
   }
 
   async function addFormTeacher() {
@@ -1063,8 +1753,11 @@
     } catch (err) { showToast(err.message || 'Could not assign.'); }
   }
 
-  async function deleteItem(resource, id, reloadFn) {
+  /* ============ DELETE — optimistic ============ */
+  async function deleteItem(resource, id, reloadFn, rowId) {
     if (!confirm('Are you sure you want to delete this?')) return;
+    const row = rowId ? document.getElementById(rowId) : null;
+    if (row) row.classList.add('leaving');
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/${resource}/${id}`, { method: 'DELETE' });
       const data = await res.json();
@@ -1072,19 +1765,18 @@
       await reloadFn();
       populateDropdowns();
       showToast('Deleted.');
-    } catch (err) { showToast(err.message || 'Could not delete.'); }
+    } catch (err) {
+      if (row) row.classList.remove('leaving');
+      showToast(err.message || 'Could not delete.');
+    }
   }
 
+  /* ============ PINS ============ */
   function debouncedOfficePinSearch() {
     clearTimeout(officePinSearchDebounceTimer);
-    officePinSearchDebounceTimer = setTimeout(searchOfficePins, 350);
+    officePinSearchDebounceTimer = setTimeout(searchOfficePins, 300);
   }
-
-  function goToOfficePinPage(delta) {
-    officePinPage = Math.max(1, officePinPage + delta);
-    searchOfficePins();
-  }
-
+  function goToOfficePinPage(delta) { officePinPage = Math.max(1, officePinPage + delta); searchOfficePins(); }
   function officePinStatus(p) {
     if (p.uses_count >= p.max_uses) return { label: 'Exhausted', cls: 'status-exhausted' };
     if (!p.student_admission_no) return { label: 'Unused', cls: 'status-unused' };
@@ -1092,30 +1784,35 @@
   }
 
   async function searchOfficePins() {
+    const myToken = ++reqTokens.pins;
     const search = document.getElementById('officePinSearch').value.trim();
     const status = document.getElementById('officePinStatusFilter').value;
-
     const params = new URLSearchParams({ page: officePinPage, pageSize: OFFICE_PINS_PER_PAGE });
     if (search) params.set('search', search);
     if (status) params.set('status', status);
 
+    const list = document.getElementById('officePinsList');
+    renderSkeleton(list, 3);
+
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/pins?${params.toString()}`);
+      if (myToken !== reqTokens.pins) return;
       const data = await res.json();
       const pins = data.pins || [];
-
-      const list = document.getElementById('officePinsList');
-      list.innerHTML = pins.length
-        ? pins.map(p => {
-            const s = officePinStatus(p);
-            const who = p.student_admission_no ? `${p.student_surname} ${p.student_first_name} (${p.student_admission_no})` : 'Not yet used';
-            return `
-              <div class="list-row">
-                <span style="font-family:monospace;">${p.code} <span class="meta">— ${who} — ${p.uses_count}/${p.max_uses} uses</span></span>
-                <span class="badge ${s.cls === 'status-unused' ? 'badge-draft' : s.cls === 'status-exhausted' ? '' : 'badge-ready'}" style="${s.cls === 'status-exhausted' ? 'background:var(--fail-bg); color:var(--fail);' : ''}">${s.label}</span>
-              </div>`;
-          }).join('')
-        : `<p class="empty-note">No PINs found.</p>`;
+      if (!pins.length) {
+        renderEmpty(list, { title: 'No PINs found', sub: search ? 'Try a different code or clear the filters.' : 'PINs from ResultPro will appear here as they\'re used.', icon: '🔑' });
+      } else {
+        list.innerHTML = pins.map((p, i) => {
+          const s = officePinStatus(p);
+          const who = p.student_admission_no ? `${p.student_surname} ${p.student_first_name} (${p.student_admission_no})` : 'Not yet used';
+          const badgeCls = s.cls === 'status-unused' ? 'badge-draft' : s.cls === 'status-exhausted' ? 'badge-exhausted' : 'badge-ready';
+          return `
+            <div class="list-row" style="--i:${i}">
+              <span style="font-family:monospace;">${p.code} <span class="meta">— ${who} — ${p.uses_count}/${p.max_uses} uses</span></span>
+              <span class="badge ${badgeCls}">${s.label}</span>
+            </div>`;
+        }).join('');
+      }
 
       const totalPages = Math.max(1, Math.ceil((data.total || 0) / OFFICE_PINS_PER_PAGE));
       document.getElementById('officePinsPager').innerHTML = `
@@ -1125,21 +1822,19 @@
           <button class="primary" style="padding:5px 10px;" onclick="goToOfficePinPage(1)" ${officePinPage >= totalPages ? 'disabled' : ''}>Next</button>
         </span>`;
     } catch (err) {
-      showToast('Could not load PINs.');
+      if (myToken === reqTokens.pins) showToast('Could not load PINs.');
     }
   }
 
+  /* ============ FEES ============ */
   function debouncedFeeSearch() {
     clearTimeout(feeSearchDebounceTimer);
-    feeSearchDebounceTimer = setTimeout(searchFeeStatus, 350);
+    feeSearchDebounceTimer = setTimeout(searchFeeStatus, 300);
   }
-
-  function goToFeePage(delta) {
-    feePage = Math.max(1, feePage + delta);
-    searchFeeStatus();
-  }
+  function goToFeePage(delta) { feePage = Math.max(1, feePage + delta); searchFeeStatus(); }
 
   async function searchFeeStatus() {
+    const myToken = ++reqTokens.fees;
     const term = document.getElementById('feeTerm').value;
     const session = document.getElementById('feeSession').value.trim();
     const search = document.getElementById('feeSearch').value.trim();
@@ -1150,24 +1845,28 @@
     if (search) params.set('search', search);
     if (classFilter) params.set('class', classFilter);
 
+    const list = document.getElementById('feeList');
+    renderSkeleton(list, 3);
+
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/fee-status?${params.toString()}`);
+      if (myToken !== reqTokens.fees) return;
       const data = await res.json();
       const students = data.students || [];
-
-      const list = document.getElementById('feeList');
-      list.innerHTML = students.length
-        ? students.map(s => {
-            const middle = s.middle_name ? ` ${s.middle_name}` : '';
-            return `
-              <div class="list-row">
-                <span><b>${s.surname}</b>, ${s.first_name}${middle} <span class="meta">— ${s.class}, admission no. ${s.admission_no}</span></span>
-                ${s.cleared
-                  ? `<button class="delete-btn" style="background:var(--fail-bg); color:var(--fail);" onclick="toggleFeeStatus(${s.id}, false)">Mark not cleared</button>`
-                  : `<button class="delete-btn" style="background:var(--pass-bg); color:var(--pass);" onclick="toggleFeeStatus(${s.id}, true)">Mark cleared</button>`}
-              </div>`;
-          }).join('')
-        : `<p class="empty-note">No students found.</p>`;
+      if (!students.length) {
+        renderEmpty(list, { title: 'No students found', sub: search ? 'Try a different search term.' : 'Add students or adjust the class filter.', icon: '💳' });
+      } else {
+        list.innerHTML = students.map((s, i) => {
+          const middle = s.middle_name ? ` ${s.middle_name}` : '';
+          return `
+            <div class="list-row" style="--i:${i}">
+              <span><b>${s.surname}</b>, ${s.first_name}${middle} <span class="meta">— ${s.class}, admission no. ${s.admission_no}</span></span>
+              ${s.cleared
+                ? `<button class="delete-btn" onclick="toggleFeeStatus(${s.id}, false)">Mark not cleared</button>`
+                : `<button class="delete-btn" style="background:var(--pass-bg); color:var(--pass);" onclick="toggleFeeStatus(${s.id}, true)">Mark cleared</button>`}
+            </div>`;
+        }).join('');
+      }
 
       const totalPages = Math.max(1, Math.ceil((data.total || 0) / FEES_PER_PAGE));
       document.getElementById('feePager').innerHTML = `
@@ -1177,7 +1876,7 @@
           <button class="primary" style="padding:5px 10px;" onclick="goToFeePage(1)" ${feePage >= totalPages ? 'disabled' : ''}>Next</button>
         </span>`;
     } catch (err) {
-      showToast('Could not load fee status.');
+      if (myToken === reqTokens.fees) showToast('Could not load fee status.');
     }
   }
 
@@ -1193,11 +1892,10 @@
       if (!res.ok) throw new Error(data.error);
       await searchFeeStatus();
       showToast(cleared ? 'Marked cleared.' : 'Marked not cleared.');
-    } catch (err) {
-      showToast(err.message || 'Could not update status.');
-    }
+    } catch (err) { showToast(err.message || 'Could not update status.'); }
   }
 
+  /* ============ ACTIVE SESSION ============ */
   async function loadActiveSchoolSettings() {
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/settings`);
@@ -1206,30 +1904,24 @@
         document.getElementById('activeTermInput').value = data.settings.current_term || 'First Term';
         document.getElementById('activeSessionInput').value = data.settings.current_session || '2026/2027';
       }
-    } catch (err) {
-      console.error('Failed to load active settings:', err);
-    }
+    } catch (err) { console.error('Failed to load active settings:', err); }
   }
-
   async function saveActiveSchoolSettings() {
     const current_term = document.getElementById('activeTermInput').value;
     const current_session = document.getElementById('activeSessionInput').value.trim();
     if (!current_session) return showToast('Enter a valid session.');
-
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/settings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ current_term, current_session })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       showToast('Active term and session updated successfully!');
-    } catch (err) {
-      showToast(err.message || 'Could not save active settings.');
-    }
+    } catch (err) { showToast(err.message || 'Could not save active settings.'); }
   }
 
+  /* ============ SETTINGS ============ */
   async function loadSchoolSettings() {
     try {
       const res = await fetch(`${API_BASE}/api/settings`);
@@ -1241,11 +1933,8 @@
         document.getElementById('schoolPhone').value = data.settings.school_phone || '';
         document.getElementById('schoolAddress').value = data.settings.school_address || '';
       }
-    } catch (err) {
-      console.error('Failed to load settings:', err);
-    }
+    } catch (err) { console.error('Failed to load settings:', err); }
   }
-
   document.getElementById('schoolSettingsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -1254,31 +1943,21 @@
     formData.append('school_email', document.getElementById('schoolEmail').value.trim());
     formData.append('school_phone', document.getElementById('schoolPhone').value.trim());
     formData.append('school_address', document.getElementById('schoolAddress').value.trim());
-    
     const logoFileInput = document.getElementById('logoFile');
-    if (logoFileInput.files[0]) {
-      formData.append('logo', logoFileInput.files[0]);
-    }
-
+    if (logoFileInput.files[0]) formData.append('logo', logoFileInput.files[0]);
     try {
-      const res = await fetch(`${API_BASE}/api/settings`, {
-        method: 'POST',
-        body: formData
-      });
+      const res = await fetch(`${API_BASE}/api/settings`, { method: 'POST', body: formData });
       const result = await res.json();
       if (res.ok) {
         showToast('School settings saved successfully!');
-        if (result.settings) {
-          updateSchoolHeader(result.settings);
-        }
+        if (result.settings) updateSchoolHeader(result.settings);
       } else {
         showToast(result.error || 'Failed to update settings');
       }
-    } catch (err) {
-      showToast('An error occurred while saving settings.');
-    }
+    } catch (err) { showToast('An error occurred while saving settings.'); }
   });
 
+  /* ============ TERM SETTINGS ============ */
   function toDatetimeLocal(isoString) {
     if (!isoString) return '';
     const d = new Date(isoString);
@@ -1291,25 +1970,17 @@
     const term = document.getElementById('tsTerm').value;
     const session = document.getElementById('tsSession').value.trim();
     if (!session) return;
-
     try {
       const res = await fetch(`${API_BASE}/api/term-settings?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}`);
       const data = await res.json();
       const s = data.settings || {};
-      
       document.getElementById('tsTeacherDeadline').value = s.teacher_deadline ? toDatetimeLocal(s.teacher_deadline.endsWith('Z') || s.teacher_deadline.includes('+') ? s.teacher_deadline : s.teacher_deadline + 'Z') : '';
       document.getElementById('tsResultRelease').value = s.result_release_at ? toDatetimeLocal(s.result_release_at.endsWith('Z') || s.result_release_at.includes('+') ? s.result_release_at : s.result_release_at + 'Z') : '';
-
       const info = document.getElementById('tsCurrentInfo');
-      if (!s.teacher_deadline && !s.result_release_at) {
-        info.textContent = 'No dates set yet for this term — students can view results anytime, teachers have no deadline shown.';
-      } else {
-        info.textContent = 'These dates are live — students and teachers will see live countdowns based on what you save here.';
-      }
-    } catch (err) {
-      showToast('Could not load current settings.');
-    }
-
+      info.textContent = (!s.teacher_deadline && !s.result_release_at)
+        ? 'No dates set yet for this term — students can view results anytime, teachers have no deadline shown.'
+        : 'These dates are live — students and teachers will see live countdowns based on what you save here.';
+    } catch (err) { showToast('Could not load current settings.'); }
     loadDeadlineOverrides();
   }
 
@@ -1317,21 +1988,20 @@
     const term = document.getElementById('tsTerm').value;
     const session = document.getElementById('tsSession').value.trim();
     if (!session) return;
-
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/deadline-overrides?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}`);
       const data = await res.json();
       const list = document.getElementById('deadlineOverridesList');
-      list.innerHTML = (data.overrides || []).length
-        ? data.overrides.map(o => `
-          <div class="list-row">
-            <span>${o.teacher_name} <span class="meta">— ${o.class}</span></span>
-            <button class="delete-btn" onclick="revokeDeadlineOverride(${o.id})">Revoke</button>
-          </div>`).join('')
-        : `<p class="empty-note">No extensions granted for this term yet.</p>`;
-    } catch (err) {
-      showToast('Could not load extensions.');
-    }
+      if (!(data.overrides || []).length) {
+        renderEmpty(list, { title: 'No extensions granted', sub: 'Teachers past the deadline can\'t save scores until you grant one here.', icon: '⏳' });
+        return;
+      }
+      list.innerHTML = data.overrides.map((o, i) => `
+        <div class="list-row" id="do-row-${o.id}" style="--i:${i}">
+          <span>${o.teacher_name} <span class="meta">— ${o.class}</span></span>
+          <button class="delete-btn" onclick="revokeDeadlineOverride(${o.id}, 'do-row-${o.id}')">Revoke</button>
+        </div>`).join('');
+    } catch (err) { showToast('Could not load extensions.'); }
   }
 
   async function grantDeadlineOverride() {
@@ -1340,7 +2010,6 @@
     const term = document.getElementById('tsTerm').value;
     const session = document.getElementById('tsSession').value.trim();
     if (!teacher_id || !className) return showToast('Add a teacher and class first.');
-
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/deadline-overrides`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1350,12 +2019,12 @@
       if (!res.ok) throw new Error(data.error);
       await loadDeadlineOverrides();
       showToast('Extension granted.');
-    } catch (err) {
-      showToast(err.message || 'Could not grant extension.');
-    }
+    } catch (err) { showToast(err.message || 'Could not grant extension.'); }
   }
 
-  async function revokeDeadlineOverride(id) {
+  async function revokeDeadlineOverride(id, rowId) {
+    const row = rowId ? document.getElementById(rowId) : null;
+    if (row) row.classList.add('leaving');
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/deadline-overrides/${id}`, { method: 'DELETE' });
       const data = await res.json();
@@ -1363,6 +2032,7 @@
       await loadDeadlineOverrides();
       showToast('Extension revoked.');
     } catch (err) {
+      if (row) row.classList.remove('leaving');
       showToast(err.message || 'Could not revoke extension.');
     }
   }
@@ -1372,28 +2042,19 @@
     const session = document.getElementById('tsSession').value.trim();
     const teacherDeadlineVal = document.getElementById('tsTeacherDeadline').value;
     const resultReleaseVal = document.getElementById('tsResultRelease').value;
-
     if (!session) return showToast('Enter a session.');
-
     const teacherDeadline = teacherDeadlineVal ? new Date(teacherDeadlineVal).toISOString() : null;
     const resultRelease = resultReleaseVal ? new Date(resultReleaseVal).toISOString() : null;
-
     try {
       const res = await fetch(`${API_BASE}/api/term-settings`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          term, session,
-          teacher_deadline: teacherDeadline,
-          result_release_at: resultRelease,
-        }),
+        body: JSON.stringify({ term, session, teacher_deadline: teacherDeadline, result_release_at: resultRelease }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       showToast('Dates saved successfully.');
       loadTermSettings();
-    } catch (err) {
-      showToast(err.message || 'Could not save dates.');
-    }
+    } catch (err) { showToast(err.message || 'Could not save dates.'); }
   }
 </script>
 </body>
