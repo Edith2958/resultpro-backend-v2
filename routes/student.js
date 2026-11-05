@@ -28,6 +28,23 @@ async function getSchoolSettings() {
   }
 }
 
+// NEW: reads the active term/session set by the exam office, with a safe fallback
+async function getActiveTermSession() {
+  try {
+    const { rows } = await pool.query(
+      'SELECT current_term, current_session FROM school_settings ORDER BY id DESC LIMIT 1'
+    );
+    if (rows.length === 0) return { term: 'First Term', session: '2026/2027' };
+    return {
+      term: rows[0].current_term || 'First Term',
+      session: rows[0].current_session || '2026/2027'
+    };
+  } catch (err) {
+    console.error('Failed to fetch active term/session:', err);
+    return { term: 'First Term', session: '2026/2027' };
+  }
+}
+
 router.post('/login', async (req, res) => {
   const { admission_no, surname } = req.body;
   if (!admission_no || !surname) {
@@ -54,10 +71,20 @@ router.post('/login', async (req, res) => {
 
 router.get('/midterm-result', async (req, res) => {
   let { student_id, term, session } = req.query;
-  if (!student_id || !term || !session) {
-    return res.status(400).json({ error: 'student_id, term and session are required' });
+  if (!student_id) {
+    return res.status(400).json({ error: 'student_id is required' });
   }
   student_id = parseInt(student_id, 10);
+  if (isNaN(student_id)) {
+    return res.status(400).json({ error: 'student_id must be a number' });
+  }
+
+  // If the student didn't specify a term/session, fall back to the exam office's active one
+  if (!term || !session) {
+    const active = await getActiveTermSession();
+    term = term || active.term;
+    session = session || active.session;
+  }
 
   try {
     const [studentRes, schoolSettings] = await Promise.all([
@@ -112,13 +139,23 @@ router.get('/midterm-result', async (req, res) => {
 
 router.get('/result', async (req, res) => {
   let { student_id, term, session, pin_code } = req.query;
-  if (!student_id || !term || !session) {
-    return res.status(400).json({ error: 'student_id, term and session are required' });
+  if (!student_id) {
+    return res.status(400).json({ error: 'student_id is required' });
   }
   if (!pin_code) {
     return res.status(400).json({ error: 'A result PIN is required to view the full-term result', pin_required: true });
   }
   student_id = parseInt(student_id, 10);
+  if (isNaN(student_id)) {
+    return res.status(400).json({ error: 'student_id must be a number' });
+  }
+
+  // If the student didn't specify a term/session, fall back to the exam office's active one
+  if (!term || !session) {
+    const active = await getActiveTermSession();
+    term = term || active.term;
+    session = session || active.session;
+  }
 
   try {
     const [settingsRes, feeRes, schoolSettings] = await Promise.all([
