@@ -974,14 +974,15 @@
       document.getElementById('verificationBox').style.display = 'block';
       const qrcodeContainer = document.getElementById('qrcode');
       qrcodeContainer.innerHTML = '';
-      const verificationText = `Verified: ${data.student.name} (${data.student.admission_no}) - Result PIN: ${data.pin_usage.code}`;
+            const verifyUrl = `${API_BASE}/verify?pin=${encodeURIComponent(data.pin_usage.code)}`;
+      const verificationText = verifyUrl;
       new QRCode(qrcodeContainer, {
         text: verificationText,
         width: 110,
         height: 110,
       });
-      document.getElementById('pinUsageText').textContent =
-        `PIN Usage: ${data.pin_usage.uses_count} of ${data.pin_usage.max_uses} used`;
+            document.getElementById('pinUsageText').innerHTML =
+        `Scan to verify this result · ${data.pin_usage.uses_count} of ${data.pin_usage.max_uses} PIN uses`;
     }
   }
 

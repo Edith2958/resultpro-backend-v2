@@ -24,6 +24,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Import API Routes
 const studentRouter = require('./routes/student');
+const verifyRouter = require('./routes/verify');
 const examOfficeRouter = require('./routes/exam-office');
 const termSettingsRouter = require('./routes/term-settings');
 const developerRouter = require('./routes/developer');
@@ -33,6 +34,7 @@ const settingsRouter = require('./routes/settings');
 
 // Mount API Routes
 app.use('/api/student', studentRouter);
+app.use('/api/verify', verifyRouter);
 app.use('/api/exam-office', examOfficeRouter);
 app.use('/api/term-settings', termSettingsRouter);
 app.use('/api/developer', developerRouter);
@@ -47,6 +49,10 @@ app.get('/student', (req, res) => {
 
 app.get('/exam-office', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'exam-office.html'));
+});
+
+app.get('/verify', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'verify.html'));
 });
 
 // Start Server

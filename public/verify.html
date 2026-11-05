@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<title>Verify Result — ResultPro</title>
+<style>
+  :root {
+    color-scheme: light;
+    --navy: #176345;
+    --gold: #d8ad55;
+    --cream: #f4f7f5;
+    --card: #ffffff;
+    --border: #e2eae5;
+    --text: #1d2c24;
+    --text-soft: #718078;
+    --pass: #18794e;
+    --pass-bg: #e5f5ec;
+    --fail: #b93838;
+    --fail-bg: #fff0ef;
+    --warn: #ce8e00;
+    --warn-bg: #fff4d1;
+    --shadow-md: 0 12px 34px rgba(24, 55, 39, .075);
+    --ease-out-expo: cubic-bezier(.16,1,.3,1);
+    --ease-out-back: cubic-bezier(.34,1.56,.64,1);
+  }
+  * { box-sizing: border-box; }
+  html { min-height: 100%; }
+  body {
+    margin: 0;
+    font-family: 'Nunito', Arial, sans-serif;
+    background:
+      radial-gradient(ellipse at 8% 0%, rgba(23, 99, 69, .06), transparent 32rem),
+      linear-gradient(180deg, #f7faf8 0%, #f0f5f1 100%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 34px 18px 72px;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { width: 100%; max-width: 480px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes crestPop {
+    0%   { opacity: 0; transform: scale(.6) rotate(-8deg); }
+    60%  { opacity: 1; transform: scale(1.06) rotate(2deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+  }
+  @keyframes checkPop {
+    0%   { opacity: 0; transform: scale(.4); }
+    60%  { opacity: 1; transform: scale(1.15); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes crossPop {
+    0%   { opacity: 0; transform: scale(.4) rotate(-8deg); }
+    60%  { opacity: 1; transform: scale(1.1) rotate(4deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+  }
+  @keyframes dotPulse {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(43,137,96,.22); transform: scale(1); }
+    50%      { box-shadow: 0 0 0 6px rgba(43,137,96,.06); transform: scale(1.1); }
+  }
+
+  .school-header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding: 5px 12px 0;
+    animation: fadeUp .55s var(--ease-out-expo) both;
+  }
+  .school-header .crest {
+    width: 58px; height: 58px;
+    background: linear-gradient(145deg, #247a56, #104b35);
+    color: #f4d58e;
+    border: 3px solid rgba(255,255,255,.92);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 19px;
+    margin: 0 auto 12px;
+    overflow: hidden;
+    box-shadow: 0 7px 18px rgba(16, 77, 54, .18);
+    font-family: 'Baloo 2', sans-serif;
+    animation: crestPop .6s var(--ease-out-back) both;
+    animation-delay: .1s;
+  }
+  .school-header .crest img { width: 100%; height: 100%; object-fit: cover; }
+  .school-header h1 {
+    font-size: clamp(20px, 3vw, 24px);
+    margin: 0;
+    font-weight: 800;
+    font-family: 'Baloo 2', sans-serif;
+    letter-spacing: -.3px;
+    line-height: 1.2;
+    color: #183d2d;
+    animation: fadeUp .5s var(--ease-out-expo) .15s both;
+  }
+  .school-header p {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin: 6px 0 0;
+    font-weight: 700;
+    letter-spacing: .35px;
+    animation: fadeUp .5s var(--ease-out-expo) .22s both;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid rgba(220, 231, 223, .95);
+    border-radius: 18px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-md);
+    animation: fadeUp .5s var(--ease-out-expo) .28s both;
+  }
+
+  .status-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .status-icon.valid {
+    background: var(--pass-bg);
+    color: var(--pass);
+    animation: checkPop .55s var(--ease-out-back) both;
+  }
+  .status-icon.invalid {
+    background: var(--fail-bg);
+    color: var(--fail);
+    animation: crossPop .55s var(--ease-out-back) both;
+  }
+  .status-icon.warn {
+    background: var(--warn-bg);
+    color: var(--warn);
+    animation: checkPop .55s var(--ease-out-back) both;
+  }
+  .status-icon.loading {
+    background: var(--cream);
+    color: var(--navy);
+    animation: dotPulse 1.4s ease-in-out infinite;
+  }
+
+  .status-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 800;
+    font-family: 'Baloo 2', sans-serif;
+    margin: 0 0 6px;
+    letter-spacing: -.2px;
+  }
+  .status-title.valid { color: var(--pass); }
+  .status-title.invalid { color: var(--fail); }
+  .status-title.warn { color: var(--warn); }
+
+  .status-sub {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-soft);
+    margin: 0 0 22px;
+    font-weight: 600;
+    line-height: 1.55;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #edf1ee;
+    font-size: 13px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .label {
+    font-size: 10px;
+    color: #596c61;
+    text-transform: uppercase;
+    letter-spacing: .85px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+  .detail-row .value {
+    font-weight: 700;
+    color: #183d2d;
+    text-align: right;
+    word-break: break-word;
+  }
+  .detail-row .value.mono {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+    font-weight: 800;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+  }
+  .pill.active { background: var(--pass-bg); color: var(--pass); }
+  .pill.exhausted { background: var(--warn-bg); color: var(--warn); }
+  .pill.unused { background: var(--cream); color: var(--text-soft); border: 1px solid var(--border); }
+
+  .footer-note {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-top: 18px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .footer-note strong { color: #183d2d; font-weight: 800; }
+
+  @media (max-width: 500px) {
+    body { padding: 20px 12px 56px; }
+    .card { padding: 22px 18px; }
+    .school-header .crest { width: 52px; height: 52px; border-radius: 16px; }
+    .school-header h1 { font-size: 20px; }
+    .status-icon { width: 64px; height: 64px; font-size: 30px; }
+    .status-title { font-size: 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      transition-duration: .01ms !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="school-header">
+    <div class="crest" id="headerCrest">GS</div>
+    <h1 id="headerSchoolName">ResultPro</h1>
+    <p>Result verification</p>
+  </div>
+
+  <div class="card" id="verifyCard">
+    <div class="status-icon loading" id="statusIcon">⋯</div>
+    <h2 class="status-title" id="statusTitle">Verifying PIN…</h2>
+    <p class="status-sub" id="statusSub">Checking this PIN against the school's records.</p>
+
+    <div id="detailsWrap" style="display:none;">
+      <div class="divider"></div>
+      <div id="detailsList"></div>
+    </div>
+
+    <p class="footer-note" id="footerNote"></p>
+  </div>
+
+</div>
+
+<script>
+  const API_BASE = window.location.origin;
+
+  function getPinFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('pin') || params.get('pin_code') || params.get('code') || '';
+  }
+
+  function renderInvalid(state, message) {
+    const icon = document.getElementById('statusIcon');
+    icon.className = 'status-icon invalid';
+    icon.textContent = '✕';
+
+    document.getElementById('statusTitle').className = 'status-title invalid';
+    document.getElementById('statusTitle').textContent = 'Not verified';
+    document.getElementById('statusSub').textContent = message || 'This PIN is not recognised by this school.';
+    document.getElementById('detailsWrap').style.display = 'none';
+    document.getElementById('footerNote').innerHTML =
+      'If you believe this is an error, contact the school directly.';
+  }
+
+  function renderValid(data) {
+    const icon = document.getElementById('statusIcon');
+    icon.className = 'status-icon valid';
+    icon.textContent = '✓';
+
+    document.getElementById('statusTitle').className = 'status-title valid';
+    document.getElementById('statusTitle').textContent = 'Verified';
+
+    document.getElementById('statusSub').textContent = data.message || 'This PIN is authentic.';
+
+    const details = document.getElementById('detailsList');
+    details.innerHTML = '';
+
+    const addRow = (label, value, opts = {}) => {
+      const row = document.createElement('div');
+      row.className = 'detail-row';
+      const labelEl = document.createElement('span');
+      labelEl.className = 'label';
+      labelEl.textContent = label;
+      const valueEl = document.createElement('span');
+      valueEl.className = 'value' + (opts.mono ? ' mono' : '');
+      if (opts.html) valueEl.innerHTML = value;
+      else valueEl.textContent = value;
+      row.appendChild(labelEl);
+      row.appendChild(valueEl);
+      details.appendChild(row);
+    };
+
+    if (data.school?.name) addRow('School', data.school.name);
+    addRow('PIN code', data.pin_code, { mono: true });
+
+    const stateLabel = data.state === 'active' ? 'Active'
+      : data.state === 'exhausted' ? 'Use limit reached'
+      : 'Not yet used';
+    addRow('Status', `<span class="pill ${data.state}">${stateLabel}</span>`, { html: true });
+
+    if (data.student) {
+      addRow('Student', data.student.name);
+      if (data.student.class) addRow('Class', data.student.class);
+    } else {
+      addRow('Student', 'Not yet used by any student');
+    }
+
+    addRow('Uses', `${data.uses.count} of ${data.uses.max}`);
+
+    if (data.first_used_at) {
+      const usedDate = new Date(data.first_used_at);
+      addRow('First used', usedDate.toLocaleString());
+    }
+
+    if (data.verified_at) {
+      const verifiedDate = new Date(data.verified_at);
+      addRow('Checked', verifiedDate.toLocaleString());
+    }
+
+    document.getElementById('detailsWrap').style.display = 'block';
+
+    if (data.state === 'exhausted') {
+      icon.className = 'status-icon warn';
+      icon.textContent = '✓';
+      document.getElementById('statusTitle').className = 'status-title warn';
+      document.getElementById('statusTitle').textContent = 'Authentic (limit reached)';
+    }
+
+    document.getElementById('footerNote').innerHTML =
+      'This page confirms the PIN was issued by <strong>' + (data.school?.name || 'this school') + '</strong>. ' +
+      'It does not display the student\'s full result.';
+  }
+
+  async function verify() {
+    const pin = getPinFromUrl();
+
+    if (!pin) {
+      const icon = document.getElementById('statusIcon');
+      icon.className = 'status-icon invalid';
+      icon.textContent = '?';
+      document.getElementById('statusTitle').className = 'status-title invalid';
+      document.getElementById('statusTitle').textContent = 'No PIN provided';
+      document.getElementById('statusSub').textContent = 'This page verifies result PINs. Open the link from the QR code on a result slip, or add ?pin=YOUR_CODE to the URL.';
+      document.getElementById('footerNote').innerHTML = 'If you believe this is an error, contact the school directly.';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/verify/${encodeURIComponent(pin)}`);
+      const data = await res.json();
+
+      if (!res.ok || data.valid === false) {
+        renderInvalid(data.state, data.message);
+        return;
+      }
+
+      renderValid(data);
+    } catch (err) {
+      console.error('Verification failed:', err);
+      renderInvalid('error', 'Could not reach the verification service. Please try again later.');
+    }
+  }
+
+  // Try to load school branding so the header matches the rest of the app
+  async function loadSchoolBranding() {
+    try {
+      const res = await fetch(`${API_BASE}/api/settings`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const school = data.settings;
+      if (!school) return;
+
+      if (school.school_name) {
+        document.getElementById('headerSchoolName').textContent = school.school_name;
+      }
+      const crestEl = document.getElementById('headerCrest');
+      if (school.logo_url) {
+        const url = school.logo_url.startsWith('http') ? school.logo_url : `${API_BASE}${school.logo_url}`;
+        crestEl.innerHTML = `<img src="${url}" alt="Logo" />`;
+      } else if (school.school_name) {
+        crestEl.textContent = school.school_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      }
+    } catch (err) {
+      console.error('Could not load branding:', err);
+    }
+  }
+
+  verify();
+  loadSchoolBranding();
+</script>
+</body>
+</html>
