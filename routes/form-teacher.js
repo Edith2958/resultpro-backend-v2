@@ -41,10 +41,11 @@ router.get('/my-class', async (req, res) => {
   let { teacher_id } = req.query;
   if (!teacher_id) return res.status(400).json({ error: 'teacher_id is required' });
   teacher_id = parseInt(teacher_id, 10);
+  if (isNaN(teacher_id)) return res.status(400).json({ error: 'teacher_id must be a number' });
 
   try {
     const { rows } = await pool.query(
-      `SELECT class FROM form_teacher_classes WHERE teacher_id::integer = $1`,
+      `SELECT class FROM form_teacher_classes WHERE teacher_id = $1`,
       [teacher_id]
     );
     res.json({ class: rows[0]?.class || null });
@@ -56,8 +57,9 @@ router.get('/my-class', async (req, res) => {
 
 async function isFormTeacherOf(teacherId, className) {
   const tId = parseInt(teacherId, 10);
+  if (isNaN(tId)) return false;
   const { rows } = await pool.query(
-    `SELECT 1 FROM form_teacher_classes WHERE teacher_id::integer = $1 AND class = $2`,
+    `SELECT 1 FROM form_teacher_classes WHERE teacher_id = $1 AND class = $2`,
     [tId, className]
   );
   return rows.length > 0;
@@ -69,6 +71,7 @@ router.get('/broadsheet', async (req, res) => {
     return res.status(400).json({ error: 'class, term, session and teacher_id are required' });
   }
   teacher_id = parseInt(teacher_id, 10);
+  if (isNaN(teacher_id)) return res.status(400).json({ error: 'teacher_id must be a number' });
 
   try {
     if (!(await isFormTeacherOf(teacher_id, className))) {
@@ -78,7 +81,7 @@ router.get('/broadsheet', async (req, res) => {
     const subjectsRes = await pool.query(
       `SELECT DISTINCT sub.id, sub.name
        FROM teacher_subjects ts
-       JOIN subjects sub ON sub.id = ts.subject_id::integer
+       JOIN subjects sub ON sub.id = ts.subject_id
        WHERE ts.class = $1
        ORDER BY sub.name ASC`,
       [className]
@@ -99,8 +102,8 @@ router.get('/broadsheet', async (req, res) => {
               m.assignment_score, m.test_score, r.exam_score, r.manual_ca_override
        FROM results r
        LEFT JOIN mid_term_results m
-         ON m.student_id::integer = r.student_id::integer 
-        AND m.subject_id::integer = r.subject_id::integer 
+         ON m.student_id = r.student_id 
+        AND m.subject_id = r.subject_id 
         AND m.term = r.term 
         AND m.session = r.session
        WHERE r.class = $1 AND r.term = $2 AND r.session = $3`,
@@ -170,6 +173,7 @@ router.get('/class-result-slips', async (req, res) => {
     return res.status(400).json({ error: 'class, term, session and teacher_id are required' });
   }
   teacher_id = parseInt(teacher_id, 10);
+  if (isNaN(teacher_id)) return res.status(400).json({ error: 'teacher_id must be a number' });
 
   try {
     if (!(await isFormTeacherOf(teacher_id, className))) {
@@ -181,7 +185,7 @@ router.get('/class-result-slips', async (req, res) => {
       pool.query(
         `SELECT DISTINCT sub.id, sub.name
          FROM teacher_subjects ts
-         JOIN subjects sub ON sub.id = ts.subject_id::integer
+         JOIN subjects sub ON sub.id = ts.subject_id
          WHERE ts.class = $1
          ORDER BY sub.name ASC`,
         [className]
@@ -200,8 +204,8 @@ router.get('/class-result-slips', async (req, res) => {
               m.assignment_score, m.test_score, r.exam_score, r.manual_ca_override
        FROM results r
        LEFT JOIN mid_term_results m
-         ON m.student_id::integer = r.student_id::integer 
-        AND m.subject_id::integer = r.subject_id::integer 
+         ON m.student_id = r.student_id 
+        AND m.subject_id = r.subject_id 
         AND m.term = r.term 
         AND m.session = r.session
        WHERE r.class = $1 AND r.term = $2 AND r.session = $3`,
@@ -307,6 +311,7 @@ router.get('/roster', async (req, res) => {
     return res.status(400).json({ error: 'class, term, session and teacher_id are required' });
   }
   teacher_id = parseInt(teacher_id, 10);
+  if (isNaN(teacher_id)) return res.status(400).json({ error: 'teacher_id must be a number' });
 
   try {
     if (!(await isFormTeacherOf(teacher_id, className))) {
@@ -318,7 +323,7 @@ router.get('/roster', async (req, res) => {
               t.form_teacher_comment, t.principal_comment
        FROM students s
        LEFT JOIN term_records t
-         ON t.student_id::integer = s.id::integer AND t.term = $2 AND t.session = $3
+         ON t.student_id = s.id AND t.term = $2 AND t.session = $3
        WHERE s.class = $1
        ORDER BY s.surname ASC`,
       [className, term, session]
@@ -342,6 +347,7 @@ router.post('/term-records', async (req, res) => {
     return res.status(400).json({ error: 'class, term, session, teacher_id and records[] are required' });
   }
   teacher_id = parseInt(teacher_id, 10);
+  if (isNaN(teacher_id)) return res.status(400).json({ error: 'teacher_id must be a number' });
 
   if (!(await isFormTeacherOf(teacher_id, className))) {
     return res.status(403).json({ error: 'You are not the form teacher for this class' });
@@ -353,6 +359,22 @@ router.post('/term-records', async (req, res) => {
 
     for (const r of records) {
       const studentIdInt = parseInt(r.student_id, 10);
+      if (isNaN(studentIdInt)) {
+        throw new Error(`Invalid student_id in records: ${r.student_id}`);
+      }
+
+      // Coerce integer fields — '' from an empty form input would now fail on integer columns
+      const toIntOrNull = (v) => {
+        if (v === null || v === undefined || String(v).trim() === '') return null;
+        const n = Number(v);
+        if (!Number.isInteger(n)) throw new Error(`Invalid integer value: ${v}`);
+        return n;
+      };
+
+      const timesPresent = toIntOrNull(r.times_present);
+      const timesAbsent = toIntOrNull(r.times_absent);
+      const totalDays = toIntOrNull(r.total_days);
+
       await client.query(
         `INSERT INTO term_records
            (student_id, class, term, session, times_present, times_absent, total_days,
@@ -367,7 +389,7 @@ router.post('/term-records', async (req, res) => {
            principal_comment = COALESCE(EXCLUDED.principal_comment, term_records.principal_comment)`,
         [
           studentIdInt, className, term, session,
-          r.times_present ?? null, r.times_absent ?? null, r.total_days ?? null,
+          timesPresent, timesAbsent, totalDays,
           r.form_teacher_comment ?? null, r.principal_comment ?? null,
         ]
       );
@@ -378,7 +400,7 @@ router.post('/term-records', async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: 'Failed to save term records' });
+    res.status(400).json({ error: err.message || 'Failed to save term records' });
   } finally {
     client.release();
   }
@@ -402,9 +424,13 @@ router.post('/upload-photo', (req, res, next) => {
 
     student_id = parseInt(student_id, 10);
     teacher_id = parseInt(teacher_id, 10);
+    if (isNaN(student_id) || isNaN(teacher_id)) {
+      return res.status(400).json({ error: 'student_id and teacher_id must be numbers' });
+    }
 
     try {
-      if (!(await isFormTeacher_teacher_of(teacher_id, className))) {
+      // BUG FIX: was calling undefined isFormTeacher_teacher_of()
+      if (!(await isFormTeacherOf(teacher_id, className))) {
         return res.status(403).json({ error: 'You are not the form teacher for this class' });
       }
 
@@ -413,7 +439,7 @@ router.post('/upload-photo', (req, res, next) => {
         throw new Error('Cloudinary did not return a file path.');
       }
 
-      await pool.query('UPDATE students SET photo_url = $1 WHERE id::integer = $2', [cloudUrl, student_id]);
+      await pool.query('UPDATE students SET photo_url = $1 WHERE id = $2', [cloudUrl, student_id]);
 
       return res.json({ success: true, photo_url: cloudUrl });
     } catch (dbOrLogicErr) {

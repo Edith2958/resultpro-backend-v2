@@ -47,8 +47,14 @@ function generatePinCode() {
 router.post('/pins/generate', async (req, res) => {
   const { count, max_uses = 5, generated_by } = req.body;
   const howMany = Number(count);
-  if (!howMany || howMany < 1 || howMany > 1000) {
+  if (!howMany || howMany < 1 || howMany > 1000 || !Number.isInteger(howMany)) {
     return res.status(400).json({ error: 'count must be between 1 and 1000' });
+  }
+
+  // max_uses is now integer in the DB — coerce explicitly so a bad input fails here, not at the DB
+  const maxUsesInt = Number(max_uses);
+  if (!Number.isInteger(maxUsesInt) || maxUsesInt < 1) {
+    return res.status(400).json({ error: 'max_uses must be a positive integer' });
   }
 
   const client = await pool.connect();
@@ -68,7 +74,7 @@ router.post('/pins/generate', async (req, res) => {
          VALUES ($1, $2, $3) 
          ON CONFLICT (code) DO NOTHING 
          RETURNING *`,
-        [code, max_uses, generated_by || null]
+        [code, maxUsesInt, generated_by || null]
       );
 
       if (rows.length > 0) {
@@ -111,7 +117,7 @@ router.get('/pins', async (req, res) => {
 
   try {
     const countRes = await pool.query(
-      `SELECT COUNT(*) FROM result_pins p LEFT JOIN students s ON s.id::integer = p.student_id::integer ${whereClause}`,
+      `SELECT COUNT(*) FROM result_pins p LEFT JOIN students s ON s.id = p.student_id ${whereClause}`,
       params
     );
     const total = Number(countRes.rows[0].count);
@@ -124,7 +130,7 @@ router.get('/pins', async (req, res) => {
       `SELECT p.id, p.code, p.max_uses, p.uses_count, p.created_at, p.first_used_at,
               s.surname AS student_name, s.admission_no AS student_admission_no
        FROM result_pins p
-       LEFT JOIN students s ON s.id::integer = p.student_id::integer
+       LEFT JOIN students s ON s.id = p.student_id
        ${whereClause}
        ORDER BY p.created_at DESC
        LIMIT $${limitIndex} OFFSET $${offsetIndex}`,

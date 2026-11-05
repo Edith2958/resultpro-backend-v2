@@ -53,7 +53,7 @@ router.post('/settings', async (req, res) => {
   }
   try {
     const checkRes = await pool.query('SELECT id FROM school_settings LIMIT 1');
-    
+
     let rows;
     if (checkRes.rows.length > 0) {
       const updateRes = await pool.query(
@@ -82,9 +82,12 @@ router.post('/term-records', async (req, res) => {
     return res.status(400).json({ error: 'student_id, term, session, and principal_comment are required' });
   }
   student_id = parseInt(student_id, 10);
+  if (isNaN(student_id)) {
+    return res.status(400).json({ error: 'student_id must be a number' });
+  }
 
   try {
-    const studentRes = await pool.query('SELECT class FROM students WHERE id::integer = $1', [student_id]);
+    const studentRes = await pool.query('SELECT class FROM students WHERE id = $1', [student_id]);
     const studentClass = studentRes.rows[0]?.class || null;
 
     const { rows } = await pool.query(
@@ -136,7 +139,7 @@ router.get('/fee-status', async (req, res) => {
               COALESCE(f.cleared, true) AS cleared
        FROM students s
        LEFT JOIN fee_status f
-         ON f.student_id::integer = s.id::integer AND f.term = $${params.length - 3} AND f.session = $${params.length - 2}
+         ON f.student_id = s.id AND f.term = $${params.length - 3} AND f.session = $${params.length - 2}
        ${whereClause}
        ORDER BY s.class ASC, s.surname ASC
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
@@ -156,6 +159,9 @@ router.post('/fee-status', async (req, res) => {
     return res.status(400).json({ error: 'student_id, term, session and cleared (true/false) are required' });
   }
   student_id = parseInt(student_id, 10);
+  if (isNaN(student_id)) {
+    return res.status(400).json({ error: 'student_id must be a number' });
+  }
 
   try {
     const { rows } = await pool.query(
@@ -192,7 +198,7 @@ router.get('/pins', async (req, res) => {
 
   try {
     const countRes = await pool.query(
-      `SELECT COUNT(*) FROM result_pins p LEFT JOIN students s ON s.id::integer = p.student_id::integer ${whereClause}`,
+      `SELECT COUNT(*) FROM result_pins p LEFT JOIN students s ON s.id = p.student_id ${whereClause}`,
       params
     );
     const total = Number(countRes.rows[0].count);
@@ -204,7 +210,7 @@ router.get('/pins', async (req, res) => {
               CONCAT(s.surname, ' ', s.first_name, CASE WHEN s.middle_name IS NOT NULL AND s.middle_name != '' THEN CONCAT(' ', s.middle_name) ELSE '' END) AS student_name,
               s.admission_no AS student_admission_no
        FROM result_pins p
-       LEFT JOIN students s ON s.id::integer = p.student_id::integer
+       LEFT JOIN students s ON s.id = p.student_id
        ${whereClause}
        ORDER BY p.created_at DESC
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
@@ -227,7 +233,7 @@ router.get('/deadline-overrides', async (req, res) => {
     const { rows } = await pool.query(
       `SELECT d.id, d.class, t.id AS teacher_id, t.name AS teacher_name
        FROM deadline_overrides d
-       JOIN teachers t ON t.id::integer = d.teacher_id::integer
+       JOIN teachers t ON t.id = d.teacher_id
        WHERE d.term = $1 AND d.session = $2
        ORDER BY d.class ASC, t.name ASC`,
       [term, session]
@@ -245,6 +251,9 @@ router.post('/deadline-overrides', async (req, res) => {
     return res.status(400).json({ error: 'teacher_id, class, term and session are required' });
   }
   teacher_id = parseInt(teacher_id, 10);
+  if (isNaN(teacher_id)) {
+    return res.status(400).json({ error: 'teacher_id must be a number' });
+  }
 
   try {
     const { rows } = await pool.query(
@@ -261,8 +270,9 @@ router.post('/deadline-overrides', async (req, res) => {
 
 router.delete('/deadline-overrides/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
-    await pool.query('DELETE FROM deadline_overrides WHERE id::integer = $1', [id]);
+    await pool.query('DELETE FROM deadline_overrides WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -354,7 +364,7 @@ router.post('/students', async (req, res) => {
     if (term && session) {
       await client.query(
         `INSERT INTO student_term_enrollments (student_id, class, term, session, status)
-         VALUES ($1::integer, $2, $3, $4, 'ACTIVE')
+         VALUES ($1, $2, $3, $4, 'ACTIVE')
          ON CONFLICT (student_id, term, session) 
          DO UPDATE SET class = $2, status = 'ACTIVE'`,
         [student.id, className, term, session]
@@ -374,8 +384,9 @@ router.post('/students', async (req, res) => {
 
 router.delete('/students/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
-    await pool.query('DELETE FROM students WHERE id::integer = $1', [id]);
+    await pool.query('DELETE FROM students WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -385,6 +396,7 @@ router.delete('/students/:id', async (req, res) => {
 
 router.put('/students/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   const { surname, first_name, middle_name, admission_no, class: className } = req.body;
   if (!surname && !first_name && !middle_name && !admission_no && !className) {
     return res.status(400).json({ error: 'Provide at least one student field to update' });
@@ -397,7 +409,7 @@ router.put('/students/:id', async (req, res) => {
          middle_name = COALESCE($3, middle_name),
          admission_no = COALESCE($4, admission_no),
          class = COALESCE($5, class)
-       WHERE id::integer = $6
+       WHERE id = $6
        RETURNING id, surname, first_name, middle_name,
                  CONCAT(surname, ' ', first_name, CASE WHEN middle_name IS NOT NULL AND middle_name != '' THEN CONCAT(' ', middle_name) ELSE '' END) AS name,
                  admission_no, class, photo_url`,
@@ -515,7 +527,7 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
 
       await client.query(
         `INSERT INTO student_term_enrollments (student_id, class, term, session, status)
-         VALUES ($1::integer, $2, $3, $4, 'ACTIVE')
+         VALUES ($1, $2, $3, $4, 'ACTIVE')
          ON CONFLICT (student_id, term, session) 
          DO UPDATE SET class = $2, status = 'ACTIVE'`,
         [studentId, className, activeTerm, activeSession]
@@ -562,8 +574,9 @@ router.post('/subjects', async (req, res) => {
 
 router.delete('/subjects/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
-    await pool.query('DELETE FROM subjects WHERE id::integer = $1', [id]);
+    await pool.query('DELETE FROM subjects WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -601,8 +614,9 @@ router.post('/teachers', async (req, res) => {
 
 router.delete('/teachers/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
-    await pool.query('DELETE FROM teachers WHERE id::integer = $1', [id]);
+    await pool.query('DELETE FROM teachers WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -644,8 +658,9 @@ router.post('/classes', async (req, res) => {
 
 router.delete('/classes/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
-    await pool.query('DELETE FROM classes WHERE id::integer = $1', [id]);
+    await pool.query('DELETE FROM classes WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -658,8 +673,8 @@ router.get('/assignments', async (req, res) => {
     const { rows } = await pool.query(
       `SELECT ts.id, ts.class, t.id AS teacher_id, t.name AS teacher_name, sub.id AS subject_id, sub.name AS subject_name
        FROM teacher_subjects ts
-       JOIN teachers t ON t.id::integer = ts.teacher_id::integer
-       JOIN subjects sub ON sub.id::integer = ts.subject_id::integer
+       JOIN teachers t ON t.id = ts.teacher_id
+       JOIN subjects sub ON sub.id = ts.subject_id
        ORDER BY ts.class ASC, t.name ASC`
     );
     res.json({ assignments: rows });
@@ -676,10 +691,13 @@ router.post('/assignments', async (req, res) => {
   }
   teacher_id = parseInt(teacher_id, 10);
   subject_id = parseInt(subject_id, 10);
+  if (isNaN(teacher_id) || isNaN(subject_id)) {
+    return res.status(400).json({ error: 'teacher_id and subject_id must be numbers' });
+  }
 
   try {
     const { rows } = await pool.query(
-      'INSERT INTO teacher_subjects (teacher_id, subject_id, class) VALUES ($1::integer, $2::integer, $3) RETURNING *',
+      'INSERT INTO teacher_subjects (teacher_id, subject_id, class) VALUES ($1, $2, $3) RETURNING *',
       [teacher_id, subject_id, className]
     );
     res.json({ assignment: rows[0] });
@@ -692,8 +710,9 @@ router.post('/assignments', async (req, res) => {
 
 router.delete('/assignments/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
-    await pool.query('DELETE FROM teacher_subjects WHERE id::integer = $1', [id]);
+    await pool.query('DELETE FROM teacher_subjects WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -706,7 +725,7 @@ router.get('/form-teachers', async (req, res) => {
     const { rows } = await pool.query(
       `SELECT ftc.id, ftc.class, t.id AS teacher_id, t.name AS teacher_name
        FROM form_teacher_classes ftc
-       JOIN teachers t ON t.id::integer = ftc.teacher_id::integer
+       JOIN teachers t ON t.id = ftc.teacher_id
        ORDER BY ftc.class ASC`
     );
     res.json({ formTeachers: rows });
@@ -722,10 +741,13 @@ router.post('/form-teachers', async (req, res) => {
     return res.status(400).json({ error: 'teacher_id and class are required' });
   }
   teacher_id = parseInt(teacher_id, 10);
+  if (isNaN(teacher_id)) {
+    return res.status(400).json({ error: 'teacher_id must be a number' });
+  }
 
   try {
     const { rows } = await pool.query(
-      'INSERT INTO form_teacher_classes (teacher_id, class) VALUES ($1::integer, $2) RETURNING *',
+      'INSERT INTO form_teacher_classes (teacher_id, class) VALUES ($1, $2) RETURNING *',
       [teacher_id, className]
     );
     res.json({ formTeacher: rows[0] });
@@ -738,8 +760,9 @@ router.post('/form-teachers', async (req, res) => {
 
 router.delete('/form-teachers/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
-    await pool.query('DELETE FROM form_teacher_classes WHERE id::integer = $1', [id]);
+    await pool.query('DELETE FROM form_teacher_classes WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);

@@ -2,6 +2,15 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
 
+function toTimestampOrNull(val, fieldName) {
+  if (val === null || val === undefined || String(val).trim() === '') return null;
+  const d = new Date(val);
+  if (isNaN(d.getTime())) {
+    throw new Error(`${fieldName} is not a valid date`);
+  }
+  return d.toISOString();
+}
+
 /**
  * GET /api/term-settings?term=First Term&session=2025/2026
  * Public — used by both the student and teacher pages to show countdowns.
@@ -35,6 +44,15 @@ router.post('/', async (req, res) => {
   if (!term || !session) {
     return res.status(400).json({ error: 'term and session are required' });
   }
+
+  let deadlineIso, releaseIso;
+  try {
+    deadlineIso = toTimestampOrNull(teacher_deadline, 'teacher_deadline');
+    releaseIso = toTimestampOrNull(result_release_at, 'result_release_at');
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+
   try {
     const { rows } = await pool.query(
       `INSERT INTO term_settings (term, session, teacher_deadline, result_release_at, updated_at)
@@ -42,7 +60,7 @@ router.post('/', async (req, res) => {
        ON CONFLICT (term, session)
        DO UPDATE SET teacher_deadline = $3, result_release_at = $4, updated_at = NOW()
        RETURNING *`,
-      [term, session, teacher_deadline || null, result_release_at || null]
+      [term, session, deadlineIso, releaseIso]
     );
     res.json({ settings: rows[0] });
   } catch (err) {
