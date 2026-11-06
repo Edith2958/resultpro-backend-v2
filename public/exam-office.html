@@ -1980,8 +1980,37 @@
       info.textContent = (!s.teacher_deadline && !s.result_release_at)
         ? 'No dates set yet for this term — students can view results anytime, teachers have no deadline shown.'
         : 'These dates are live — students and teachers will see live countdowns based on what you save here.';
-    } catch (err) { showToast('Could not load current settings.'); }
+       } catch (err) { showToast('Could not load current settings.'); }
+
     loadDeadlineOverrides();
+    attachDeadlineWatchers();
+  }
+    function attachDeadlineWatchers() {
+    const deadlineEl = document.getElementById('tsTeacherDeadline');
+    const releaseEl = document.getElementById('tsResultRelease');
+    if (!deadlineEl || !releaseEl) return;
+
+    const check = () => {
+      const d = deadlineEl.value ? new Date(deadlineEl.value) : null;
+      const r = releaseEl.value ? new Date(releaseEl.value) : null;
+      const info = document.getElementById('tsCurrentInfo');
+      if (!info) return;
+
+      if (d && r && r <= d) {
+        info.innerHTML = '<span style="color:var(--fail); font-weight:800;">⚠ Result release date must be AFTER the teacher submission deadline. Please adjust one of the dates.</span>';
+      } else if (d && r) {
+        info.innerHTML = '<span style="color:var(--pass); font-weight:700;">✓ Dates are valid — students will see results after teachers finish submitting.</span>';
+      } else {
+        info.textContent = 'Set a teacher deadline and a result release date. Release must be after the deadline.';
+      }
+    };
+
+    // Remove old listeners first to avoid stacking on repeat loads
+    deadlineEl.oninput = check;
+    deadlineEl.onchange = check;
+    releaseEl.oninput = check;
+    releaseEl.onchange = check;
+    check();
   }
 
   async function loadDeadlineOverrides() {
@@ -2037,24 +2066,51 @@
     }
   }
 
-  async function saveTermSettings() {
+    async function saveTermSettings() {
     const term = document.getElementById('tsTerm').value;
     const session = document.getElementById('tsSession').value.trim();
     const teacherDeadlineVal = document.getElementById('tsTeacherDeadline').value;
     const resultReleaseVal = document.getElementById('tsResultRelease').value;
+
     if (!session) return showToast('Enter a session.');
-    const teacherDeadline = teacherDeadlineVal ? new Date(teacherDeadlineVal).toISOString() : null;
-    const resultRelease = resultReleaseVal ? new Date(resultReleaseVal).toISOString() : null;
+
+    const teacherDeadline = teacherDeadlineVal ? new Date(teacherDeadlineVal) : null;
+    const resultRelease = resultReleaseVal ? new Date(resultReleaseVal) : null;
+
+    // Client-side validation: release must be strictly after deadline
+    if (teacherDeadline && resultRelease && resultRelease <= teacherDeadline) {
+      showToast('Result release date must be AFTER the teacher submission deadline.');
+      // Highlight both fields briefly
+      ['tsTeacherDeadline', 'tsResultRelease'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.borderColor = 'var(--fail)';
+          el.style.boxShadow = '0 0 0 3px rgba(185,56,56,.12)';
+          setTimeout(() => {
+            el.style.borderColor = '';
+            el.style.boxShadow = '';
+          }, 2500);
+        }
+      });
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/api/term-settings`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ term, session, teacher_deadline: teacherDeadline, result_release_at: resultRelease }),
+        body: JSON.stringify({
+          term, session,
+          teacher_deadline: teacherDeadline ? teacherDeadline.toISOString() : null,
+          result_release_at: resultRelease ? resultRelease.toISOString() : null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       showToast('Dates saved successfully.');
       loadTermSettings();
-    } catch (err) { showToast(err.message || 'Could not save dates.'); }
+    } catch (err) {
+      showToast(err.message || 'Could not save dates.');
+    }
   }
 </script>
 </body>

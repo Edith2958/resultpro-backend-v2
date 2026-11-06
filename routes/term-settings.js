@@ -11,11 +11,6 @@ function toTimestampOrNull(val, fieldName) {
   return d.toISOString();
 }
 
-/**
- * GET /api/term-settings?term=First Term&session=2025/2026
- * Public — used by both the student and teacher pages to show countdowns.
- * Returns null fields if the exam office hasn't set anything yet for this term/session.
- */
 router.get('/', async (req, res) => {
   const { term, session } = req.query;
   if (!term || !session) {
@@ -33,12 +28,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-/**
- * POST /api/term-settings
- * Exam office sets/updates the deadline and release date for a term+session.
- * body: { term, session, teacher_deadline, result_release_at }
- * Either date can be null to clear it. Upserts — one row per term+session.
- */
 router.post('/', async (req, res) => {
   const { term, session, teacher_deadline, result_release_at } = req.body;
   if (!term || !session) {
@@ -51,6 +40,14 @@ router.post('/', async (req, res) => {
     releaseIso = toTimestampOrNull(result_release_at, 'result_release_at');
   } catch (err) {
     return res.status(400).json({ error: err.message });
+  }
+
+  // Release must be strictly after the teacher submission deadline.
+  if (deadlineIso && releaseIso && new Date(releaseIso) <= new Date(deadlineIso)) {
+    return res.status(400).json({
+      error: 'Result release date must be AFTER the teacher submission deadline.',
+      validation: 'release_before_deadline'
+    });
   }
 
   try {
