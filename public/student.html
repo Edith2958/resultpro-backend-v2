@@ -578,7 +578,14 @@
     margin-bottom: 20px;
     animation: fadeUp .45s var(--ease-out-expo) .45s both;
   }
-  .verification-box p { font-size: 11px; color: var(--text-soft); margin: 8px 0 0; font-weight: 700; }
+  .verification-caption {
+    font-size: 11px;
+    color: var(--text-soft);
+    margin: 5px 0 0 auto;
+    max-width: 62mm;
+    text-align: right;
+    font-weight: 700;
+  }
   #qrcode { display: inline-block; padding: 8px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(24, 55, 39, .06); }
 
   .result-actions {
@@ -1478,6 +1485,147 @@
     }
   }
 
+
+
+  /* ============================================================
+     PRINT CORRECTIONS — DARK, LEGIBLE TEXT + STABLE QR POSITION
+     Overrides animation fill-states and prevents QR canvas/image
+     from stacking vertically in print engines.
+     ============================================================ */
+  @media print {
+    /* Some animated certificate elements retain their initial
+       opacity:0 when printing. Explicitly reset every descendant. */
+    #resultView, #resultView *, #resultView *::before, #resultView *::after {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+      filter: none !important;
+      text-shadow: none !important;
+    }
+
+    #resultView,
+    #resultView p,
+    #resultView span,
+    #resultView div,
+    #resultView td,
+    #resultView th,
+    #resultView label {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .cert-header .cert-school,
+    .cert-header .cert-term,
+    .cert-identity .ci-name,
+    .cert-identity .ci-meta,
+    .stat-box .label,
+    .stat-box .value,
+    .results-section-title,
+    .comments-block .comment-label,
+    .comments-block p.comment-text,
+    .cert-signature .sig-label,
+    .cert-signature .sig-sub,
+    .cert-issued,
+    .cert-issued .ci-date,
+    .verification-caption {
+      color: #111 !important;
+      opacity: 1 !important;
+      -webkit-text-fill-color: #111 !important;
+    }
+
+    .cert-header .cert-title,
+    .cert-identity .ci-meta,
+    .stat-box .label,
+    .comments-block .comment-label,
+    .cert-signature .sig-sub,
+    .cert-issued {
+      color: #333 !important;
+      -webkit-text-fill-color: #333 !important;
+    }
+
+    .verification-box {
+      display: flex !important;
+      position: relative !important;
+      float: none !important;
+      clear: both !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 29mm !important;
+      min-width: 29mm !important;
+      max-width: 29mm !important;
+      min-height: 29mm !important;
+      height: 29mm !important;
+      box-sizing: border-box !important;
+      margin: 2mm 0 0 auto !important;
+      padding: 1mm !important;
+      overflow: hidden !important;
+      border: .6pt solid #888 !important;
+      background: #fff !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+
+    #qrcode {
+      position: relative !important;
+      display: block !important;
+      flex: 0 0 27mm !important;
+      width: 27mm !important;
+      min-width: 27mm !important;
+      max-width: 27mm !important;
+      height: 27mm !important;
+      min-height: 27mm !important;
+      max-height: 27mm !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      border: .4pt solid #ddd !important;
+      background: #fff !important;
+    }
+
+    /* QRCode.js may create both a canvas and an image. Overlay them
+       in the same square instead of letting them add height. */
+    #qrcode canvas,
+    #qrcode img {
+      position: absolute !important;
+      inset: 0 !important;
+      display: block !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      object-fit: contain !important;
+      image-rendering: pixelated !important;
+      background: #fff !important;
+    }
+
+    .verification-caption {
+      display: block !important;
+      width: 62mm !important;
+      max-width: 62mm !important;
+      margin: 1mm 0 2mm auto !important;
+      color: #111 !important;
+      font-size: 6.5pt !important;
+      line-height: 1.2 !important;
+      font-weight: 700 !important;
+      text-align: right !important;
+      -webkit-text-fill-color: #111 !important;
+    }
+
+    .cert-footer {
+      position: relative !important;
+      clear: both !important;
+      margin-top: 1mm !important;
+      padding-top: 2mm !important;
+      border-top: .7pt solid #555 !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+  }
+
 </style>
 <script>
   (function () {
@@ -1632,8 +1780,8 @@
 
     <div class="verification-box" id="verificationBox" style="display:none;">
       <div id="qrcode"></div>
-      <p id="pinUsageText"></p>
     </div>
+    <p class="verification-caption" id="pinUsageText"></p>
 
     <div class="cert-footer">
       <div class="cert-signature">
