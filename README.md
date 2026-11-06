@@ -101,3 +101,4 @@ Node.js + Express + PostgreSQL backend matching the data model we designed:
   form-teacher request can also set `principal_comment` — fine for V1, not for production.
 - "Submit final" currently just sets `status = 'final'` but doesn't lock editing.
   Add a rule in the routes if you want final results to become read-only after a date.
+  
