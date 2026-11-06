@@ -553,9 +553,10 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
 
       await client.query('COMMIT');
       results.processed++;
-    } catch (err) {
+        } catch (err) {
       await client.query('ROLLBACK');
-      results.skipped.push({ row: rowNum, reason: 'Could not process this row due to a database error' });
+      console.error(`BULK IMPORT FAILED — Row ${rowNum}:`, err.message, '| Code:', err.code);
+      results.skipped.push({ row: rowNum, reason: `DB Error: ${err.message}` });
     } finally {
       client.release();
     }
