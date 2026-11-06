@@ -53,7 +53,7 @@ router.post('/settings', async (req, res) => {
   }
   try {
     const checkRes = await pool.query('SELECT id FROM school_settings LIMIT 1');
-
+    
     let rows;
     if (checkRes.rows.length > 0) {
       const updateRes = await pool.query(
@@ -82,9 +82,6 @@ router.post('/term-records', async (req, res) => {
     return res.status(400).json({ error: 'student_id, term, session, and principal_comment are required' });
   }
   student_id = parseInt(student_id, 10);
-  if (isNaN(student_id)) {
-    return res.status(400).json({ error: 'student_id must be a number' });
-  }
 
   try {
     const studentRes = await pool.query('SELECT class FROM students WHERE id = $1', [student_id]);
@@ -159,9 +156,6 @@ router.post('/fee-status', async (req, res) => {
     return res.status(400).json({ error: 'student_id, term, session and cleared (true/false) are required' });
   }
   student_id = parseInt(student_id, 10);
-  if (isNaN(student_id)) {
-    return res.status(400).json({ error: 'student_id must be a number' });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -251,9 +245,6 @@ router.post('/deadline-overrides', async (req, res) => {
     return res.status(400).json({ error: 'teacher_id, class, term and session are required' });
   }
   teacher_id = parseInt(teacher_id, 10);
-  if (isNaN(teacher_id)) {
-    return res.status(400).json({ error: 'teacher_id must be a number' });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -270,7 +261,6 @@ router.post('/deadline-overrides', async (req, res) => {
 
 router.delete('/deadline-overrides/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
     await pool.query('DELETE FROM deadline_overrides WHERE id = $1', [id]);
     res.json({ success: true });
@@ -331,10 +321,39 @@ router.post('/students', async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    const existingRes = await client.query('SELECT class FROM students WHERE admission_no = $1', [admission_no.trim()]);
-    if (existingRes.rows.length > 0 && existingRes.rows[0].class === className) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: `Student with admission number ${admission_no} is already in ${className}` });
+    const existingRes = await client.query('SELECT id, class FROM students WHERE admission_no = $1', [admission_no.trim()]);
+    
+    let studentId;
+    
+    if (existingRes.rows.length > 0) {
+      const existing = existingRes.rows[0];
+      
+      if (existing.class === className) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: `Student with admission number ${admission_no} is already in ${className}` });
+      }
+
+      const updateRes = await client.query(
+        `UPDATE students 
+         SET surname = $1, first_name = $2, middle_name = $3, class = $4
+         WHERE id = $5
+         RETURNING id, surname, first_name, middle_name,
+                   CONCAT(surname, ' ', first_name, CASE WHEN middle_name IS NOT NULL AND middle_name != '' THEN CONCAT(' ', middle_name) ELSE '' END) AS name,
+                   admission_no, class, photo_url`,
+        [surname.trim(), first_name.trim(), middle_name ? middle_name.trim() : null, className, existing.id]
+      );
+      studentId = existing.id;
+      
+    } else {
+      const insertRes = await client.query(
+        `INSERT INTO students (surname, first_name, middle_name, admission_no, class)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, surname, first_name, middle_name,
+                   CONCAT(surname, ' ', first_name, CASE WHEN middle_name IS NOT NULL AND middle_name != '' THEN CONCAT(' ', middle_name) ELSE '' END) AS name,
+                   admission_no, class, photo_url`,
+        [surname.trim(), first_name.trim(), middle_name ? middle_name.trim() : null, admission_no.trim(), className]
+      );
+      studentId = insertRes.rows[0].id;
     }
 
     if (!term || !session) {
@@ -345,34 +364,21 @@ router.post('/students', async (req, res) => {
       }
     }
 
-    const studentRes = await client.query(
-      `INSERT INTO students (surname, first_name, middle_name, admission_no, class)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (admission_no) 
-       DO UPDATE SET 
-         surname = EXCLUDED.surname, 
-         first_name = EXCLUDED.first_name, 
-         middle_name = EXCLUDED.middle_name, 
-         class = EXCLUDED.class
-       RETURNING id, surname, first_name, middle_name,
-                 CONCAT(surname, ' ', first_name, CASE WHEN middle_name IS NOT NULL AND middle_name != '' THEN CONCAT(' ', middle_name) ELSE '' END) AS name,
-                 admission_no, class, photo_url`,
-      [surname.trim(), first_name.trim(), middle_name ? middle_name.trim() : null, admission_no.trim(), className]
-    );
-    const student = studentRes.rows[0];
-
     if (term && session) {
       await client.query(
         `INSERT INTO student_term_enrollments (student_id, class, term, session, status)
          VALUES ($1, $2, $3, $4, 'ACTIVE')
          ON CONFLICT (student_id, term, session) 
          DO UPDATE SET class = $2, status = 'ACTIVE'`,
-        [student.id, className, term, session]
+        [studentId, className, term, session]
       );
     }
 
     await client.query('COMMIT');
-    res.json({ student, message: 'Student saved successfully' });
+    
+    const finalStudent = await pool.query('SELECT id, surname, first_name, middle_name, admission_no, class, photo_url FROM students WHERE id = $1', [studentId]);
+    res.json({ student: finalStudent.rows[0], message: 'Student saved successfully' });
+    
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
@@ -384,7 +390,6 @@ router.post('/students', async (req, res) => {
 
 router.delete('/students/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
     await pool.query('DELETE FROM students WHERE id = $1', [id]);
     res.json({ success: true });
@@ -396,7 +401,6 @@ router.delete('/students/:id', async (req, res) => {
 
 router.put('/students/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   const { surname, first_name, middle_name, admission_no, class: className } = req.body;
   if (!surname && !first_name && !middle_name && !admission_no && !className) {
     return res.status(400).json({ error: 'Provide at least one student field to update' });
@@ -477,7 +481,7 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
     let surname = extractField(row, ['surname', 'last name', 'familyname']);
     let firstName = extractField(row, ['firstname', 'first name', 'givenname']);
     let middleName = extractField(row, ['middlename', 'middle name', 'othername']);
-    const admissionNo = extractField(row, ['admissionno', 'admno', 'admissionnumber']);
+    let admissionNo = extractField(row, ['admissionno', 'admno', 'admissionnumber']);
     const className = extractField(row, ['class']);
 
     if (!surname || !firstName) {
@@ -495,8 +499,8 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
       }
     }
 
-    if (!surname || !firstName || !admissionNo || !className) {
-      results.skipped.push({ row: rowNum, reason: 'Missing surname, first name, admission number, or class' });
+    if (!surname || !firstName || !className) {
+      results.skipped.push({ row: rowNum, reason: 'Missing surname, first name, or class' });
       continue;
     }
 
@@ -504,26 +508,40 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
     try {
       await client.query('BEGIN');
 
-      const existingRes = await client.query('SELECT id, class FROM students WHERE admission_no = $1', [admissionNo]);
-      if (existingRes.rows.length > 0 && existingRes.rows[0].class === className) {
-        await client.query('ROLLBACK');
-        results.skipped.push({ row: rowNum, reason: `Student is already in ${className}` });
-        continue;
+      // 1. Handle Brand New Students (no admission number provided)
+      if (!admissionNo) {
+        const year = new Date().getFullYear();
+        const random = Math.floor(1000 + Math.random() * 9000);
+        admissionNo = `ADM-${year}-${random}`;
       }
 
-      const studentRes = await client.query(
-        `INSERT INTO students (surname, first_name, middle_name, admission_no, class) 
-         VALUES ($1, $2, $3, $4, $5) 
-         ON CONFLICT (admission_no) 
-         DO UPDATE SET 
-           surname = EXCLUDED.surname, 
-           first_name = EXCLUDED.first_name, 
-           middle_name = EXCLUDED.middle_name, 
-           class = EXCLUDED.class 
-         RETURNING id`,
-        [surname, firstName, middleName || null, admissionNo, className]
-      );
-      const studentId = studentRes.rows[0].id;
+      const existingRes = await client.query('SELECT id, class FROM students WHERE admission_no = $1', [admissionNo]);
+      
+      let studentId;
+
+      if (existingRes.rows.length > 0) {
+        const existing = existingRes.rows[0];
+        
+        if (existing.class === className) {
+          await client.query('ROLLBACK');
+          results.skipped.push({ row: rowNum, reason: `Student is already in ${className}` });
+          continue;
+        }
+
+        await client.query(
+          `UPDATE students SET surname = $1, first_name = $2, middle_name = $3, class = $4 WHERE id = $5`,
+          [surname, firstName, middleName || null, className, existing.id]
+        );
+        studentId = existing.id;
+        
+      } else {
+        const studentRes = await client.query(
+          `INSERT INTO students (surname, first_name, middle_name, admission_no, class) 
+           VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+          [surname, firstName, middleName || null, admissionNo, className]
+        );
+        studentId = studentRes.rows[0].id;
+      }
 
       await client.query(
         `INSERT INTO student_term_enrollments (student_id, class, term, session, status)
@@ -574,7 +592,6 @@ router.post('/subjects', async (req, res) => {
 
 router.delete('/subjects/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
     await pool.query('DELETE FROM subjects WHERE id = $1', [id]);
     res.json({ success: true });
@@ -614,7 +631,6 @@ router.post('/teachers', async (req, res) => {
 
 router.delete('/teachers/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
     await pool.query('DELETE FROM teachers WHERE id = $1', [id]);
     res.json({ success: true });
@@ -658,7 +674,6 @@ router.post('/classes', async (req, res) => {
 
 router.delete('/classes/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
     await pool.query('DELETE FROM classes WHERE id = $1', [id]);
     res.json({ success: true });
@@ -691,9 +706,6 @@ router.post('/assignments', async (req, res) => {
   }
   teacher_id = parseInt(teacher_id, 10);
   subject_id = parseInt(subject_id, 10);
-  if (isNaN(teacher_id) || isNaN(subject_id)) {
-    return res.status(400).json({ error: 'teacher_id and subject_id must be numbers' });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -710,7 +722,6 @@ router.post('/assignments', async (req, res) => {
 
 router.delete('/assignments/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
     await pool.query('DELETE FROM teacher_subjects WHERE id = $1', [id]);
     res.json({ success: true });
@@ -741,9 +752,6 @@ router.post('/form-teachers', async (req, res) => {
     return res.status(400).json({ error: 'teacher_id and class are required' });
   }
   teacher_id = parseInt(teacher_id, 10);
-  if (isNaN(teacher_id)) {
-    return res.status(400).json({ error: 'teacher_id must be a number' });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -760,7 +768,6 @@ router.post('/form-teachers', async (req, res) => {
 
 router.delete('/form-teachers/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
   try {
     await pool.query('DELETE FROM form_teacher_classes WHERE id = $1', [id]);
     res.json({ success: true });
