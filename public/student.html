@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Check your official school results securely" />
+<meta name="theme-color" content="#176345" id="themeColorMeta" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <title>ResultPro — Check Your Result</title>
 <style>
   :root {
@@ -17,12 +19,13 @@
     --card: #ffffff;
     --border: #e2eae5;
     --text: #1d2c24;
-    --text-soft: #718078;
+    --text-soft: #5a6b62;
+    --text-heading: #183d2d;
     --pass: #18794e;
     --pass-bg: #e5f5ec;
     --fail: #b93838;
     --fail-bg: #fff0ef;
-    --warn: #ce8e00;
+    --warn: #b87a00;
     --warn-bg: #fff4d1;
     --shadow-md: 0 12px 34px rgba(24, 55, 39, .075);
     --shadow-sm: 0 2px 8px rgba(24, 55, 39, .045);
@@ -30,15 +33,170 @@
     --radius-control: 11px;
     --ease-out-expo: cubic-bezier(.16,1,.3,1);
     --ease-out-back: cubic-bezier(.34,1.56,.64,1);
+    --focus-ring: 0 0 0 3px rgba(49, 131, 93, .28);
+    --input-bg: #fbfdfb;
+    --input-border: #dce6df;
+    --stat-bg: linear-gradient(145deg, #f0f8f3, #eaf4ee);
+    --stat-border: #e1eee5;
+    --table-header-bg: #edf5ef;
+    --row-hover: #fbfdfb;
+    --session-bg: linear-gradient(145deg, #f0f8f3, #eaf4ee);
+    --session-border: #d4e7da;
+    --secondary-btn-bg: #f5faf6;
+    --secondary-btn-border: #dce9e0;
+    --secondary-btn-hover: #eaf4ed;
+    --skeleton-base: #edf3ef;
+    --skeleton-shine: #f7faf8;
+    --body-bg: radial-gradient(ellipse at 8% 0%, rgba(23, 99, 69, .06), transparent 32rem),
+               linear-gradient(180deg, #f7faf8 0%, #f0f5f1 100%);
+    --crest-border: rgba(255,255,255,.92);
+    --avatar-bg: linear-gradient(145deg, #e7f3ea, #d5e9db);
+    --avatar-border: #e1eee5;
+    --verify-bg: linear-gradient(145deg, #f8faf8, #f0f5f1);
+    --verify-border: #d5e2d9;
+    --divider: #edf5ef;
   }
+
+  /* Dark theme (system preference) */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --navy: #2d9b6a;
+      --navy-light: #1e7a52;
+      --gold: #e0c07a;
+      --cream: #0f1612;
+      --card: #15201a;
+      --border: #24352c;
+      --text: #e6efe9;
+      --text-soft: #9aaf9f;
+      --text-heading: #e8f2eb;
+      --pass: #3ecf8e;
+      --pass-bg: #143528;
+      --fail: #f07171;
+      --fail-bg: #3a1a1a;
+      --warn: #e6b34d;
+      --warn-bg: #3a2e12;
+      --shadow-md: 0 12px 34px rgba(0, 0, 0, .35);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, .25);
+      --focus-ring: 0 0 0 3px rgba(45, 155, 106, .35);
+      --input-bg: #1a2620;
+      --input-border: #2d4036;
+      --stat-bg: linear-gradient(145deg, #1a2b22, #16241c);
+      --stat-border: #24352c;
+      --table-header-bg: #1a2b22;
+      --row-hover: #1a2620;
+      --session-bg: linear-gradient(145deg, #1a2b22, #16241c);
+      --session-border: #2a3d32;
+      --secondary-btn-bg: #1a2b22;
+      --secondary-btn-border: #2d4036;
+      --secondary-btn-hover: #21352a;
+      --skeleton-base: #1a2b22;
+      --skeleton-shine: #24352c;
+      --body-bg: radial-gradient(ellipse at 8% 0%, rgba(45, 155, 106, .08), transparent 32rem),
+                 linear-gradient(180deg, #0f1612 0%, #0c120e 100%);
+      --crest-border: rgba(255,255,255,.12);
+      --avatar-bg: linear-gradient(145deg, #1a2b22, #16241c);
+      --avatar-border: #2d4036;
+      --verify-bg: linear-gradient(145deg, #1a2b22, #16241c);
+      --verify-border: #2d4036;
+      --divider: #24352c;
+    }
+  }
+
+  /* Manual dark override */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --navy: #2d9b6a;
+    --navy-light: #1e7a52;
+    --gold: #e0c07a;
+    --cream: #0f1612;
+    --card: #15201a;
+    --border: #24352c;
+    --text: #e6efe9;
+    --text-soft: #9aaf9f;
+    --text-heading: #e8f2eb;
+    --pass: #3ecf8e;
+    --pass-bg: #143528;
+    --fail: #f07171;
+    --fail-bg: #3a1a1a;
+    --warn: #e6b34d;
+    --warn-bg: #3a2e12;
+    --shadow-md: 0 12px 34px rgba(0, 0, 0, .35);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, .25);
+    --focus-ring: 0 0 0 3px rgba(45, 155, 106, .35);
+    --input-bg: #1a2620;
+    --input-border: #2d4036;
+    --stat-bg: linear-gradient(145deg, #1a2b22, #16241c);
+    --stat-border: #24352c;
+    --table-header-bg: #1a2b22;
+    --row-hover: #1a2620;
+    --session-bg: linear-gradient(145deg, #1a2b22, #16241c);
+    --session-border: #2a3d32;
+    --secondary-btn-bg: #1a2b22;
+    --secondary-btn-border: #2d4036;
+    --secondary-btn-hover: #21352a;
+    --skeleton-base: #1a2b22;
+    --skeleton-shine: #24352c;
+    --body-bg: radial-gradient(ellipse at 8% 0%, rgba(45, 155, 106, .08), transparent 32rem),
+               linear-gradient(180deg, #0f1612 0%, #0c120e 100%);
+    --crest-border: rgba(255,255,255,.12);
+    --avatar-bg: linear-gradient(145deg, #1a2b22, #16241c);
+    --avatar-border: #2d4036;
+    --verify-bg: linear-gradient(145deg, #1a2b22, #16241c);
+    --verify-border: #2d4036;
+    --divider: #24352c;
+  }
+
+  /* Manual light override — fully reset all tokens */
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --navy: #176345;
+    --navy-light: #104d36;
+    --gold: #d8ad55;
+    --cream: #f4f7f5;
+    --card: #ffffff;
+    --border: #e2eae5;
+    --text: #1d2c24;
+    --text-soft: #5a6b62;
+    --text-heading: #183d2d;
+    --pass: #18794e;
+    --pass-bg: #e5f5ec;
+    --fail: #b93838;
+    --fail-bg: #fff0ef;
+    --warn: #b87a00;
+    --warn-bg: #fff4d1;
+    --shadow-md: 0 12px 34px rgba(24, 55, 39, .075);
+    --shadow-sm: 0 2px 8px rgba(24, 55, 39, .045);
+    --focus-ring: 0 0 0 3px rgba(49, 131, 93, .28);
+    --input-bg: #fbfdfb;
+    --input-border: #dce6df;
+    --stat-bg: linear-gradient(145deg, #f0f8f3, #eaf4ee);
+    --stat-border: #e1eee5;
+    --table-header-bg: #edf5ef;
+    --row-hover: #fbfdfb;
+    --session-bg: linear-gradient(145deg, #f0f8f3, #eaf4ee);
+    --session-border: #d4e7da;
+    --secondary-btn-bg: #f5faf6;
+    --secondary-btn-border: #dce9e0;
+    --secondary-btn-hover: #eaf4ed;
+    --skeleton-base: #edf3ef;
+    --skeleton-shine: #f7faf8;
+    --body-bg: radial-gradient(ellipse at 8% 0%, rgba(23, 99, 69, .06), transparent 32rem),
+               linear-gradient(180deg, #f7faf8 0%, #f0f5f1 100%);
+    --crest-border: rgba(255,255,255,.92);
+    --avatar-bg: linear-gradient(145deg, #e7f3ea, #d5e9db);
+    --avatar-border: #e1eee5;
+    --verify-bg: linear-gradient(145deg, #f8faf8, #f0f5f1);
+    --verify-border: #d5e2d9;
+    --divider: #edf5ef;
+  }
+
   * { box-sizing: border-box; }
   html { min-height: 100%; scroll-behavior: smooth; }
   body {
     margin: 0;
-    font-family: 'Nunito', Arial, sans-serif;
-    background:
-      radial-gradient(ellipse at 8% 0%, rgba(23, 99, 69, .06), transparent 32rem),
-      linear-gradient(180deg, #f7faf8 0%, #f0f5f1 100%);
+    font-family: 'Nunito', system-ui, -apple-system, Arial, sans-serif;
+    background: var(--body-bg);
     color: var(--text);
     min-height: 100vh;
     display: flex;
@@ -47,8 +205,9 @@
     font-size: 14px;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    transition: background .25s ease, color .2s ease;
   }
-  .wrap { width: 100%; max-width: 520px; }
+  .wrap { width: 100%; max-width: 520px; position: relative; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(14px); }
@@ -72,9 +231,13 @@
     25%      { transform: translateX(-4px); }
     75%      { transform: translateX(4px); }
   }
-  @keyframes dotPulse {
-    0%, 100% { box-shadow: 0 0 0 2px rgba(43,137,96,.22); transform: scale(1); }
-    50%      { box-shadow: 0 0 0 6px rgba(43,137,96,.06); transform: scale(1.1); }
+  @keyframes pulse {
+    0%, 100% { opacity: .55; }
+    50%      { opacity: 1; }
+  }
+  @keyframes skeletonShine {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
 
   .school-header {
@@ -87,7 +250,7 @@
     width: 58px; height: 58px;
     background: linear-gradient(145deg, #247a56, #104b35);
     color: #f4d58e;
-    border: 3px solid rgba(255,255,255,.92);
+    border: 3px solid var(--crest-border);
     border-radius: 18px;
     display: flex; align-items: center; justify-content: center;
     font-weight: 800; font-size: 19px;
@@ -106,7 +269,7 @@
     font-family: 'Baloo 2', sans-serif;
     letter-spacing: -.35px;
     line-height: 1.2;
-    color: #183d2d;
+    color: var(--text-heading);
     animation: fadeUp .5s var(--ease-out-expo) .15s both;
   }
   .school-header p {
@@ -125,14 +288,58 @@
     animation: fadeUp .5s var(--ease-out-expo) .28s both;
   }
 
+  /* Theme toggle */
+  .theme-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: background .2s ease, border-color .2s ease, transform .18s var(--ease-out-back);
+    z-index: 10;
+  }
+  .theme-toggle:hover {
+    background: var(--secondary-btn-hover);
+    transform: translateY(-1px);
+  }
+  .theme-toggle:focus-visible {
+    outline: 3px solid rgba(49, 131, 93, .35);
+    outline-offset: 2px;
+  }
+  .theme-toggle svg {
+    width: 18px;
+    height: 18px;
+  }
+  .theme-toggle .icon-sun { display: none; }
+  .theme-toggle .icon-moon { display: block; }
+
+  /* When dark (explicit or system) show sun icon */
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
+    :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
+  }
+
   .card {
     background: var(--card);
-    border: 1px solid rgba(220, 231, 223, .95);
+    border: 1px solid var(--border);
     border-radius: var(--radius-card);
     padding: 28px 24px;
     margin-bottom: 20px;
     box-shadow: var(--shadow-md);
     animation: fadeUp .5s var(--ease-out-expo) .28s both;
+    transition: background .25s ease, border-color .2s ease;
   }
   .card.view-enter { animation: viewSwap .45s var(--ease-out-expo) both; }
   .card h2 {
@@ -140,13 +347,13 @@
     font-weight: 800;
     font-family: 'Baloo 2', sans-serif;
     margin: 0 0 18px;
-    color: #183d2d;
+    color: var(--text-heading);
     letter-spacing: -.2px;
   }
 
   label {
     font-size: 10px;
-    color: #596c61;
+    color: var(--text-soft);
     display: block;
     margin-bottom: 6px;
     text-transform: uppercase;
@@ -154,35 +361,43 @@
     font-weight: 900;
     line-height: 1.4;
   }
+  .field-hint {
+    font-size: 11px;
+    color: var(--text-soft);
+    font-weight: 600;
+    margin: -8px 0 12px;
+    line-height: 1.4;
+  }
   input, select {
     width: 100%;
     padding: 11px 13px;
     font-size: 13px;
-    border: 1px solid #dce6df;
+    border: 1px solid var(--input-border);
     border-radius: var(--radius-control);
     margin-bottom: 14px;
-    background: #fbfdfb;
+    background: var(--input-bg);
     color: var(--text);
     font-family: inherit;
     font-weight: 700;
     outline: none;
     transition: border-color .2s var(--ease-out-expo), box-shadow .2s var(--ease-out-expo), background .2s var(--ease-out-expo), transform .2s var(--ease-out-back);
   }
-  input::placeholder { color: #a1ada5; font-weight: 500; }
-  input:hover, select:hover { border-color: #bdcfc2; }
+  input::placeholder { color: var(--text-soft); font-weight: 500; opacity: .7; }
+  input:hover, select:hover { border-color: var(--navy); }
   input:focus, select:focus {
-    border-color: #31835d;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(49, 131, 93, .12);
+    border-color: var(--navy);
+    background: var(--card);
+    box-shadow: var(--focus-ring);
     transform: translateY(-1px);
   }
   input.invalid, select.invalid {
     border-color: var(--fail);
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(185,56,56,.08);
+    background: var(--card);
+    box-shadow: 0 0 0 3px rgba(185,56,56,.15);
     animation: shake .4s var(--ease-out-expo);
   }
   select { cursor: pointer; }
+  select option { background: var(--card); color: var(--text); }
 
   .row { display: flex; gap: 10px; }
   .row > div { flex: 1; min-width: 0; }
@@ -190,7 +405,7 @@
   button {
     width: 100%;
     padding: 12px 18px;
-    font-family: 'Nunito', Arial, sans-serif;
+    font-family: 'Nunito', system-ui, Arial, sans-serif;
     font-size: 12px;
     font-weight: 900;
     letter-spacing: .25px;
@@ -202,22 +417,27 @@
     box-shadow: 0 4px 10px rgba(23, 99, 69, .16);
     transition: transform .18s var(--ease-out-back), box-shadow .18s var(--ease-out-expo), background .18s ease, border-color .18s ease;
   }
-  button:hover {
+  button:hover:not(:disabled) {
     background: linear-gradient(135deg, #2b8960, #176345);
     box-shadow: 0 8px 20px rgba(23, 99, 69, .26);
     transform: translateY(-2px);
   }
-  button:active { transform: translateY(0) scale(.98); }
-  button:focus-visible { outline: 3px solid rgba(49, 131, 93, .28); outline-offset: 2px; }
+  button:active:not(:disabled) { transform: translateY(0) scale(.98); }
+  button:focus-visible { outline: 3px solid rgba(49, 131, 93, .35); outline-offset: 2px; }
+  button:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+    transform: none;
+  }
   button.secondary {
-    background: #f5faf6;
+    background: var(--secondary-btn-bg);
     color: var(--navy);
-    border: 1px solid #dce9e0;
+    border: 1px solid var(--secondary-btn-border);
     box-shadow: none;
   }
-  button.secondary:hover {
-    background: #eaf4ed;
-    border-color: #bcd8c6;
+  button.secondary:hover:not(:disabled) {
+    background: var(--secondary-btn-hover);
+    border-color: var(--navy);
     box-shadow: 0 4px 12px rgba(23, 99, 69, .08);
     transform: translateY(-1px);
   }
@@ -226,7 +446,7 @@
     font-size: 12px;
     color: var(--fail);
     background: var(--fail-bg);
-    border: 1px solid #f3d0cd;
+    border: 1px solid var(--fail);
     border-radius: 10px;
     padding: 11px 13px;
     margin-bottom: 14px;
@@ -234,34 +454,36 @@
     font-weight: 800;
     animation: shake .4s var(--ease-out-expo);
   }
+  .error-msg[aria-hidden="false"] { display: block; }
 
-  /* Session banner when a student is remembered */
+  /* Session banner */
   .session-banner {
     display: none;
     align-items: center;
     gap: 10px;
     padding: 11px 14px;
     margin-bottom: 14px;
-    background: linear-gradient(145deg, #f0f8f3, #eaf4ee);
-    border: 1px solid #d4e7da;
+    background: var(--session-bg);
+    border: 1px solid var(--session-border);
     border-radius: 12px;
     font-size: 12px;
     font-weight: 700;
-    color: #315542;
+    color: var(--text-soft);
     animation: fadeUp .4s var(--ease-out-expo) both;
   }
+  .session-banner[aria-hidden="false"] { display: flex; }
   .session-banner .sb-name {
     flex: 1;
     font-weight: 900;
-    color: #183d2d;
+    color: var(--text-heading);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .session-banner .sb-signout {
     padding: 4px 10px;
-    background: #fff;
-    border: 1px solid #dce9e0;
+    background: var(--card);
+    border: 1px solid var(--secondary-btn-border);
     border-radius: 7px;
     color: var(--navy);
     font-size: 10px;
@@ -270,7 +492,7 @@
     text-transform: uppercase;
     letter-spacing: .4px;
   }
-  .session-banner .sb-signout:hover { background: #f5faf6; }
+  .session-banner .sb-signout:hover { background: var(--secondary-btn-hover); }
 
   /* ============================================
      RESULT VIEW — certificate style
@@ -281,7 +503,7 @@
     text-align: center;
     margin-bottom: 20px;
     padding-bottom: 18px;
-    border-bottom: 2px solid #edf5ef;
+    border-bottom: 2px solid var(--divider);
     animation: fadeUp .45s var(--ease-out-expo) .05s both;
   }
   .cert-header .cert-crest {
@@ -289,7 +511,7 @@
     margin: 0 auto 8px;
     background: linear-gradient(145deg, #247a56, #104b35);
     color: #f4d58e;
-    border: 3px solid rgba(255,255,255,.92);
+    border: 3px solid var(--crest-border);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-weight: 800; font-size: 17px;
@@ -302,14 +524,14 @@
     font-family: 'Baloo 2', sans-serif;
     font-size: 16px;
     font-weight: 800;
-    color: #183d2d;
+    color: var(--text-heading);
     margin: 0 0 2px;
     letter-spacing: -.2px;
   }
   .cert-header .cert-title {
     font-size: 10px;
     font-weight: 900;
-    color: #596c61;
+    color: var(--text-soft);
     letter-spacing: 2px;
     text-transform: uppercase;
     margin: 8px 0 0;
@@ -333,9 +555,9 @@
   .avatar {
     width: 56px; height: 56px;
     border-radius: 16px;
-    background: linear-gradient(145deg, #e7f3ea, #d5e9db);
-    color: #176345;
-    border: 2px solid #e1eee5;
+    background: var(--avatar-bg);
+    color: var(--navy);
+    border: 2px solid var(--avatar-border);
     display: flex; align-items: center; justify-content: center;
     font-weight: 900;
     font-size: 16px;
@@ -347,7 +569,7 @@
     font-size: 16px;
     margin: 0;
     font-weight: 900;
-    color: #203b2d;
+    color: var(--text-heading);
     line-height: 1.3;
     font-family: 'Baloo 2', sans-serif;
   }
@@ -366,8 +588,8 @@
     margin-bottom: 22px;
   }
   .stat-box {
-    background: linear-gradient(145deg, #f0f8f3, #eaf4ee);
-    border: 1px solid #e1eee5;
+    background: var(--stat-bg);
+    border: 1px solid var(--stat-border);
     border-radius: 12px;
     padding: 11px 13px;
     animation: fadeUp .4s var(--ease-out-expo) both;
@@ -379,27 +601,25 @@
   .stat-box:nth-child(4) { --i: 3; }
   .stat-box .label {
     font-size: 9px;
-    color: #596c61;
+    color: var(--text-soft);
     margin: 0;
     text-transform: uppercase;
     letter-spacing: .85px;
     font-weight: 900;
     line-height: 1.4;
   }
-  .stat-box .value { font-size: 15px; margin: 4px 0 0; font-weight: 900; color: #183d2d; line-height: 1.3; }
+  .stat-box .value { font-size: 15px; margin: 4px 0 0; font-weight: 900; color: var(--text-heading); line-height: 1.3; }
 
-  /* Results section title */
   .results-section-title {
     font-size: 10px;
     font-weight: 900;
-    color: #596c61;
+    color: var(--text-soft);
     letter-spacing: 1.2px;
     text-transform: uppercase;
     margin: 0 0 12px;
     animation: fadeUp .4s var(--ease-out-expo) .25s both;
   }
 
-  /* Desktop/tablet table */
   .result-table {
     width: 100%;
     border-collapse: collapse;
@@ -409,8 +629,8 @@
   }
   .result-table th {
     text-align: left;
-    color: #315542;
-    background: #edf5ef;
+    color: var(--text-heading);
+    background: var(--table-header-bg);
     font-weight: 900;
     padding: 9px 6px;
     font-size: 10px;
@@ -423,8 +643,8 @@
   .result-table th.num, .result-table td.num { text-align: right; }
   .result-table td {
     padding: 10px 6px;
-    border-bottom: 1px solid #edf1ee;
-    color: #26372d;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
     font-weight: 600;
     vertical-align: middle;
   }
@@ -435,13 +655,12 @@
     animation: rowArrive .35s var(--ease-out-expo) both;
     animation-delay: calc(var(--i, 0) * 45ms + 0.3s);
   }
-  .result-table tbody tr:hover td { background: #fbfdfb; }
+  .result-table tbody tr:hover td { background: var(--row-hover); }
 
-  /* Mobile card layout */
   .result-cards { display: none; margin-bottom: 20px; }
   .result-card {
-    background: #fff;
-    border: 1px solid #e1eee5;
+    background: var(--card);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 13px 14px;
     margin-bottom: 10px;
@@ -455,12 +674,12 @@
     gap: 10px;
     margin-bottom: 10px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #f0f5f1;
+    border-bottom: 1px solid var(--border);
   }
   .result-card .rc-subject {
     font-weight: 900;
     font-size: 13px;
-    color: #203b2d;
+    color: var(--text-heading);
     flex: 1;
     line-height: 1.3;
   }
@@ -469,12 +688,10 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 6px;
   }
-  .result-card .rc-cell {
-    text-align: center;
-  }
+  .result-card .rc-cell { text-align: center; }
   .result-card .rc-cell .lbl {
     font-size: 8px;
-    color: #596c61;
+    color: var(--text-soft);
     text-transform: uppercase;
     letter-spacing: .5px;
     font-weight: 900;
@@ -483,12 +700,12 @@
   }
   .result-card .rc-cell .val {
     font-size: 12px;
-    color: #26372d;
+    color: var(--text);
     font-weight: 800;
     margin: 3px 0 0;
     line-height: 1.2;
   }
-  .result-card .rc-cell .val strong { font-weight: 900; color: #183d2d; }
+  .result-card .rc-cell .val strong { font-weight: 900; color: var(--text-heading); }
 
   .grade-pill {
     display: inline-block;
@@ -499,17 +716,16 @@
     letter-spacing: .3px;
   }
   .grade-A, .grade-B { background: var(--pass-bg); color: var(--pass); }
-  .grade-C, .grade-D, .grade-E { background: #fff4d1; color: #ce8e00; }
+  .grade-C, .grade-D, .grade-E { background: var(--warn-bg); color: var(--warn); }
   .grade-F { background: var(--fail-bg); color: var(--fail); }
 
-  /* Comments */
   .comments-block {
     animation: fadeUp .45s var(--ease-out-expo) .35s both;
     margin-bottom: 20px;
   }
   .comments-block .comment-label {
     font-size: 10px;
-    color: #596c61;
+    color: var(--text-soft);
     text-transform: uppercase;
     letter-spacing: .85px;
     font-weight: 900;
@@ -518,33 +734,30 @@
   .comments-block p.comment-text {
     font-size: 13px;
     margin: 0 0 14px;
-    color: #26372d;
+    color: var(--text);
     font-weight: 600;
     line-height: 1.55;
   }
 
-  /* Signature / footer */
   .cert-footer {
     margin-top: 24px;
     padding-top: 18px;
-    border-top: 2px solid #edf5ef;
+    border-top: 2px solid var(--divider);
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
     gap: 20px;
     animation: fadeUp .45s var(--ease-out-expo) .4s both;
   }
-  .cert-signature {
-    flex: 1;
-  }
+  .cert-signature { flex: 1; }
   .cert-signature .sig-line {
-    border-bottom: 1px solid #bdcfc2;
+    border-bottom: 1px solid var(--border);
     height: 24px;
     margin-bottom: 4px;
   }
   .cert-signature .sig-label {
     font-size: 10px;
-    color: #596c61;
+    color: var(--text-soft);
     font-weight: 900;
     letter-spacing: .5px;
     text-transform: uppercase;
@@ -565,28 +778,25 @@
   }
   .cert-issued .ci-date {
     font-weight: 900;
-    color: #183d2d;
+    color: var(--text-heading);
   }
 
-  /* Verification box */
+  /* On screen: stack verification above footer (print rearranges them) */
+  .print-bottom {
+    display: block;
+  }
+
   .verification-box {
-    background: linear-gradient(145deg, #f8faf8, #f0f5f1);
-    border: 1px dashed #d5e2d9;
+    background: var(--verify-bg);
+    border: 1px dashed var(--verify-border);
     border-radius: 14px;
     padding: 16px;
     text-align: center;
     margin-bottom: 20px;
     animation: fadeUp .45s var(--ease-out-expo) .45s both;
   }
-  .verification-caption {
-    font-size: 11px;
-    color: var(--text-soft);
-    margin: 5px 0 0 auto;
-    max-width: 62mm;
-    text-align: right;
-    font-weight: 700;
-  }
-  #qrcode { display: inline-block; padding: 8px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(24, 55, 39, .06); }
+  .verification-box p { font-size: 11px; color: var(--text-soft); margin: 8px 0 0; font-weight: 700; }
+  #qrcode { display: inline-block; padding: 8px; background: var(--card); border-radius: 10px; box-shadow: var(--shadow-sm); }
 
   .result-actions {
     display: flex;
@@ -595,34 +805,86 @@
   }
   .result-actions button { flex: 1; }
 
-  .loading, .empty-state {
+  /* Skeleton loading */
+  .skeleton-card {
+    padding: 28px 24px;
+  }
+  .skel {
+    background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%);
+    background-size: 200% 100%;
+    animation: skeletonShine 1.4s ease-in-out infinite;
+    border-radius: 8px;
+  }
+  .skel-crest {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    margin: 0 auto 12px;
+  }
+  .skel-line {
+    height: 12px;
+    margin: 0 auto 8px;
+  }
+  .skel-line.short { width: 40%; }
+  .skel-line.med { width: 60%; }
+  .skel-line.long { width: 85%; }
+  .skel-identity {
+    display: flex;
+    gap: 14px;
+    margin: 24px 0 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .skel-avatar {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    flex-shrink: 0;
+  }
+  .skel-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .skel-stat {
+    height: 58px;
+    border-radius: 12px;
+  }
+  .skel-row {
+    height: 36px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+  .loading-status {
+    text-align: center;
     font-size: 13px;
     color: var(--text-soft);
-    text-align: center;
-    padding: 24px 16px;
     font-weight: 700;
-    animation: fadeUp .4s var(--ease-out-expo) both;
+    margin-top: 8px;
   }
-  .loading::before {
-    content: '';
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--navy);
-    margin-right: 8px;
-    vertical-align: middle;
-    animation: dotPulse 1.4s ease-in-out infinite;
+
+  .empty-state-msg {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin: 0 0 18px;
+    font-weight: 600;
   }
-  #releaseCountdown { animation: fadeUp .4s var(--ease-out-expo) both; }
+
+  #releaseCountdown {
+    font-size: 12px;
+    color: var(--warn);
+    margin: 0 0 14px;
+    display: none;
+    font-weight: 800;
+  }
+  #releaseCountdown[aria-hidden="false"] { display: block; }
 
   .empty-term-btn {
     width: 100%;
     text-align: left;
     margin: 0 0 8px;
     padding: 12px 14px;
-    background: #f5faf6;
-    border: 1px solid #dce9e0;
+    background: var(--secondary-btn-bg);
+    border: 1px solid var(--secondary-btn-border);
     border-radius: 11px;
     color: var(--text);
     cursor: pointer;
@@ -631,9 +893,26 @@
     transition: background .15s ease, border-color .15s ease, transform .15s ease;
   }
   .empty-term-btn:hover {
-    background: #eaf4ed;
-    border-color: #bcd8c6;
+    background: var(--secondary-btn-hover);
+    border-color: var(--navy);
     transform: translateY(-1px);
+  }
+  .empty-term-btn:focus-visible {
+    outline: 3px solid rgba(49, 131, 93, .28);
+    outline-offset: 2px;
+  }
+
+  /* Visually hidden utility for screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   /* ============================================
@@ -651,7 +930,6 @@
     .stat-box { padding: 9px 10px; }
     .stat-box .value { font-size: 13px; }
 
-    /* Mobile: hide table, show cards */
     .result-table { display: none; }
     .result-cards { display: block; }
 
@@ -682,1174 +960,592 @@
   /* ============================================
      PRINT — A4 result slip
      ============================================ */
+  /* ============================================================
+     PRINT — single A4 page for 9–15 subjects + QR
+     ============================================================ */
   @media print {
-    @page { size: A4 portrait; margin: 15mm 15mm 20mm; }
-    html, body {
-      background: #fff !important;
-      padding: 0 !important;
-      display: block !important;
-      font-size: 10pt;
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm 10mm;
     }
-    .wrap { max-width: 100% !important; }
+
+    html, body {
+      width: 100% !important;
+      max-width: 100% !important;
+      background: #fff !important;
+      color: #000 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: block !important;
+      font-size: 8.5pt;
+      line-height: 1.25;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .wrap {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    /* Hide everything that is not the result slip */
+    .theme-toggle,
     .school-header,
     #loginView,
     #loadingView,
     #emptyState,
     #releaseCountdown,
     .session-banner,
-    .verification-box,
     .result-actions,
-    .result-cards { display: none !important; }
+    .result-cards,
+    .sr-only {
+      display: none !important;
+    }
+
+    /* Kill animations so nothing stays opacity:0 */
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
 
     .card {
+      background: #fff !important;
       border: none !important;
       padding: 0 !important;
       box-shadow: none !important;
       margin: 0 !important;
-      animation: none !important;
     }
-    #resultView { display: block !important; padding: 0 !important; }
+    #resultView {
+      display: block !important;
+      padding: 0 !important;
+    }
 
+    /* ---- Header ---- */
     .cert-header {
-      margin-bottom: 16px;
-      padding-bottom: 14px;
-      border-bottom: 2px solid #333 !important;
+      margin-bottom: 2.5mm;
+      padding-bottom: 2mm;
+      border-bottom: 1.25pt solid #222 !important;
+      text-align: center;
     }
     .cert-header .cert-crest {
-      border: 2px solid #333 !important;
+      width: 11mm;
+      height: 11mm;
+      border: 1pt solid #222 !important;
       box-shadow: none !important;
-      width: 48px;
-      height: 48px;
-    }
-    .cert-header .cert-school { font-size: 16pt; color: #000 !important; }
-    .cert-header .cert-title { color: #444 !important; }
-    .cert-header .cert-term { color: #333 !important; }
-
-    .cert-identity {
-      margin-bottom: 16px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid #999 !important;
-    }
-    .cert-identity .avatar { border: 1px solid #999 !important; }
-    .cert-identity .ci-name { color: #000 !important; }
-    .cert-identity .ci-meta { color: #333 !important; }
-
-    .stat-grid { gap: 4px; margin-bottom: 16px; }
-    .stat-box {
-      border: 1px solid #999 !important;
-      background: #fafafa !important;
-      animation: none !important;
-    }
-    .stat-box .label { color: #555 !important; }
-    .stat-box .value { color: #000 !important; }
-
-    .result-table { display: table !important; font-size: 9pt; margin-bottom: 16px; }
-    .result-cards { display: none !important; }
-    .result-table th {
-      background: #eee !important;
-      color: #000 !important;
-      border-bottom: 1px solid #999 !important;
-    }
-    .result-table td {
-      border-bottom: 1px solid #ccc !important;
-      color: #000 !important;
-    }
-    .result-table tbody tr { animation: none !important; }
-
-    .grade-pill {
-      border: 1px solid #999 !important;
-      color: #000 !important;
-      background: transparent !important;
-    }
-
-    .comments-block { margin-bottom: 16px; animation: none !important; }
-    .comments-block .comment-label { color: #555 !important; }
-    .comments-block p.comment-text { color: #000 !important; }
-
-    .cert-footer {
-      margin-top: 30px !important;
-      padding-top: 20px !important;
-      border-top: 1px solid #999 !important;
-      animation: none !important;
-      page-break-inside: avoid;
-    }
-    .cert-signature .sig-line { border-bottom: 1px solid #000 !important; }
-    .cert-signature .sig-label { color: #000 !important; }
-    .cert-signature .sig-sub { color: #555 !important; }
-    .cert-issued { color: #555 !important; }
-    .cert-issued .ci-date { color: #000 !important; }
-  }
-
-  /* ============================================================
-     RESULTPRO POLISH + ACCESSIBLE LIGHT / DARK THEMES
-     Visual layer only: existing views, IDs and workflows retained.
-     ============================================================ */
-  :root {
-    color-scheme: light;
-    --navy: #176345;
-    --navy-light: #104d36;
-    --gold: #d8ad55;
-    --cream: #f4f7f5;
-    --card: #ffffff;
-    --border: #e2eae5;
-    --text: #1d2c24;
-    --text-soft: #718078;
-    --pass: #18794e;
-    --pass-bg: #e5f5ec;
-    --fail: #b93838;
-    --fail-bg: #fff0ef;
-    --warn: #ce8e00;
-    --warn-bg: #fff4d1;
-    --shadow-md: 0 18px 48px rgba(24, 55, 39, .09);
-    --shadow-sm: 0 3px 12px rgba(24, 55, 39, .055);
-    --radius-card: 22px;
-    --radius-control: 13px;
-    --surface-muted: #f4f8f5;
-    --surface-raised: #ffffff;
-    --line-soft: #e6eee8;
-    --heading: #183d2d;
-  }
-
-  html { background: #f2f7f3; }
-  body {
-    background:
-      radial-gradient(ellipse at 8% 0%, rgba(23,99,69,.09), transparent 34rem),
-      radial-gradient(ellipse at 100% 25%, rgba(216,173,85,.07), transparent 28rem),
-      linear-gradient(180deg, #f8fbf9 0%, #eff5f1 100%);
-    transition: background .25s ease, color .25s ease;
-  }
-  .wrap { max-width: 560px; }
-  .school-header {
-    position: relative;
-    padding: 42px 12px 0;
-    margin-bottom: 26px;
-  }
-  .school-header .crest {
-    width: 64px;
-    height: 64px;
-    border-radius: 20px;
-    box-shadow: 0 10px 24px rgba(16,77,54,.2), 0 0 0 6px rgba(255,255,255,.58);
-  }
-  .school-header h1 { letter-spacing: -.55px; }
-  .school-header p { letter-spacing: .55px; }
-  .theme-toggle {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: auto;
-    min-height: 36px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 7px 12px;
-    border: 1px solid #dce8df;
-    border-radius: 999px;
-    background: rgba(255,255,255,.82);
-    color: #315542;
-    box-shadow: 0 3px 12px rgba(24,55,39,.05);
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: .1px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-  .theme-toggle:hover {
-    background: #fff;
-    border-color: #b9d2c1;
-    color: #176345;
-    box-shadow: 0 6px 16px rgba(23,99,69,.1);
-    transform: translateY(-1px);
-  }
-  .theme-toggle-icon { font-size: 15px; line-height: 1; }
-
-  .card {
-    border-color: rgba(218,230,221,.95);
-    border-radius: 22px;
-    padding: 30px 26px;
-    box-shadow: 0 18px 48px rgba(24,55,39,.075), 0 2px 8px rgba(24,55,39,.025);
-  }
-  .card h2 { font-size: 18px; margin-bottom: 20px; }
-  label { font-size: 10px; letter-spacing: 1px; }
-  input, select {
-    min-height: 46px;
-    padding: 12px 14px;
-    border-color: #dce7df;
-    background: #fbfdfb;
-    border-radius: 12px;
-    font-size: 13px;
-  }
-  input:focus, select:focus {
-    border-color: #31835d;
-    box-shadow: 0 0 0 4px rgba(49,131,93,.12);
-  }
-  button {
-    min-height: 46px;
-    border-radius: 12px;
-    font-size: 12px;
-  }
-  button.secondary {
-    background: #f4f8f5;
-    border-color: #dce8df;
-  }
-  button.secondary:hover { background: #eaf3ed; }
-  .session-banner {
-    border-radius: 14px;
-    padding: 12px 14px;
-  }
-  .session-banner .sb-signout {
-    width: auto;
-    min-height: 30px;
-  }
-  #resultView { padding: 34px 30px 30px; }
-  .cert-header { border-bottom-color: #e5eee7; }
-  .cert-identity { gap: 15px; }
-  .avatar { border-radius: 17px; }
-  .stat-grid { gap: 10px; }
-  .stat-box {
-    border-radius: 14px;
-    padding: 13px 14px;
-    background: linear-gradient(145deg, #f2f8f4, #eaf4ed);
-  }
-  .stat-box .value { font-size: 16px; }
-  .result-table { font-size: 12px; }
-  .result-table th { background: #edf5ef; }
-  .result-table td { padding-top: 11px; padding-bottom: 11px; }
-  .result-table tbody tr:hover td { background: #f7fbf8; }
-  .result-card {
-    border-radius: 14px;
-    border-color: #e1ece4;
-    box-shadow: 0 3px 10px rgba(24,55,39,.025);
-  }
-  .result-card .rc-head { border-bottom-color: #edf3ef; }
-  .grade-pill { padding: 4px 9px; border-radius: 999px; }
-  .verification-box { border-radius: 16px; }
-  .result-actions button { min-height: 44px; }
-  :where(button, input, select):focus-visible {
-    outline: 3px solid rgba(49,131,93,.28);
-    outline-offset: 2px;
-  }
-
-  html[data-theme="dark"] {
-    color-scheme: dark;
-    --navy: #75d3a0;
-    --navy-light: #9ae3b8;
-    --gold: #e7c477;
-    --cream: #111a15;
-    --card: #19251e;
-    --border: #304238;
-    --text: #e7f0e9;
-    --text-soft: #a3b4a8;
-    --pass: #8fe0ad;
-    --pass-bg: #203d2d;
-    --fail: #ffaaa5;
-    --fail-bg: #452927;
-    --warn: #f1ca73;
-    --warn-bg: #40351f;
-    --shadow-md: 0 18px 48px rgba(0,0,0,.24);
-    --shadow-sm: 0 3px 12px rgba(0,0,0,.18);
-    --surface-muted: #202e25;
-    --surface-raised: #1b2921;
-    --line-soft: #304238;
-    --heading: #e5f4e9;
-  }
-  html[data-theme="dark"] body {
-    color: var(--text);
-    background:
-      radial-gradient(ellipse at 8% 0%, rgba(45,126,82,.17), transparent 34rem),
-      radial-gradient(ellipse at 100% 25%, rgba(216,173,85,.045), transparent 28rem),
-      linear-gradient(180deg, #101913 0%, #131e17 100%);
-  }
-  html[data-theme="dark"] .school-header h1,
-  html[data-theme="dark"] .card h2,
-  html[data-theme="dark"] .cert-header .cert-school,
-  html[data-theme="dark"] .cert-identity .ci-name,
-  html[data-theme="dark"] .stat-box .value,
-  html[data-theme="dark"] .result-card .rc-subject,
-  html[data-theme="dark"] .result-card .rc-cell .val strong,
-  html[data-theme="dark"] .cert-issued .ci-date {
-    color: var(--heading) !important;
-  }
-  html[data-theme="dark"] .school-header p,
-  html[data-theme="dark"] .school-header .school-details,
-  html[data-theme="dark"] .cert-header .cert-term,
-  html[data-theme="dark"] .cert-identity .ci-meta,
-  html[data-theme="dark"] .cert-issued,
-  html[data-theme="dark"] .sig-sub,
-  html[data-theme="dark"] .loading,
-  html[data-theme="dark"] .empty-state {
-    color: var(--text-soft) !important;
-  }
-  html[data-theme="dark"] .theme-toggle {
-    color: #e5f4e9;
-    background: rgba(29,44,35,.9);
-    border-color: #3a5142;
-    box-shadow: 0 3px 12px rgba(0,0,0,.18);
-  }
-  html[data-theme="dark"] .theme-toggle:hover {
-    color: #fff;
-    background: #26392d;
-    border-color: #587761;
-  }
-  html[data-theme="dark"] .card {
-    background: var(--card);
-    border-color: #2b3c31;
-    box-shadow: 0 18px 48px rgba(0,0,0,.2);
-  }
-  html[data-theme="dark"] label { color: #bdcbbf; }
-  html[data-theme="dark"] input,
-  html[data-theme="dark"] select {
-    color: var(--text);
-    background: #121d16;
-    border-color: #3a4d40;
-    color-scheme: dark;
-  }
-  html[data-theme="dark"] input::placeholder { color: #829488; }
-  html[data-theme="dark"] input:hover,
-  html[data-theme="dark"] select:hover { border-color: #63836d; }
-  html[data-theme="dark"] input:focus,
-  html[data-theme="dark"] select:focus {
-    color: #f2faf4;
-    background: #16231a;
-    border-color: #75c895;
-    box-shadow: 0 0 0 4px rgba(117,200,149,.13);
-  }
-  html[data-theme="dark"] input.invalid,
-  html[data-theme="dark"] select.invalid {
-    background: #2c1d1c;
-    border-color: var(--fail);
-  }
-  html[data-theme="dark"] button.secondary,
-  html[data-theme="dark"] .empty-term-btn {
-    color: #d9eee0;
-    background: #223229;
-    border-color: #3a5142;
-  }
-  html[data-theme="dark"] button.secondary:hover,
-  html[data-theme="dark"] .empty-term-btn:hover {
-    color: #fff;
-    background: #2a4032;
-    border-color: #5b8068;
-  }
-  html[data-theme="dark"] .session-banner {
-    color: #d9eee0;
-    background: linear-gradient(145deg, #20392a, #1c3024);
-    border-color: #365943;
-  }
-  html[data-theme="dark"] .session-banner .sb-name { color: #effaf2; }
-  html[data-theme="dark"] .session-banner .sb-signout {
-    color: #e2f3e7;
-    background: #263d2e;
-    border-color: #45624d;
-  }
-  html[data-theme="dark"] .error-msg {
-    color: #ffb7b2;
-    background: #3c2524;
-    border-color: #75413d;
-  }
-  html[data-theme="dark"] #resultView { color: var(--text); }
-  html[data-theme="dark"] .cert-header { border-bottom-color: #34463a; }
-  html[data-theme="dark"] .cert-identity { border-bottom-color: #34463a; }
-  html[data-theme="dark"] .avatar {
-    color: #b8f0ca;
-    background: linear-gradient(145deg, #284a34, #203b2b);
-    border-color: #3b6147;
-  }
-  html[data-theme="dark"] .stat-box {
-    background: linear-gradient(145deg, #22382a, #1e3025);
-    border-color: #344d3b;
-  }
-  html[data-theme="dark"] .stat-box .label,
-  html[data-theme="dark"] .results-section-title,
-  html[data-theme="dark"] .result-card .rc-cell .lbl,
-  html[data-theme="dark"] .comments-block .comment-label,
-  html[data-theme="dark"] .cert-signature .sig-label {
-    color: #b5c7b9 !important;
-  }
-  html[data-theme="dark"] .result-table th {
-    color: #d6eadb;
-    background: #263a2c;
-  }
-  html[data-theme="dark"] .result-table td {
-    color: #dce9df;
-    border-bottom-color: #2b3b30;
-  }
-  html[data-theme="dark"] .result-table tbody tr:hover td { background: #203027; }
-  html[data-theme="dark"] .result-card {
-    background: #1d2b22;
-    border-color: #34483a;
-    box-shadow: 0 3px 12px rgba(0,0,0,.12);
-  }
-  html[data-theme="dark"] .result-card .rc-head { border-bottom-color: #34483a; }
-  html[data-theme="dark"] .result-card .rc-cell .val { color: #dce9df; }
-  html[data-theme="dark"] .grade-A,
-  html[data-theme="dark"] .grade-B {
-    color: #a8edbd;
-    background: #244632;
-  }
-  html[data-theme="dark"] .grade-C,
-  html[data-theme="dark"] .grade-D,
-  html[data-theme="dark"] .grade-E {
-    color: #f4d68a;
-    background: #46391f;
-  }
-  html[data-theme="dark"] .grade-F {
-    color: #ffb4ad;
-    background: #482a28;
-  }
-  html[data-theme="dark"] .comments-block p.comment-text { color: #dce9df; }
-  html[data-theme="dark"] .cert-footer { border-top-color: #34463a; }
-  html[data-theme="dark"] .cert-signature .sig-line { border-bottom-color: #64796a; }
-  html[data-theme="dark"] .verification-box {
-    background: linear-gradient(145deg, #202e25, #1b2921);
-    border-color: #465d4c;
-  }
-  html[data-theme="dark"] .verification-box p { color: #b6c7ba; }
-  html[data-theme="dark"] #qrcode {
-    background: #fff;
-    box-shadow: 0 2px 10px rgba(0,0,0,.25);
-  }
-  html[data-theme="dark"] .empty-term-btn > div > span:first-child { color: #d9eee0 !important; }
-  html[data-theme="dark"] :where(button, input, select):focus-visible {
-    outline-color: rgba(139,220,164,.48);
-  }
-
-  @media (max-width: 600px) {
-    .school-header { padding-top: 46px; }
-    .school-header .crest { width: 56px; height: 56px; }
-    .card { padding: 24px 19px; }
-    #resultView { padding: 26px 19px 22px; }
-    .theme-toggle { top: 0; right: 0; }
-  }
-  @media (max-width: 390px) {
-    .theme-toggle { min-height: 33px; padding: 6px 10px; font-size: 10px; }
-    .school-header { padding-left: 4px; padding-right: 4px; }
-    .result-actions { flex-direction: column; }
-    .result-actions button { width: 100%; }
-  }
-  @media (hover: none) {
-    button:hover { transform: none; }
-  }
-  @media print {
-    html, html[data-theme="dark"], body {
-      color-scheme: light !important;
-      background: #fff !important;
-      color: #000 !important;
-    }
-    .theme-toggle { display: none !important; }
-    .card { background: #fff !important; }
-  }
-
-
-
-  /* ============================================================
-     RESULTPRO — PRINT-OPTIMIZED A4 RESULT SHEET
-     Designed for up to 15 subjects with the verification QR code.
-     Screen layout and application logic are not changed.
-     ============================================================ */
-  @media print {
-    @page {
-      size: A4 portrait;
-      margin: 8mm;
-    }
-
-    html, body {
-      width: 100% !important;
-      min-width: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      background: #fff !important;
-      color: #111 !important;
-      font-size: 8pt !important;
-      line-height: 1.2 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    *, *::before, *::after {
-      animation: none !important;
-      transition: none !important;
-      box-shadow: none !important;
-      text-shadow: none !important;
-    }
-
-    .wrap {
-      width: 100% !important;
-      max-width: none !important;
-      min-width: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    .school-header, .theme-toggle,
-    #loginView, #loadingView, #emptyState, #releaseCountdown,
-    .session-banner, .result-actions, .result-cards {
-      display: none !important;
-    }
-
-    #resultView, #resultView.card {
-      display: block !important;
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      border: 0 !important;
-      border-radius: 0 !important;
-      background: #fff !important;
-      overflow: visible !important;
-    }
-
-    /* School identity */
-    .cert-header {
-      display: block !important;
-      margin: 0 0 3mm !important;
-      padding: 0 0 2.5mm !important;
-      text-align: center !important;
-      border-bottom: 1.2pt solid #25382c !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-    }
-    .cert-header .cert-crest {
-      display: flex !important;
-      width: 13mm !important;
-      height: 13mm !important;
-      margin: 0 auto 1.5mm !important;
-      border: .8pt solid #555 !important;
-      border-radius: 50% !important;
-      background: #fff !important;
-      color: #111 !important;
-    }
-    .cert-header .cert-crest img {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: contain !important;
+      margin: 0 auto 1mm;
+      border-radius: 50%;
     }
     .cert-header .cert-school {
-      margin: 0 !important;
-      color: #111 !important;
-      font-size: 15pt !important;
-      line-height: 1.12 !important;
-      font-weight: 800 !important;
+      font-size: 13pt;
+      color: #000 !important;
+      margin: 0;
+      line-height: 1.15;
     }
     .cert-header .cert-title {
-      margin: 1mm 0 0 !important;
-      color: #333 !important;
-      font-size: 7pt !important;
-      letter-spacing: 1.5pt !important;
+      font-size: 7pt;
+      color: #444 !important;
+      margin: 0.8mm 0 0;
+      letter-spacing: 1.5pt;
     }
     .cert-header .cert-term {
-      margin: 1mm 0 0 !important;
+      font-size: 8.5pt;
       color: #222 !important;
-      font-size: 8.5pt !important;
-      font-weight: 700 !important;
+      margin: 0.6mm 0 0;
     }
 
-    /* Student identity */
+    /* ---- Identity ---- */
     .cert-identity {
-      display: flex !important;
-      align-items: center !important;
-      gap: 3mm !important;
-      margin: 0 0 2.5mm !important;
-      padding: 0 0 2.5mm !important;
-      border-bottom: .6pt solid #aaa !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
+      margin-bottom: 2.5mm;
+      padding-bottom: 2mm;
+      border-bottom: 0.6pt solid #999 !important;
+      gap: 3mm;
+      align-items: center;
     }
     .cert-identity .avatar {
-      flex: 0 0 12mm !important;
-      width: 12mm !important;
-      height: 12mm !important;
-      border: .6pt solid #999 !important;
-      border-radius: 2mm !important;
-      background: #f1f1f1 !important;
-      color: #111 !important;
+      width: 11mm;
+      height: 11mm;
+      border: 0.6pt solid #999 !important;
+      background: #f2f2f2 !important;
+      color: #000 !important;
+      border-radius: 1.5mm;
+      font-size: 8pt;
     }
     .cert-identity .ci-name {
-      margin: 0 !important;
-      color: #111 !important;
-      font-size: 11pt !important;
-      line-height: 1.15 !important;
+      color: #000 !important;
+      font-size: 11pt;
+      margin: 0;
+      line-height: 1.2;
     }
     .cert-identity .ci-meta {
-      margin: .8mm 0 0 !important;
       color: #333 !important;
-      font-size: 7.5pt !important;
-      line-height: 1.25 !important;
+      font-size: 8pt;
+      margin: 0.5mm 0 0;
     }
 
-    /* Four compact summary figures */
+    /* ---- Stats: 4 columns, very tight ---- */
     .stat-grid {
       display: grid !important;
-      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      grid-template-columns: repeat(4, 1fr) !important;
       gap: 1.5mm !important;
-      margin: 0 0 2.5mm !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
+      margin-bottom: 2.5mm !important;
     }
     .stat-box {
-      min-width: 0 !important;
-      padding: 1.5mm 1.8mm !important;
-      border: .55pt solid #aaa !important;
+      border: 0.5pt solid #999 !important;
+      background: #f7f7f7 !important;
+      padding: 1.2mm 1.5mm !important;
       border-radius: 1mm !important;
-      background: #f7f8f7 !important;
     }
     .stat-box .label {
-      margin: 0 !important;
-      color: #444 !important;
-      font-size: 6.2pt !important;
-      line-height: 1.1 !important;
-      letter-spacing: .1pt !important;
+      color: #555 !important;
+      font-size: 6pt !important;
+      letter-spacing: 0.3pt;
+      margin: 0;
     }
     .stat-box .value {
-      margin: .7mm 0 0 !important;
-      color: #111 !important;
-      font-size: 9pt !important;
-      line-height: 1.1 !important;
-      font-weight: 800 !important;
+      color: #000 !important;
+      font-size: 8.5pt !important;
+      margin: 0.4mm 0 0 !important;
+      line-height: 1.15;
     }
 
+    /* ---- Section title ---- */
     .results-section-title {
-      margin: 0 0 1.2mm !important;
-      color: #222 !important;
       font-size: 7pt !important;
-      letter-spacing: .8pt !important;
-      text-transform: uppercase !important;
-      font-weight: 800 !important;
+      color: #333 !important;
+      margin: 0 0 1.2mm !important;
+      letter-spacing: 0.8pt;
     }
 
-    /* Seven-column marks table — compact enough for 15 subjects */
+    /* ---- Subject table (compact for 15 rows) ---- */
     .result-table {
       display: table !important;
       width: 100% !important;
-      margin: 0 0 2.2mm !important;
-      border-collapse: collapse !important;
-      table-layout: fixed !important;
-      font-size: 7.2pt !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
+      font-size: 7.5pt !important;
+      margin-bottom: 2mm !important;
+      border-collapse: collapse;
     }
-    .result-table thead { display: table-header-group !important; }
-    .result-table tbody { display: table-row-group !important; }
-    .result-table tr {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-    }
+    .result-table thead { display: table-header-group; }
+    .result-table tbody { display: table-row-group; }
     .result-table th {
-      padding: 1.25mm 1mm !important;
-      border: .5pt solid #777 !important;
-      background: #e9eeea !important;
-      color: #111 !important;
+      background: #e8e8e8 !important;
+      color: #000 !important;
+      padding: 1mm 1.2mm !important;
       font-size: 6.5pt !important;
-      line-height: 1.1 !important;
-      font-weight: 800 !important;
-      letter-spacing: 0 !important;
-      white-space: nowrap !important;
+      border-bottom: 0.6pt solid #666 !important;
+      white-space: nowrap;
     }
+    .result-table th:first-child { padding-left: 1.5mm !important; }
+    .result-table th:last-child { padding-right: 1.5mm !important; }
     .result-table td {
-      padding: 1.15mm 1mm !important;
-      border: .4pt solid #c7c7c7 !important;
-      color: #111 !important;
-      font-size: 7.2pt !important;
-      line-height: 1.12 !important;
-      vertical-align: middle !important;
-      overflow-wrap: anywhere !important;
+      padding: 0.85mm 1.2mm !important;
+      border-bottom: 0.4pt solid #ccc !important;
+      color: #000 !important;
+      font-size: 7.5pt !important;
+      line-height: 1.15;
+      vertical-align: middle;
     }
-    .result-table th:first-child,
-    .result-table td:first-child {
-      width: 34% !important;
-      padding-left: 1.8mm !important;
-      text-align: left !important;
-      font-weight: 700 !important;
-    }
-    .result-table th:nth-child(2), .result-table td:nth-child(2),
-    .result-table th:nth-child(3), .result-table td:nth-child(3),
-    .result-table th:nth-child(4), .result-table td:nth-child(4),
-    .result-table th:nth-child(5), .result-table td:nth-child(5),
-    .result-table th:nth-child(6), .result-table td:nth-child(6),
-    .result-table th:nth-child(7), .result-table td:nth-child(7) {
-      text-align: center !important;
-    }
+    .result-table td:first-child { padding-left: 1.5mm !important; font-weight: 700; }
+    .result-table td:last-child { padding-right: 1.5mm !important; }
+    .result-table tr:last-child td { border-bottom: 0.6pt solid #666 !important; }
+
     .grade-pill {
-      display: inline-block !important;
-      padding: .2mm 1mm !important;
-      border: .45pt solid #777 !important;
-      border-radius: 1mm !important;
-      background: #fff !important;
-      color: #111 !important;
+      border: 0.4pt solid #666 !important;
+      color: #000 !important;
+      background: transparent !important;
+      padding: 0.15mm 1mm !important;
       font-size: 6.5pt !important;
-      line-height: 1.1 !important;
+      border-radius: 0.8mm;
     }
 
-    /* Teacher and principal comments */
+    /* ---- Comments (compact) ---- */
     .comments-block {
       margin: 1.5mm 0 2mm !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
+      page-break-inside: avoid;
     }
     .comments-block .comment-label {
-      margin: 0 0 .6mm !important;
-      color: #444 !important;
+      color: #555 !important;
       font-size: 6.5pt !important;
-      letter-spacing: .35pt !important;
+      letter-spacing: 0.4pt;
+      margin: 0 0 0.5mm !important;
     }
     .comments-block p.comment-text {
-      margin: 0 0 1.5mm !important;
-      color: #111 !important;
-      font-size: 7.2pt !important;
-      line-height: 1.25 !important;
-      font-weight: 500 !important;
+      color: #000 !important;
+      font-size: 7.5pt !important;
+      margin: 0 0 1.2mm !important;
+      line-height: 1.25;
     }
 
-    /* Keep the verification QR on the same printed page */
-    .verification-box {
+    /* ---- QR + Footer on one horizontal band ---- */
+    .print-bottom {
       display: flex !important;
-      align-items: center !important;
-      justify-content: flex-start !important;
-      gap: 3mm !important;
-      width: fit-content !important;
-      max-width: 100% !important;
-      margin: 1.5mm 0 2mm auto !important;
-      padding: 1.5mm 2mm !important;
-      border: .5pt solid #aaa !important;
-      border-radius: 1.2mm !important;
-      background: #fff !important;
-      text-align: left !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 4mm;
+      margin-top: 2mm;
+      padding-top: 2mm;
+      border-top: 0.6pt solid #666 !important;
+      page-break-inside: avoid;
     }
-    .verification-box[style*="display: none"] {
-      display: none !important;
-    }
-    #qrcode {
+
+    .verification-box {
       display: block !important;
-      flex: 0 0 auto !important;
-      width: 27mm !important;
-      height: 27mm !important;
-      padding: 1mm !important;
-      border: .4pt solid #ddd !important;
-      border-radius: 0 !important;
-      background: #fff !important;
-    }
-    #qrcode canvas, #qrcode img {
-      display: block !important;
-      width: 25mm !important;
-      height: 25mm !important;
-      max-width: none !important;
-      image-rendering: pixelated !important;
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      text-align: left;
+      flex-shrink: 0;
     }
     .verification-box p {
-      max-width: 48mm !important;
-      margin: 0 !important;
-      color: #222 !important;
-      font-size: 6.8pt !important;
-      line-height: 1.25 !important;
-      overflow-wrap: anywhere !important;
+      color: #555 !important;
+      font-size: 6pt !important;
+      margin: 0.8mm 0 0 !important;
+      max-width: 28mm;
+      line-height: 1.2;
+    }
+    #qrcode {
+      display: inline-block !important;
+      box-shadow: none !important;
+      border: 0.5pt solid #ccc !important;
+      padding: 1mm !important;
+      background: #fff !important;
+      border-radius: 0 !important;
+    }
+    #qrcode img,
+    #qrcode canvas {
+      width: 22mm !important;
+      height: 22mm !important;
     }
 
-    /* Signature and issue date */
     .cert-footer {
       display: flex !important;
-      align-items: flex-end !important;
-      justify-content: space-between !important;
-      gap: 8mm !important;
-      margin: 2mm 0 0 !important;
-      padding: 2mm 0 0 !important;
-      border-top: .7pt solid #777 !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
+      flex: 1;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      gap: 4mm;
     }
-    .cert-signature { flex: 1 1 auto !important; }
     .cert-signature .sig-line {
+      border-bottom: 0.75pt solid #000 !important;
       height: 7mm !important;
-      margin: 0 0 1mm !important;
-      border-bottom: .7pt solid #222 !important;
+      margin-bottom: 0.6mm !important;
+      min-width: 35mm;
     }
     .cert-signature .sig-label {
-      margin: 0 !important;
-      color: #111 !important;
+      color: #000 !important;
       font-size: 6.5pt !important;
+      margin: 0;
     }
     .cert-signature .sig-sub {
-      margin: .5mm 0 0 !important;
-      color: #444 !important;
-      font-size: 6.5pt !important;
+      color: #555 !important;
+      font-size: 7pt !important;
+      margin: 0.3mm 0 0 !important;
     }
     .cert-issued {
-      color: #444 !important;
+      color: #555 !important;
       font-size: 6.5pt !important;
-      line-height: 1.2 !important;
+      text-align: right;
+      line-height: 1.25;
     }
     .cert-issued .ci-date {
-      color: #111 !important;
-      font-size: 7.5pt !important;
+      color: #000 !important;
+      font-size: 8pt !important;
     }
   }
-
-
-
-  /* ============================================================
-     PRINT CORRECTIONS — DARK, LEGIBLE TEXT + STABLE QR POSITION
-     Overrides animation fill-states and prevents QR canvas/image
-     from stacking vertically in print engines.
-     ============================================================ */
-  @media print {
-    /* Some animated certificate elements retain their initial
-       opacity:0 when printing. Explicitly reset every descendant. */
-    #resultView, #resultView *, #resultView *::before, #resultView *::after {
-      animation: none !important;
-      transition: none !important;
-      transform: none !important;
-      opacity: 1 !important;
-      filter: none !important;
-      text-shadow: none !important;
-    }
-
-    #resultView,
-    #resultView p,
-    #resultView span,
-    #resultView div,
-    #resultView td,
-    #resultView th,
-    #resultView label {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    .cert-header .cert-school,
-    .cert-header .cert-term,
-    .cert-identity .ci-name,
-    .cert-identity .ci-meta,
-    .stat-box .label,
-    .stat-box .value,
-    .results-section-title,
-    .comments-block .comment-label,
-    .comments-block p.comment-text,
-    .cert-signature .sig-label,
-    .cert-signature .sig-sub,
-    .cert-issued,
-    .cert-issued .ci-date,
-    .verification-caption {
-      color: #111 !important;
-      opacity: 1 !important;
-      -webkit-text-fill-color: #111 !important;
-    }
-
-    .cert-header .cert-title,
-    .cert-identity .ci-meta,
-    .stat-box .label,
-    .comments-block .comment-label,
-    .cert-signature .sig-sub,
-    .cert-issued {
-      color: #333 !important;
-      -webkit-text-fill-color: #333 !important;
-    }
-
-    .verification-box {
-      display: flex !important;
-      position: relative !important;
-      float: none !important;
-      clear: both !important;
-      align-items: center !important;
-      justify-content: center !important;
-      width: 29mm !important;
-      min-width: 29mm !important;
-      max-width: 29mm !important;
-      min-height: 29mm !important;
-      height: 29mm !important;
-      box-sizing: border-box !important;
-      margin: 2mm 0 0 auto !important;
-      padding: 1mm !important;
-      overflow: hidden !important;
-      border: .6pt solid #888 !important;
-      background: #fff !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-    }
-
-    #qrcode {
-      position: relative !important;
-      display: block !important;
-      flex: 0 0 27mm !important;
-      width: 27mm !important;
-      min-width: 27mm !important;
-      max-width: 27mm !important;
-      height: 27mm !important;
-      min-height: 27mm !important;
-      max-height: 27mm !important;
-      box-sizing: border-box !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      overflow: hidden !important;
-      border: .4pt solid #ddd !important;
-      background: #fff !important;
-    }
-
-    /* QRCode.js may create both a canvas and an image. Overlay them
-       in the same square instead of letting them add height. */
-    #qrcode canvas,
-    #qrcode img {
-      position: absolute !important;
-      inset: 0 !important;
-      display: block !important;
-      width: 100% !important;
-      height: 100% !important;
-      max-width: 100% !important;
-      max-height: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      object-fit: contain !important;
-      image-rendering: pixelated !important;
-      background: #fff !important;
-    }
-
-    .verification-caption {
-      display: block !important;
-      width: 62mm !important;
-      max-width: 62mm !important;
-      margin: 1mm 0 2mm auto !important;
-      color: #111 !important;
-      font-size: 6.5pt !important;
-      line-height: 1.2 !important;
-      font-weight: 700 !important;
-      text-align: right !important;
-      -webkit-text-fill-color: #111 !important;
-    }
-
-    .cert-footer {
-      position: relative !important;
-      clear: both !important;
-      margin-top: 1mm !important;
-      padding-top: 2mm !important;
-      border-top: .7pt solid #555 !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-    }
-  }
-
 </style>
-<script>
-  (function () {
-    try {
-      const saved = localStorage.getItem('resultpro_theme');
-      if (saved === 'dark' || saved === 'light') {
-        document.documentElement.dataset.theme = saved;
-      }
-    } catch (e) {}
-  })();
-</script>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="school-header">
-    <div class="crest" id="headerCrest">GS</div>
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+    </svg>
+  </button>
+
+  <header class="school-header" role="banner">
+    <div class="crest" id="headerCrest" aria-hidden="true">GS</div>
     <h1 id="headerSchoolName">ResultPro Academy</h1>
     <p id="headerSchoolMotto">Student result portal</p>
     <div class="school-details" id="headerSchoolDetails"></div>
-    <button type="button" class="theme-toggle" id="themeToggle"
-            onclick="toggleTheme()" aria-label="Switch to dark mode"
-            aria-pressed="false">
-      <span class="theme-toggle-icon" id="themeIcon" aria-hidden="true">☾</span>
-      <span id="themeText">Dark mode</span>
-    </button>
-  </div>
+  </header>
 
   <!-- LOGIN VIEW -->
-  <div class="card" id="loginView">
-    <h2>Check your result</h2>
-    <div class="error-msg" id="loginError"></div>
+  <main>
+    <section class="card" id="loginView" aria-labelledby="loginHeading">
+      <h2 id="loginHeading">Check your result</h2>
+      <div class="error-msg" id="loginError" role="alert" aria-live="assertive" aria-hidden="true"></div>
 
-    <!-- Session banner: appears when a student was remembered -->
-    <div class="session-banner" id="sessionBanner">
-      <span class="sb-name" id="sessionName">—</span>
-      <button class="sb-signout" onclick="signOut()">Sign out</button>
-    </div>
+      <!-- Session banner -->
+      <div class="session-banner" id="sessionBanner" aria-hidden="true">
+        <span class="sb-name" id="sessionName">—</span>
+        <button type="button" class="sb-signout" onclick="signOut()" aria-label="Sign out and clear remembered student">Sign out</button>
+      </div>
 
-    <div id="identityFields">
-      <label for="admissionNo">Admission number</label>
-      <input type="text" id="admissionNo" placeholder="e.g. 245" autocomplete="off" />
+      <form id="resultForm" onsubmit="event.preventDefault(); checkResult();" novalidate>
+        <div id="identityFields">
+          <label for="admissionNo">Admission number</label>
+          <input type="text" id="admissionNo" name="admissionNo" placeholder="e.g. 245" autocomplete="off" inputmode="text" aria-required="true" />
 
-      <label for="surname">Surname</label>
-      <input type="text" id="surname" placeholder="e.g. Johnson" autocomplete="off" />
-    </div>
+          <label for="surname">Surname</label>
+          <input type="text" id="surname" name="surname" placeholder="e.g. Johnson" autocomplete="family-name" aria-required="true" />
+        </div>
 
-    <label for="resultType">Which result</label>
-    <select id="resultType" style="margin-bottom:14px;" onchange="togglePinField()">
-      <option value="fullterm">Full term result</option>
-      <option value="midterm">Mid-term result</option>
-    </select>
-
-    <div id="pinFieldWrap">
-      <label for="pinCode">Result PIN</label>
-      <input type="text" id="pinCode" placeholder="e.g. K6HWPL2N2" style="margin-bottom:14px;" autocomplete="off" />
-    </div>
-
-    <div class="row">
-      <div>
-        <label for="termSelect">Term</label>
-        <select id="termSelect" onchange="checkReleaseCountdown()">
-          <option>First Term</option>
-          <option>Second Term</option>
-          <option>Third Term</option>
+        <label for="resultType">Which result</label>
+        <select id="resultType" name="resultType" onchange="togglePinField()" aria-describedby="pinHint">
+          <option value="fullterm">Full term result</option>
+          <option value="midterm">Mid-term result</option>
         </select>
+
+        <div id="pinFieldWrap">
+          <label for="pinCode">Result PIN</label>
+          <input type="text" id="pinCode" name="pinCode" placeholder="e.g. K6HWPL2N2" autocomplete="off" spellcheck="false" aria-required="true" />
+          <p class="field-hint" id="pinHint">Required for full-term results. Your school issued this PIN.</p>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="termSelect">Term</label>
+            <select id="termSelect" name="term" onchange="checkReleaseCountdown()">
+              <option value="First Term">First Term</option>
+              <option value="Second Term">Second Term</option>
+              <option value="Third Term">Third Term</option>
+            </select>
+          </div>
+          <div>
+            <label for="sessionInput">Session</label>
+            <input type="text" id="sessionInput" name="session" placeholder="2026/2027" value="2026/2027" onchange="checkReleaseCountdown()" oninput="checkReleaseCountdown()" autocomplete="off" aria-required="true" />
+          </div>
+        </div>
+
+        <p id="releaseCountdown" aria-live="polite" aria-hidden="true"></p>
+        <button type="submit" id="loginBtn">View result</button>
+      </form>
+    </section>
+
+    <!-- LOADING / SKELETON -->
+    <section class="card skeleton-card" id="loadingView" style="display:none;" aria-live="polite" aria-busy="true" aria-label="Loading result">
+      <div class="skel skel-crest"></div>
+      <div class="skel skel-line med"></div>
+      <div class="skel skel-line short" style="margin-bottom:20px;"></div>
+      <div class="skel-identity">
+        <div class="skel skel-avatar"></div>
+        <div style="flex:1;">
+          <div class="skel skel-line long" style="margin-bottom:8px;"></div>
+          <div class="skel skel-line short"></div>
+        </div>
       </div>
-      <div>
-        <label for="sessionInput">Session</label>
-        <input type="text" id="sessionInput" placeholder="2026/2027" value="2026/2027" onchange="checkReleaseCountdown()" oninput="checkReleaseCountdown()" />
+      <div class="skel-stats">
+        <div class="skel skel-stat"></div>
+        <div class="skel skel-stat"></div>
+        <div class="skel skel-stat"></div>
+        <div class="skel skel-stat"></div>
       </div>
-    </div>
+      <div class="skel skel-row"></div>
+      <div class="skel skel-row"></div>
+      <div class="skel skel-row"></div>
+      <div class="skel skel-row" style="width:70%;"></div>
+      <p class="loading-status">Fetching your result…</p>
+    </section>
 
-    <p id="releaseCountdown" style="font-size:12px; color:var(--warn); margin:0 0 14px; display:none; font-weight:800;"></p>
-    <button id="loginBtn" onclick="checkResult()">View result</button>
-  </div>
+    <!-- EMPTY STATE -->
+    <section class="card" id="emptyState" style="display:none;" aria-labelledby="emptyHeading">
+      <h2 id="emptyHeading" style="margin-bottom:14px;">No result found</h2>
+      <p class="empty-state-msg" id="emptyMessage">
+        There are no results yet for the term and session you selected.
+      </p>
+      <div id="emptyTermList" role="list"></div>
+      <button type="button" class="secondary" onclick="backToLogin()" style="margin-top:16px;">Try a different term</button>
+    </section>
 
-  <!-- LOADING -->
-  <div class="card" id="loadingView" style="display:none;">
-    <p class="loading">Fetching result…</p>
-  </div>
-
-  <!-- EMPTY STATE -->
-  <div class="card" id="emptyState" style="display:none;">
-    <h2 style="margin-bottom:14px;">No result found</h2>
-    <p id="emptyMessage" style="font-size:13px; color:var(--text-soft); margin:0 0 18px; font-weight:600;">
-      There are no results yet for the term and session you selected.
-    </p>
-    <div id="emptyTermList"></div>
-    <button class="secondary" onclick="backToLogin()" style="margin-top:16px;">Try a different term</button>
-  </div>
-
-  <!-- RESULT VIEW (certificate) -->
-  <div class="card" id="resultView">
-
-    <div class="cert-header">
-      <div class="cert-crest" id="certCrest">GS</div>
-      <p class="cert-school" id="certSchoolName">ResultPro Academy</p>
-      <p class="cert-title">Official Result</p>
-      <p class="cert-term" id="certTermLine">—</p>
-    </div>
-
-    <div class="cert-identity">
-      <div class="avatar" id="studentAvatar">--</div>
-      <div>
-        <p class="ci-name" id="studentName">—</p>
-        <p class="ci-meta" id="studentMeta">—</p>
+    <!-- RESULT VIEW -->
+    <section class="card" id="resultView" aria-labelledby="certTitle">
+      <div class="cert-header">
+        <div class="cert-crest" id="certCrest" aria-hidden="true">GS</div>
+        <p class="cert-school" id="certSchoolName">ResultPro Academy</p>
+        <p class="cert-title" id="certTitle">Official Result</p>
+        <p class="cert-term" id="certTermLine">—</p>
       </div>
-    </div>
 
-    <div class="stat-grid">
-      <div class="stat-box">
-        <p class="label" id="statTotalLabel">Total score</p>
-        <p class="value" id="statTotal">—</p>
+      <div class="cert-identity">
+        <div class="avatar" id="studentAvatar" aria-hidden="true">--</div>
+        <div>
+          <p class="ci-name" id="studentName">—</p>
+          <p class="ci-meta" id="studentMeta">—</p>
+        </div>
       </div>
-      <div class="stat-box">
-        <p class="label" id="statAverageLabel">Average</p>
-        <p class="value" id="statAverage">—</p>
+
+      <div class="stat-grid" role="group" aria-label="Result summary">
+        <div class="stat-box">
+          <p class="label" id="statTotalLabel">Total score</p>
+          <p class="value" id="statTotal">—</p>
+        </div>
+        <div class="stat-box">
+          <p class="label" id="statAverageLabel">Average</p>
+          <p class="value" id="statAverage">—</p>
+        </div>
+        <div class="stat-box">
+          <p class="label" id="statPositionLabel">Class position</p>
+          <p class="value" id="statPosition">—</p>
+        </div>
+        <div class="stat-box">
+          <p class="label" id="statAttendanceLabel">Attendance</p>
+          <p class="value" id="statAttendance">—</p>
+        </div>
       </div>
-      <div class="stat-box">
-        <p class="label" id="statPositionLabel">Class position</p>
-        <p class="value" id="statPosition">—</p>
+
+      <p class="results-section-title" id="subjectsHeading">Subject breakdown</p>
+
+      <table class="result-table" aria-labelledby="subjectsHeading">
+        <thead>
+          <tr>
+            <th scope="col">Subject</th>
+            <th class="num" scope="col">CA</th>
+            <th class="num" scope="col">Exam</th>
+            <th class="num" scope="col">Total</th>
+            <th class="num" scope="col">Highest</th>
+            <th class="num" scope="col">Pos</th>
+            <th class="num" scope="col">Grade</th>
+          </tr>
+        </thead>
+        <tbody id="subjectsBody"></tbody>
+      </table>
+
+      <div class="result-cards" id="subjectsCards" role="list" aria-labelledby="subjectsHeading"></div>
+
+      <div class="comments-block" id="commentsBlock"></div>
+
+      <div class="print-bottom">
+        <div class="verification-box" id="verificationBox" style="display:none;" role="region" aria-label="Result verification">
+          <div id="qrcode" role="img" aria-label="QR code to verify this result"></div>
+          <p id="pinUsageText"></p>
+        </div>
+
+        <div class="cert-footer">
+          <div class="cert-signature">
+            <div class="sig-line" aria-hidden="true"></div>
+            <p class="sig-label">Principal's signature</p>
+            <p class="sig-sub" id="sigSchoolName">ResultPro Academy</p>
+          </div>
+          <div class="cert-issued">
+            Issued on<br>
+            <span class="ci-date" id="issuedDate">—</span>
+          </div>
+        </div>
       </div>
-      <div class="stat-box">
-        <p class="label" id="statAttendanceLabel">Attendance</p>
-        <p class="value" id="statAttendance">—</p>
+
+      <div class="result-actions" style="margin-top:24px;">
+        <button type="button" class="secondary" onclick="window.print()">Print / Save as PDF</button>
+        <button type="button" class="secondary" onclick="backToLogin()">Check another result</button>
       </div>
-    </div>
-
-    <p class="results-section-title">Subject breakdown</p>
-
-    <!-- Desktop / print: table -->
-    <table class="result-table">
-      <thead>
-        <tr>
-          <th>Subject</th>
-          <th class="num">CA</th>
-          <th class="num">Exam</th>
-          <th class="num">Total</th>
-          <th class="num">Highest</th>
-          <th class="num">Pos</th>
-          <th class="num">Grade</th>
-        </tr>
-      </thead>
-      <tbody id="subjectsBody"></tbody>
-    </table>
-
-    <!-- Mobile: cards -->
-    <div class="result-cards" id="subjectsCards"></div>
-
-    <div class="comments-block" id="commentsBlock"></div>
-
-    <div class="verification-box" id="verificationBox" style="display:none;">
-      <div id="qrcode"></div>
-    </div>
-    <p class="verification-caption" id="pinUsageText"></p>
-
-    <div class="cert-footer">
-      <div class="cert-signature">
-        <div class="sig-line"></div>
-        <p class="sig-label">Principal's signature</p>
-        <p class="sig-sub" id="sigSchoolName">ResultPro Academy</p>
-      </div>
-      <div class="cert-issued">
-        Issued on<br>
-        <span class="ci-date" id="issuedDate">—</span>
-      </div>
-    </div>
-
-    <div class="result-actions" style="margin-top:24px;">
-      <button class="secondary" onclick="window.print()">Print / Save as PDF</button>
-      <button class="secondary" onclick="backToLogin()">Check another result</button>
-    </div>
-  </div>
-
+    </section>
+  </main>
 </div>
 
 <script>
+  const API_BASE = window.location.origin;
+  const SESSION_KEY = 'resultpro_student_session_v1';
+  const THEME_KEY = 'resultpro_theme';
+  let releaseCountdownInterval = null;
+  let currentSchoolBranding = null;
+  let lastFocusedElement = null;
+
   // ============================================================
-  // Theme preference — independent of student login/session data
+  // Theme (dark mode)
   // ============================================================
   function applyTheme(theme) {
-    const selected = theme === 'dark' ? 'dark' : 'light';
-    document.documentElement.dataset.theme = selected;
-
-    const isDark = selected === 'dark';
-    const icon = document.getElementById('themeIcon');
-    const label = document.getElementById('themeText');
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+    } else if (theme === 'light') {
+      root.setAttribute('data-theme', 'light');
+    } else {
+      root.removeAttribute('data-theme');
+    }
+    const meta = document.getElementById('themeColorMeta');
+    if (meta) {
+      const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      meta.setAttribute('content', isDark ? '#0f1612' : '#176345');
+    }
     const toggle = document.getElementById('themeToggle');
-
-    if (icon) icon.textContent = isDark ? '☀' : '☾';
-    if (label) label.textContent = isDark ? 'Light mode' : 'Dark mode';
     if (toggle) {
+      const isDark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
       toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
-      toggle.setAttribute('aria-pressed', String(isDark));
+      toggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
     }
   }
 
   function toggleTheme() {
-    const current = document.documentElement.dataset.theme || 'light';
-    const next = current === 'dark' ? 'light' : 'dark';
+    const current = document.documentElement.getAttribute('data-theme');
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let next;
+    if (current === 'dark') {
+      next = 'light';
+    } else if (current === 'light') {
+      next = 'dark';
+    } else {
+      next = systemDark ? 'light' : 'dark';
+    }
+    localStorage.setItem(THEME_KEY, next);
     applyTheme(next);
-    try {
-      localStorage.setItem('resultpro_theme', next);
-    } catch (e) {}
   }
 
-  // Keep light mode as the first-visit default; restore a saved choice.
-  (function initializeTheme() {
-    let saved = 'light';
-    try {
-      saved = localStorage.getItem('resultpro_theme') || 'light';
-    } catch (e) {}
-    applyTheme(saved);
+  // Apply stored preference immediately to avoid flash
+  (function initTheme() {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === 'light' || stored === 'dark') {
+      applyTheme(stored);
+    } else {
+      const meta = document.getElementById('themeColorMeta');
+      if (meta && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        meta.setAttribute('content', '#0f1612');
+      }
+    }
   })();
 
-  const API_BASE = window.location.origin;
-  const SESSION_KEY = 'resultpro_student_session';
-  let releaseCountdownInterval;
-  let currentSchoolBranding = null;
+  // ============================================================
+  // Utilities
+  // ============================================================
+  function $(id) { return document.getElementById(id); }
+
+  function getInitials(name) {
+    if (!name) return '--';
+    return name.split(/\s+/).filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  function getPhotoUrl(photoUrl) {
+    if (!photoUrl) return '';
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) return photoUrl;
+    return `${API_BASE}${photoUrl}`;
+  }
+
+  function setVisible(el, visible) {
+    if (!el) return;
+    el.style.display = visible ? '' : 'none';
+    if (el.hasAttribute('aria-hidden')) {
+      el.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    }
+  }
+
+  function announce(message) {
+    // Reuse the error region briefly for polite announcements if needed
+    const live = $('loginError');
+    if (!live) return;
+  }
 
   // ============================================================
-  // Session persistence — remember the logged-in student so that
-  // re-trying a PIN or checking another term is a one-field flow.
+  // Session persistence
   // ============================================================
   function getSessionStudent() {
     try {
@@ -1857,41 +1553,87 @@
       return raw ? JSON.parse(raw) : null;
     } catch (e) { return null; }
   }
+
   function setSessionStudent(student) {
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(student));
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        id: student.id,
+        admission_no: student.admission_no,
+        surname: student.surname,
+        first_name: student.first_name || student.name?.split(' ')[0] || ''
+      }));
     } catch (e) {}
   }
+
   function clearSessionStudent() {
     try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
   }
 
   function applySessionStudent() {
     const student = getSessionStudent();
-    const banner = document.getElementById('sessionBanner');
-    const identityFields = document.getElementById('identityFields');
+    const banner = $('sessionBanner');
+    const identityFields = $('identityFields');
 
     if (student) {
+      banner.setAttribute('aria-hidden', 'false');
       banner.style.display = 'flex';
-      document.getElementById('sessionName').textContent =
-        `Checking as ${student.surname} ${student.first_name || ''}`.trim();
+      $('sessionName').textContent = `Checking as ${student.surname} ${student.first_name || ''}`.trim();
       identityFields.style.display = 'none';
+      // Make PIN and term the primary focus path
+      $('admissionNo').removeAttribute('aria-required');
+      $('surname').removeAttribute('aria-required');
     } else {
+      banner.setAttribute('aria-hidden', 'true');
       banner.style.display = 'none';
       identityFields.style.display = 'block';
+      $('admissionNo').setAttribute('aria-required', 'true');
+      $('surname').setAttribute('aria-required', 'true');
     }
   }
 
   function signOut() {
     clearSessionStudent();
-    document.getElementById('admissionNo').value = '';
-    document.getElementById('surname').value = '';
-    document.getElementById('pinCode').value = '';
+    $('admissionNo').value = '';
+    $('surname').value = '';
+    $('pinCode').value = '';
     applySessionStudent();
+    $('admissionNo').focus();
   }
 
   // ============================================================
-  // Initial load — branding + active term/session
+  // Branding
+  // ============================================================
+  function updateSchoolHeader(school) {
+    if (!school) return;
+    if (school.school_name) {
+      $('headerSchoolName').textContent = school.school_name;
+      $('certSchoolName').textContent = school.school_name;
+      $('sigSchoolName').textContent = school.school_name;
+      document.title = `${school.school_name} — Check Your Result`;
+    }
+    if (school.motto) {
+      $('headerSchoolMotto').textContent = school.motto;
+    }
+    const detailsParts = [];
+    if (school.school_address) detailsParts.push(school.school_address);
+    if (school.school_phone) detailsParts.push(`Phone: ${school.school_phone}`);
+    if (school.school_email) detailsParts.push(`Email: ${school.school_email}`);
+    $('headerSchoolDetails').innerHTML = detailsParts.length > 0 ? detailsParts.join(' · ') : '';
+
+    const setCrest = (el) => {
+      if (!el) return;
+      if (school.logo_url) {
+        el.innerHTML = `<img src="${getPhotoUrl(school.logo_url)}" alt="" />`;
+      } else if (school.school_name) {
+        el.textContent = school.school_name.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      }
+    };
+    setCrest($('headerCrest'));
+    setCrest($('certCrest'));
+  }
+
+  // ============================================================
+  // Initial load
   // ============================================================
   async function fetchInitialContext() {
     try {
@@ -1911,20 +1653,20 @@
       if (activeRes.ok) {
         const active = await activeRes.json();
         if (active.term) {
-          const termSelect = document.getElementById('termSelect');
-          const matchingOption = Array.from(termSelect.options).find(o => o.value === active.term);
-          if (matchingOption) {
-            termSelect.value = active.term;
+          const termSelect = $('termSelect');
+          const matching = Array.from(termSelect.options).find(o => o.value === active.term || o.textContent === active.term);
+          if (matching) {
+            termSelect.value = matching.value;
           } else {
-            const newOpt = document.createElement('option');
-            newOpt.value = active.term;
-            newOpt.textContent = active.term;
-            termSelect.appendChild(newOpt);
+            const opt = document.createElement('option');
+            opt.value = active.term;
+            opt.textContent = active.term;
+            termSelect.appendChild(opt);
             termSelect.value = active.term;
           }
         }
         if (active.session) {
-          document.getElementById('sessionInput').value = active.session;
+          $('sessionInput').value = active.session;
         }
         checkReleaseCountdown();
       }
@@ -1933,86 +1675,53 @@
     }
   }
 
-  function updateSchoolHeader(school) {
-    if (!school) return;
-    if (school.school_name) {
-      document.getElementById('headerSchoolName').textContent = school.school_name;
-      document.getElementById('certSchoolName').textContent = school.school_name;
-      document.getElementById('sigSchoolName').textContent = school.school_name;
-    }
-    if (school.motto) {
-      document.getElementById('headerSchoolMotto').textContent = school.motto;
-    }
-    const detailsParts = [];
-    if (school.school_address) detailsParts.push(school.school_address);
-    if (school.school_phone) detailsParts.push(`Phone: ${school.school_phone}`);
-    if (school.school_email) detailsParts.push(`Email: ${school.school_email}`);
-    const detailsEl = document.getElementById('headerSchoolDetails');
-    detailsEl.innerHTML = detailsParts.length > 0 ? detailsParts.join(' &middot; ') : '';
-
-    // Header crest
-    const headerCrest = document.getElementById('headerCrest');
-    if (school.logo_url) {
-      headerCrest.innerHTML = `<img src="${getPhotoUrl(school.logo_url)}" alt="Logo" />`;
-    } else if (school.school_name) {
-      headerCrest.textContent = school.school_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    }
-
-    // Certificate crest
-    const certCrest = document.getElementById('certCrest');
-    if (school.logo_url) {
-      certCrest.innerHTML = `<img src="${getPhotoUrl(school.logo_url)}" alt="Logo" />`;
-    } else if (school.school_name) {
-      certCrest.textContent = school.school_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    }
-  }
-
-  function getInitials(name) {
-    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  }
-  function getPhotoUrl(photoUrl) {
-    if (!photoUrl) return '';
-    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) return photoUrl;
-    return `${API_BASE}${photoUrl}`;
-  }
-
   // ============================================================
-  // PIN field visibility
+  // PIN field + release countdown
   // ============================================================
   function togglePinField() {
-    const isFullTerm = document.getElementById('resultType').value === 'fullterm';
-    document.getElementById('pinFieldWrap').style.display = isFullTerm ? 'block' : 'none';
+    const isFullTerm = $('resultType').value === 'fullterm';
+    const wrap = $('pinFieldWrap');
+    wrap.style.display = isFullTerm ? 'block' : 'none';
+    $('pinCode').setAttribute('aria-required', isFullTerm ? 'true' : 'false');
     checkReleaseCountdown();
   }
-  togglePinField();
 
-  // ============================================================
-  // Release countdown
-  // ============================================================
   async function checkReleaseCountdown() {
     clearInterval(releaseCountdownInterval);
-    const el = document.getElementById('releaseCountdown');
-    const isFullTerm = document.getElementById('resultType').value === 'fullterm';
-    const term = document.getElementById('termSelect').value;
-    const session = document.getElementById('sessionInput').value.trim();
+    const el = $('releaseCountdown');
+    const isFullTerm = $('resultType').value === 'fullterm';
+    const term = $('termSelect').value;
+    const session = $('sessionInput').value.trim();
+
     if (!isFullTerm || !session) {
       el.style.display = 'none';
+      el.setAttribute('aria-hidden', 'true');
       return;
     }
+
     try {
       const res = await fetch(`${API_BASE}/api/term-settings?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}`);
+      if (!res.ok) {
+        el.style.display = 'none';
+        el.setAttribute('aria-hidden', 'true');
+        return;
+      }
       const data = await res.json();
       const releaseAt = data.settings?.result_release_at;
       if (!releaseAt || new Date(releaseAt) <= new Date()) {
         el.style.display = 'none';
+        el.setAttribute('aria-hidden', 'true');
         return;
       }
+
       const releaseDate = new Date(releaseAt);
       el.style.display = 'block';
+      el.setAttribute('aria-hidden', 'false');
+
       function tick() {
         const diff = releaseDate - new Date();
         if (diff <= 0) {
-          el.textContent = `🎉 Results are now available!`;
+          el.textContent = '🎉 Results are now available!';
           clearInterval(releaseCountdownInterval);
           return;
         }
@@ -2026,6 +1735,7 @@
       releaseCountdownInterval = setInterval(tick, 1000);
     } catch (err) {
       el.style.display = 'none';
+      el.setAttribute('aria-hidden', 'true');
     }
   }
 
@@ -2033,47 +1743,99 @@
   // Error + validation
   // ============================================================
   function showError(message) {
-    const el = document.getElementById('loginError');
+    const el = $('loginError');
     el.textContent = message;
     el.style.display = 'block';
+    el.setAttribute('aria-hidden', 'false');
     el.style.animation = 'none';
     void el.offsetWidth;
     el.style.animation = '';
+    // Move focus for screen reader users
+    el.focus?.();
   }
+
   function hideError() {
-    document.getElementById('loginError').style.display = 'none';
+    const el = $('loginError');
+    el.style.display = 'none';
+    el.setAttribute('aria-hidden', 'true');
+    el.textContent = '';
   }
+
+  function markInvalid(id) {
+    const el = $(id);
+    if (!el) return;
+    el.classList.add('invalid');
+    const clear = () => el.classList.remove('invalid');
+    el.addEventListener('input', clear, { once: true });
+    el.addEventListener('change', clear, { once: true });
+  }
+
   function validateInputs(admissionNo, surname, session, resultType, pinCode, isLoggedIn) {
     let valid = true;
-    const markInvalid = (id) => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.classList.add('invalid');
-        el.addEventListener('input', () => el.classList.remove('invalid'), { once: true });
-        el.addEventListener('change', () => el.classList.remove('invalid'), { once: true });
-      }
-      valid = false;
-    };
     if (!isLoggedIn) {
-      if (!admissionNo) markInvalid('admissionNo');
-      if (!surname) markInvalid('surname');
+      if (!admissionNo) { markInvalid('admissionNo'); valid = false; }
+      if (!surname) { markInvalid('surname'); valid = false; }
     }
-    if (!session) markInvalid('sessionInput');
-    if (resultType === 'fullterm' && !pinCode) markInvalid('pinCode');
+    if (!session) { markInvalid('sessionInput'); valid = false; }
+    if (resultType === 'fullterm' && !pinCode) { markInvalid('pinCode'); valid = false; }
     return valid;
+  }
+
+  // ============================================================
+  // View management + focus
+  // ============================================================
+  function showView(viewId) {
+    ['loginView', 'loadingView', 'emptyState', 'resultView'].forEach(id => {
+      const el = $(id);
+      if (!el) return;
+      el.style.display = id === viewId ? (id === 'resultView' || id === 'loadingView' ? 'block' : 'block') : 'none';
+      if (id === viewId) {
+        el.classList.remove('view-enter');
+        void el.offsetWidth;
+        el.classList.add('view-enter');
+      }
+    });
+
+    // Focus management
+    requestAnimationFrame(() => {
+      if (viewId === 'loginView') {
+        const student = getSessionStudent();
+        if (student) {
+          $('pinCode')?.focus() || $('termSelect')?.focus();
+        } else {
+          $('admissionNo')?.focus();
+        }
+      } else if (viewId === 'resultView') {
+        $('resultView')?.querySelector('h2, .ci-name, .cert-title')?.focus?.();
+        // Prefer the student name for context
+        const nameEl = $('studentName');
+        if (nameEl) {
+          nameEl.setAttribute('tabindex', '-1');
+          nameEl.focus();
+        }
+      } else if (viewId === 'emptyState') {
+        $('emptyHeading')?.focus?.();
+      }
+    });
+  }
+
+  function enterResultView() {
+    const card = $('resultView');
+    if (!card) return;
+    card.classList.remove('view-enter');
+    void card.offsetWidth;
+    card.classList.add('view-enter');
   }
 
   // ============================================================
   // Empty state
   // ============================================================
   async function renderEmptyState(studentId, attemptedTerm, attemptedSession) {
-    const emptyState = document.getElementById('emptyState');
-    const message = document.getElementById('emptyMessage');
-    const termList = document.getElementById('emptyTermList');
-
+    const message = $('emptyMessage');
+    const termList = $('emptyTermList');
     message.textContent = `No results found for ${attemptedTerm}, ${attemptedSession}.`;
     termList.innerHTML = '';
-    emptyState.style.display = 'block';
+    showView('emptyState');
 
     try {
       const res = await fetch(`${API_BASE}/api/student/available-terms?student_id=${studentId}`);
@@ -2081,7 +1843,7 @@
       const data = await res.json();
 
       if (!data.terms || data.terms.length === 0) {
-        message.textContent = `You don't have any results available yet. Check back after ${data.active.term}, ${data.active.session} results are released.`;
+        message.textContent = `You don't have any results available yet. Check back after ${data.active?.term || 'the next'}, ${data.active?.session || ''} results are released.`;
         return;
       }
 
@@ -2100,13 +1862,15 @@
       }
 
       const intro = document.createElement('p');
-      intro.style.cssText = 'font-size:11px; color:#596c61; text-transform:uppercase; letter-spacing:.85px; font-weight:900; margin:0 0 8px;';
+      intro.style.cssText = 'font-size:11px; color:#4a5c53; text-transform:uppercase; letter-spacing:.85px; font-weight:900; margin:0 0 8px;';
       intro.textContent = 'Try one of these instead';
       termList.appendChild(intro);
 
       availableTerms.forEach(t => {
         const btn = document.createElement('button');
+        btn.type = 'button';
         btn.className = 'empty-term-btn';
+        btn.setAttribute('role', 'listitem');
         btn.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
             <span style="font-weight:800; color:var(--navy);">${t.term}, ${t.session}</span>
@@ -2117,10 +1881,9 @@
           </div>
         `;
         btn.onclick = () => {
-          document.getElementById('termSelect').value = t.term;
-          document.getElementById('sessionInput').value = t.session;
-          document.getElementById('emptyState').style.display = 'none';
-          document.getElementById('loginView').style.display = 'block';
+          $('termSelect').value = t.term;
+          $('sessionInput').value = t.session;
+          showView('loginView');
           checkReleaseCountdown();
         };
         termList.appendChild(btn);
@@ -2128,6 +1891,229 @@
     } catch (err) {
       console.error('Failed to load available terms:', err);
     }
+  }
+
+  // ============================================================
+  // Shared render helpers (DRY)
+  // ============================================================
+  function renderStudentIdentity(student) {
+    const avatarEl = $('studentAvatar');
+    if (student.photo_url) {
+      avatarEl.innerHTML = `<img src="${getPhotoUrl(student.photo_url)}" alt="" />`;
+    } else {
+      avatarEl.textContent = getInitials(student.name);
+    }
+    $('studentName').textContent = student.name || '—';
+    $('studentMeta').textContent = `${student.class || '—'} · Admission no. ${student.admission_no || '—'}`;
+  }
+
+  function renderSchoolCrestAndName(school) {
+    if (school?.school_name) {
+      $('certSchoolName').textContent = school.school_name;
+      $('sigSchoolName').textContent = school.school_name;
+    }
+    const crest = $('certCrest');
+    if (school?.logo_url) {
+      crest.innerHTML = `<img src="${getPhotoUrl(school.logo_url)}" alt="" />`;
+    } else if (school?.school_name) {
+      crest.textContent = school.school_name.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    }
+  }
+
+  function setIssuedDate() {
+    $('issuedDate').textContent = new Date().toLocaleDateString(undefined, {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
+
+  // ============================================================
+  // Full-term render
+  // ============================================================
+  function renderResult(data) {
+    showView('resultView');
+    enterResultView();
+
+    renderSchoolCrestAndName(data.school);
+    $('certTermLine').textContent = `${data.term}, ${data.session}`;
+    renderStudentIdentity(data.student);
+
+    // Stats
+    $('statTotalLabel').textContent = 'Total score';
+    $('statAverageLabel').textContent = 'Average';
+    $('statPositionLabel').textContent = 'Class position';
+    $('statAttendanceLabel').textContent = 'Attendance';
+    $('statTotal').textContent = `${data.summary?.total_score ?? '—'} / ${data.summary?.max_obtainable ?? '—'}`;
+    $('statAverage').textContent = data.summary?.average != null ? `${data.summary.average}%` : '—';
+    $('statPosition').textContent = data.summary ? `${data.summary.class_position} of ${data.summary.class_size}` : '—';
+    $('statAttendance').textContent = data.attendance
+      ? `${data.attendance.present} / ${data.attendance.total_days}`
+      : 'Not recorded';
+
+    // Table header
+    document.querySelector('#resultView .result-table thead').innerHTML = `
+      <tr>
+        <th scope="col">Subject</th>
+        <th class="num" scope="col">CA</th>
+        <th class="num" scope="col">Exam</th>
+        <th class="num" scope="col">Total</th>
+        <th class="num" scope="col">Highest</th>
+        <th class="num" scope="col">Pos</th>
+        <th class="num" scope="col">Grade</th>
+      </tr>`;
+
+    const subjects = Array.isArray(data.subjects) ? data.subjects : [];
+    const tbody = $('subjectsBody');
+    tbody.innerHTML = '';
+    subjects.forEach((s, i) => {
+      const tr = document.createElement('tr');
+      tr.style.setProperty('--i', i);
+      tr.innerHTML = `
+        <td>${s.subject_name || '—'}</td>
+        <td class="num">${s.ca ?? '—'}</td>
+        <td class="num">${s.exam ?? '—'}</td>
+        <td class="num"><strong>${s.total ?? '—'}</strong></td>
+        <td class="num">${s.highest ?? '—'}</td>
+        <td class="num">${s.position ?? '—'}</td>
+        <td class="num"><span class="grade-pill grade-${s.grade || ''}">${s.grade || '—'}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Mobile cards
+    const cardsContainer = $('subjectsCards');
+    cardsContainer.innerHTML = '';
+    subjects.forEach((s, i) => {
+      const card = document.createElement('div');
+      card.className = 'result-card';
+      card.setAttribute('role', 'listitem');
+      card.style.setProperty('--i', i);
+      card.innerHTML = `
+        <div class="rc-head">
+          <span class="rc-subject">${s.subject_name || '—'}</span>
+          <span class="grade-pill grade-${s.grade || ''}">${s.grade || '—'}</span>
+        </div>
+        <div class="rc-grid">
+          <div class="rc-cell"><p class="lbl">CA</p><p class="val">${s.ca ?? '—'}</p></div>
+          <div class="rc-cell"><p class="lbl">Exam</p><p class="val">${s.exam ?? '—'}</p></div>
+          <div class="rc-cell"><p class="lbl">Total</p><p class="val"><strong>${s.total ?? '—'}</strong></p></div>
+          <div class="rc-cell"><p class="lbl">Pos</p><p class="val">${s.position ?? '—'}</p></div>
+        </div>
+      `;
+      cardsContainer.appendChild(card);
+    });
+
+    // Comments
+    const commentsBlock = $('commentsBlock');
+    if (data.comments && (data.comments.form_teacher || data.comments.principal)) {
+      commentsBlock.innerHTML = `
+        ${data.comments.form_teacher ? `
+          <p class="comment-label">Form teacher's comment</p>
+          <p class="comment-text">${data.comments.form_teacher}</p>` : ''}
+        ${data.comments.principal ? `
+          <p class="comment-label">Principal's comment</p>
+          <p class="comment-text">${data.comments.principal}</p>` : ''}
+      `;
+    } else {
+      commentsBlock.innerHTML = '';
+    }
+
+    setIssuedDate();
+
+    // QR verification
+    const vBox = $('verificationBox');
+    if (data.pin_usage) {
+      vBox.style.display = 'block';
+      const qrcodeContainer = $('qrcode');
+      qrcodeContainer.innerHTML = '';
+      const verifyUrl = `${API_BASE}/verify?pin=${encodeURIComponent(data.pin_usage.code)}`;
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(qrcodeContainer, {
+          text: verifyUrl,
+          width: 110,
+          height: 110,
+        });
+      }
+      $('pinUsageText').innerHTML =
+        `Scan to verify this result · ${data.pin_usage.uses_count} of ${data.pin_usage.max_uses} PIN uses`;
+    } else {
+      vBox.style.display = 'none';
+    }
+  }
+
+  // ============================================================
+  // Mid-term render
+  // ============================================================
+  function renderMidTermResult(data) {
+    showView('resultView');
+    enterResultView();
+    $('verificationBox').style.display = 'none';
+
+    renderSchoolCrestAndName(data.school);
+    $('certTermLine').textContent = `${data.term}, ${data.session} (Mid-term)`;
+    renderStudentIdentity(data.student);
+
+    const subjects = Array.isArray(data.subjects) ? data.subjects : [];
+    const passed = subjects.filter(s => s.remark === 'Pass').length;
+
+    $('statTotalLabel').textContent = 'Passed';
+    $('statAverageLabel').textContent = 'Subjects passed';
+    $('statPositionLabel').textContent = 'Total subjects';
+    $('statAttendanceLabel').textContent = 'Session';
+    $('statTotal').textContent = `${passed} / ${subjects.length}`;
+    $('statAverage').textContent = `${passed}`;
+    $('statPosition').textContent = `${subjects.length}`;
+    $('statAttendance').textContent = data.session || '—';
+
+    document.querySelector('#resultView .result-table thead').innerHTML = `
+      <tr>
+        <th scope="col">Subject</th>
+        <th class="num" scope="col">Assignment</th>
+        <th class="num" scope="col">Test</th>
+        <th class="num" scope="col">Total</th>
+        <th class="num" scope="col">Remark</th>
+      </tr>`;
+
+    const tbody = $('subjectsBody');
+    tbody.innerHTML = '';
+    subjects.forEach((s, i) => {
+      const tr = document.createElement('tr');
+      tr.style.setProperty('--i', i);
+      const remarkClass = s.remark === 'Pass' ? 'grade-A' : s.remark === 'Fail' ? 'grade-F' : '';
+      tr.innerHTML = `
+        <td>${s.subject_name || '—'}</td>
+        <td class="num">${s.assignment ?? '—'}</td>
+        <td class="num">${s.test ?? '—'}</td>
+        <td class="num"><strong>${s.total ?? '—'}</strong></td>
+        <td class="num"><span class="grade-pill ${remarkClass}">${s.remark || '—'}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const cardsContainer = $('subjectsCards');
+    cardsContainer.innerHTML = '';
+    subjects.forEach((s, i) => {
+      const card = document.createElement('div');
+      card.className = 'result-card';
+      card.setAttribute('role', 'listitem');
+      card.style.setProperty('--i', i);
+      const remarkClass = s.remark === 'Pass' ? 'grade-A' : s.remark === 'Fail' ? 'grade-F' : '';
+      card.innerHTML = `
+        <div class="rc-head">
+          <span class="rc-subject">${s.subject_name || '—'}</span>
+          <span class="grade-pill ${remarkClass}">${s.remark || '—'}</span>
+        </div>
+        <div class="rc-grid">
+          <div class="rc-cell"><p class="lbl">Assignment</p><p class="val">${s.assignment ?? '—'}</p></div>
+          <div class="rc-cell"><p class="lbl">Test</p><p class="val">${s.test ?? '—'}</p></div>
+          <div class="rc-cell"><p class="lbl">Total</p><p class="val"><strong>${s.total ?? '—'}</strong></p></div>
+          <div class="rc-cell"><p class="lbl">Remark</p><p class="val">${s.remark || '—'}</p></div>
+        </div>
+      `;
+      cardsContainer.appendChild(card);
+    });
+
+    $('commentsBlock').innerHTML = '';
+    setIssuedDate();
   }
 
   // ============================================================
@@ -2143,14 +2129,14 @@
       admissionNo = session.admission_no;
       surname = session.surname;
     } else {
-      admissionNo = document.getElementById('admissionNo').value.trim();
-      surname = document.getElementById('surname').value.trim();
+      admissionNo = $('admissionNo').value.trim();
+      surname = $('surname').value.trim();
     }
 
-    const term = document.getElementById('termSelect').value;
-    const sessionTerm = document.getElementById('sessionInput').value.trim();
-    const resultType = document.getElementById('resultType').value;
-    const pinCode = document.getElementById('pinCode').value.trim();
+    const term = $('termSelect').value;
+    const sessionTerm = $('sessionInput').value.trim();
+    const resultType = $('resultType').value;
+    const pinCode = $('pinCode').value.trim();
 
     if (!validateInputs(admissionNo, surname, sessionTerm, resultType, pinCode, isLoggedIn)) {
       if (!isLoggedIn && (!admissionNo || !surname)) {
@@ -2163,8 +2149,9 @@
       return;
     }
 
-    document.getElementById('loginView').style.display = 'none';
-    document.getElementById('loadingView').style.display = 'block';
+    lastFocusedElement = document.activeElement;
+    showView('loadingView');
+    $('loginBtn').disabled = true;
 
     try {
       let student;
@@ -2176,12 +2163,12 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ admission_no: admissionNo, surname }),
         });
-        const loginData = await loginRes.json();
+        const loginData = await loginRes.json().catch(() => ({}));
         if (!loginRes.ok) {
           throw new Error(loginData.error || 'Could not find that student.');
         }
         student = loginData.student;
-        // Persist session so future checks don't need identity fields again
+        if (!student?.id) throw new Error('Invalid student response from server.');
         setSessionStudent(student);
         applySessionStudent();
       }
@@ -2191,28 +2178,25 @@
       const resultRes = await fetch(
         `${API_BASE}/api/student/${endpoint}?student_id=${student.id}&term=${encodeURIComponent(term)}&session=${encodeURIComponent(sessionTerm)}${pinParam}`
       );
-      const resultData = await resultRes.json();
-
-      document.getElementById('loadingView').style.display = 'none';
+      const resultData = await resultRes.json().catch(() => ({}));
 
       if (resultRes.status === 403 && resultData.result_release_at) {
         const releaseDate = new Date(resultData.result_release_at);
         showError(`Results aren't released yet. They'll be available from ${releaseDate.toLocaleString()}.`);
-        document.getElementById('loginView').style.display = 'block';
+        showView('loginView');
         return;
       }
       if (resultRes.status === 403 && resultData.fee_hold) {
-        showError(resultData.error);
-        document.getElementById('loginView').style.display = 'block';
+        showError(resultData.error || 'There is a fee hold on this account.');
+        showView('loginView');
         return;
       }
       if (resultRes.status === 403 && resultData.error) {
         showError(resultData.error);
-        document.getElementById('loginView').style.display = 'block';
+        showView('loginView');
         return;
       }
       if (!resultRes.ok || !resultData.subjects || resultData.subjects.length === 0) {
-        document.getElementById('loginView').style.display = 'block';
         await renderEmptyState(student.id, term, sessionTerm);
         return;
       }
@@ -2228,298 +2212,44 @@
         renderResult(resultData);
       }
     } catch (err) {
-      document.getElementById('loadingView').style.display = 'none';
-      document.getElementById('loginView').style.display = 'block';
+      showView('loginView');
       showError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      $('loginBtn').disabled = false;
     }
-  }
-
-  function enterResultView() {
-    const card = document.getElementById('resultView');
-    if (!card) return;
-    card.classList.remove('view-enter');
-    void card.offsetWidth;
-    card.classList.add('view-enter');
-  }
-
-  // ============================================================
-  // Render full-term result
-  // ============================================================
-  function renderResult(data) {
-    document.getElementById('emptyState').style.display = 'none';
-    document.getElementById('resultView').style.display = 'block';
-    enterResultView();
-
-    // Crest and school name in cert header
-    if (data.school?.school_name) {
-      document.getElementById('certSchoolName').textContent = data.school.school_name;
-      document.getElementById('sigSchoolName').textContent = data.school.school_name;
-    }
-    if (data.school?.logo_url) {
-      document.getElementById('certCrest').innerHTML =
-        `<img src="${getPhotoUrl(data.school.logo_url)}" alt="Logo" />`;
-    } else if (data.school?.school_name) {
-      document.getElementById('certCrest').textContent =
-        data.school.school_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    }
-
-    document.getElementById('certTermLine').textContent = `${data.term}, ${data.session}`;
-
-    // Avatar
-    const avatarEl = document.getElementById('studentAvatar');
-    if (data.student.photo_url) {
-      avatarEl.innerHTML = `<img src="${getPhotoUrl(data.student.photo_url)}" alt="${data.student.name}" />`;
-    } else {
-      avatarEl.textContent = getInitials(data.student.name);
-    }
-    document.getElementById('studentName').textContent = data.student.name;
-    document.getElementById('studentMeta').textContent =
-      `${data.student.class} · Admission no. ${data.student.admission_no}`;
-
-    // Stats
-    document.getElementById('statTotalLabel').textContent = 'Total score';
-    document.getElementById('statAverageLabel').textContent = 'Average';
-    document.getElementById('statPositionLabel').textContent = 'Class position';
-    document.getElementById('statAttendanceLabel').textContent = 'Attendance';
-    document.getElementById('statTotal').textContent = `${data.summary.total_score} / ${data.summary.max_obtainable}`;
-    document.getElementById('statAverage').textContent = `${data.summary.average}%`;
-    document.getElementById('statPosition').textContent = `${data.summary.class_position} of ${data.summary.class_size}`;
-    document.getElementById('statAttendance').textContent = data.attendance
-      ? `${data.attendance.present} / ${data.attendance.total_days}`
-      : 'Not recorded';
-
-    // Ensure table header is in the full-term layout (in case midterm was shown first)
-    document.querySelector('#resultView .result-table thead').innerHTML = `
-      <tr>
-        <th>Subject</th>
-        <th class="num">CA</th>
-        <th class="num">Exam</th>
-        <th class="num">Total</th>
-        <th class="num">Highest</th>
-        <th class="num">Pos</th>
-        <th class="num">Grade</th>
-      </tr>`;
-
-    // Table rows
-    const tbody = document.getElementById('subjectsBody');
-    tbody.innerHTML = '';
-    data.subjects.forEach((s, i) => {
-      const tr = document.createElement('tr');
-      tr.style.setProperty('--i', i);
-      tr.innerHTML = `
-        <td>${s.subject_name}</td>
-        <td class="num">${s.ca}</td>
-        <td class="num">${s.exam}</td>
-        <td class="num"><strong>${s.total}</strong></td>
-        <td class="num">${s.highest ?? '—'}</td>
-        <td class="num">${s.position ?? '—'}</td>
-        <td class="num"><span class="grade-pill grade-${s.grade}">${s.grade || '—'}</span></td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    // Mobile cards
-    const cardsContainer = document.getElementById('subjectsCards');
-    cardsContainer.innerHTML = '';
-    data.subjects.forEach((s, i) => {
-      const card = document.createElement('div');
-      card.className = 'result-card';
-      card.style.setProperty('--i', i);
-      card.innerHTML = `
-        <div class="rc-head">
-          <span class="rc-subject">${s.subject_name}</span>
-          <span class="grade-pill grade-${s.grade}">${s.grade || '—'}</span>
-        </div>
-        <div class="rc-grid">
-          <div class="rc-cell">
-            <p class="lbl">CA</p>
-            <p class="val">${s.ca}</p>
-          </div>
-          <div class="rc-cell">
-            <p class="lbl">Exam</p>
-            <p class="val">${s.exam}</p>
-          </div>
-          <div class="rc-cell">
-            <p class="lbl">Total</p>
-            <p class="val"><strong>${s.total}</strong></p>
-          </div>
-          <div class="rc-cell">
-            <p class="lbl">Pos</p>
-            <p class="val">${s.position ?? '—'}</p>
-          </div>
-        </div>
-      `;
-      cardsContainer.appendChild(card);
-    });
-
-    // Comments
-    const commentsBlock = document.getElementById('commentsBlock');
-    if (data.comments && (data.comments.form_teacher || data.comments.principal)) {
-      commentsBlock.innerHTML = `
-        ${data.comments.form_teacher ? `
-          <p class="comment-label">Form teacher's comment</p>
-          <p class="comment-text">${data.comments.form_teacher}</p>` : ''}
-        ${data.comments.principal ? `
-          <p class="comment-label">Principal's comment</p>
-          <p class="comment-text">${data.comments.principal}</p>` : ''}
-      `;
-    } else {
-      commentsBlock.innerHTML = '';
-    }
-
-    // Issued date
-    document.getElementById('issuedDate').textContent = new Date().toLocaleDateString(undefined, {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
-
-    // QR
-    if (data.pin_usage) {
-      document.getElementById('verificationBox').style.display = 'block';
-      const qrcodeContainer = document.getElementById('qrcode');
-      qrcodeContainer.innerHTML = '';
-
-      const verifyUrl = `${API_BASE}/verify?pin=${encodeURIComponent(data.pin_usage.code)}`;
-      new QRCode(qrcodeContainer, {
-        text: verifyUrl,
-        width: 110,
-        height: 110,
-      });
-
-      document.getElementById('pinUsageText').innerHTML =
-        `Scan to verify this result · ${data.pin_usage.uses_count} of ${data.pin_usage.max_uses} PIN uses`;
-    } else {
-      document.getElementById('verificationBox').style.display = 'none';
-    }
-  }
-
-  // ============================================================
-  // Render mid-term result
-  // ============================================================
-  function renderMidTermResult(data) {
-    document.getElementById('emptyState').style.display = 'none';
-    document.getElementById('resultView').style.display = 'block';
-    document.getElementById('verificationBox').style.display = 'none';
-    enterResultView();
-
-    if (data.school?.school_name) {
-      document.getElementById('certSchoolName').textContent = data.school.school_name;
-      document.getElementById('sigSchoolName').textContent = data.school.school_name;
-    }
-    if (data.school?.logo_url) {
-      document.getElementById('certCrest').innerHTML =
-        `<img src="${getPhotoUrl(data.school.logo_url)}" alt="Logo" />`;
-    } else if (data.school?.school_name) {
-      document.getElementById('certCrest').textContent =
-        data.school.school_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    }
-
-    document.getElementById('certTermLine').textContent = `${data.term}, ${data.session} (Mid-term)`;
-
-    const avatarEl = document.getElementById('studentAvatar');
-    if (data.student.photo_url) {
-      avatarEl.innerHTML = `<img src="${getPhotoUrl(data.student.photo_url)}" alt="${data.student.name}" />`;
-    } else {
-      avatarEl.textContent = getInitials(data.student.name);
-    }
-    document.getElementById('studentName').textContent = data.student.name;
-    document.getElementById('studentMeta').textContent =
-      `${data.student.class} · Admission no. ${data.student.admission_no}`;
-
-    document.getElementById('statTotalLabel').textContent = 'Passed';
-    document.getElementById('statAverageLabel').textContent = 'Subjects';
-    document.getElementById('statPositionLabel').textContent = 'Total subjects';
-    document.getElementById('statAttendanceLabel').textContent = 'Session';
-    const passed = data.subjects.filter(s => s.remark === 'Pass').length;
-    document.getElementById('statTotal').textContent = `${passed} / ${data.subjects.length}`;
-    document.getElementById('statAverage').textContent = `${passed}`;
-    document.getElementById('statPosition').textContent = `${data.subjects.length}`;
-    document.getElementById('statAttendance').textContent = data.session;
-
-    // Table header for midterm
-    document.querySelector('#resultView .result-table thead').innerHTML = `
-      <tr>
-        <th>Subject</th>
-        <th class="num">Assignment</th>
-        <th class="num">Test</th>
-        <th class="num">Total</th>
-        <th class="num">Remark</th>
-      </tr>`;
-
-    const tbody = document.getElementById('subjectsBody');
-    tbody.innerHTML = '';
-    data.subjects.forEach((s, i) => {
-      const tr = document.createElement('tr');
-      tr.style.setProperty('--i', i);
-      const remarkClass = s.remark === 'Pass' ? 'grade-A' : s.remark === 'Fail' ? 'grade-F' : '';
-      tr.innerHTML = `
-        <td>${s.subject_name}</td>
-        <td class="num">${s.assignment ?? '—'}</td>
-        <td class="num">${s.test ?? '—'}</td>
-        <td class="num"><strong>${s.total ?? '—'}</strong></td>
-        <td class="num"><span class="grade-pill ${remarkClass}">${s.remark || '—'}</span></td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    // Mobile cards
-    const cardsContainer = document.getElementById('subjectsCards');
-    cardsContainer.innerHTML = '';
-    data.subjects.forEach((s, i) => {
-      const card = document.createElement('div');
-      card.className = 'result-card';
-      card.style.setProperty('--i', i);
-      const remarkClass = s.remark === 'Pass' ? 'grade-A' : s.remark === 'Fail' ? 'grade-F' : '';
-      card.innerHTML = `
-        <div class="rc-head">
-          <span class="rc-subject">${s.subject_name}</span>
-          <span class="grade-pill ${remarkClass}">${s.remark || '—'}</span>
-        </div>
-        <div class="rc-grid">
-          <div class="rc-cell">
-            <p class="lbl">Assignment</p>
-            <p class="val">${s.assignment ?? '—'}</p>
-          </div>
-          <div class="rc-cell">
-            <p class="lbl">Test</p>
-            <p class="val">${s.test ?? '—'}</p>
-          </div>
-          <div class="rc-cell">
-            <p class="lbl">Total</p>
-            <p class="val"><strong>${s.total ?? '—'}</strong></p>
-          </div>
-          <div class="rc-cell">
-            <p class="lbl">Remark</p>
-            <p class="val">${s.remark || '—'}</p>
-          </div>
-        </div>
-      `;
-      cardsContainer.appendChild(card);
-    });
-
-    document.getElementById('commentsBlock').innerHTML = '';
-    document.getElementById('issuedDate').textContent = new Date().toLocaleDateString(undefined, {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
   }
 
   function backToLogin() {
-    document.getElementById('resultView').style.display = 'none';
-    document.getElementById('emptyState').style.display = 'none';
-    document.getElementById('loginView').style.display = 'block';
-    document.getElementById('pinCode').value = ''; // clear PIN so retry is fresh
-    const loginCard = document.getElementById('loginView');
-    loginCard.classList.remove('view-enter');
-    void loginCard.offsetWidth;
-    loginCard.classList.add('view-enter');
-    applySessionStudent();
+    showView('loginView');
+    $('pinCode').value = '';
     hideError();
+    applySessionStudent();
   }
 
   // ============================================================
   // Boot
   // ============================================================
-  applySessionStudent();
-  fetchInitialContext();
+  document.addEventListener('DOMContentLoaded', () => {
+    applySessionStudent();
+    togglePinField();
+    fetchInitialContext();
+
+    // Theme toggle
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', toggleTheme);
+      // Refresh labels after DOM ready
+      const stored = localStorage.getItem(THEME_KEY);
+      applyTheme(stored === 'light' || stored === 'dark' ? stored : null);
+    }
+
+    // React to system preference changes when user has no manual override
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem(THEME_KEY)) {
+        applyTheme(null);
+      }
+    });
+  });
 </script>
 </body>
 </html>
