@@ -7,25 +7,54 @@ const XLSX = require('xlsx');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, school_code } = req.body;
+  
   if (!email || !password) {
     return res.status(400).json({ error: 'email and password are required' });
   }
+  if (!school_code) {
+    return res.status(400).json({ error: 'School Code is required' });
+  }
+
   try {
-    const { rows } = await pool.query(
-      `SELECT id, name, email FROM exam_officers WHERE email = $1 AND password_hash = $2`,
-      [email, password]
+    // 1. Check if the school exists and is active
+    const schoolRes = await pool.query(
+      'SELECT id, status, name FROM schools WHERE code = $1',
+      [school_code.trim().toUpperCase()]
     );
-    if (rows.length === 0) {
-      return res.status(401).json({ error: 'Incorrect email or password' });
+
+    if (schoolRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Invalid School Code' });
     }
-    res.json({ officer: rows[0] });
+
+    const school = schoolRes.rows[0];
+    if (school.status === 'suspended') {
+      return res.status(403).json({ 
+        error: 'This school\'s subscription has been suspended. Please contact ResultPro support.' 
+      });
+    }
+
+    // 2. Find the officer IN THAT SCHOOL
+    const { rows } = await pool.query(
+      `SELECT id, name, email, school_id FROM exam_officers 
+       WHERE email = $1 AND password_hash = $2 AND school_id = $3`,
+      [email, password, school.id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Incorrect email or password for this school' });
+    }
+
+    // Return officer AND the school details
+    res.json({ 
+      officer: rows[0],
+      school: { id: school.id, name: school.name, code: school_code.toUpperCase() }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed' });
   }
 });
-
 function friendlyDeleteError(err, whatYoureDeleting) {
   if (err.code === '23503') {
     return `Can't delete this ${whatYoureDeleting} — it's already linked to existing records (scores, assignments, etc). Remove those first.`;

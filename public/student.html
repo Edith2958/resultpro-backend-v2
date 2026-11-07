@@ -1713,7 +1713,10 @@
       <button class="sb-signout" onclick="signOut()">Sign out</button>
     </div>
 
-    <div id="identityFields">
+        <div id="identityFields">
+      <label for="schoolCode">School Code</label>
+      <input type="text" id="schoolCode" placeholder="e.g. AHS" autocomplete="off" style="text-transform:uppercase;" />
+
       <label for="admissionNo">Admission number</label>
       <input type="text" id="admissionNo" placeholder="e.g. 245" autocomplete="off" />
 
@@ -1982,8 +1985,9 @@
     }
   }
 
-  function signOut() {
+   function signOut() {
     clearSessionStudent();
+    document.getElementById('schoolCode').value = '';
     document.getElementById('admissionNo').value = '';
     document.getElementById('surname').value = '';
     document.getElementById('pinCode').value = '';
@@ -2233,18 +2237,26 @@
   // ============================================================
   // Main submit
   // ============================================================
-  async function checkResult() {
+    async function checkResult() {
     hideError();
     const session = getSessionStudent();
     const isLoggedIn = !!session;
 
     let admissionNo, surname;
+    const schoolCode = document.getElementById('schoolCode').value.trim();
+
     if (isLoggedIn) {
       admissionNo = session.admission_no;
       surname = session.surname;
     } else {
       admissionNo = document.getElementById('admissionNo').value.trim();
       surname = document.getElementById('surname').value.trim();
+      
+      if (!schoolCode) {
+        document.getElementById('schoolCode').classList.add('invalid');
+        showError('Please enter your School Code (e.g., AHS).');
+        return;
+      }
     }
 
     const term = document.getElementById('termSelect').value;
@@ -2271,10 +2283,10 @@
       if (isLoggedIn) {
         student = session;
       } else {
-        const loginRes = await fetch(`${API_BASE}/api/student/login`, {
+                const loginRes = await fetch(`${API_BASE}/api/student/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ admission_no: admissionNo, surname }),
+          body: JSON.stringify({ admission_no: admissionNo, surname, school_code: schoolCode }),
         });
         const loginData = await loginRes.json();
         if (!loginRes.ok) {

@@ -701,6 +701,7 @@
 <body>
 
 <a href="#mainApp" class="visually-hidden">Skip to main content</a>
+    
 
 <!-- LOGIN -->
 <div class="wrap narrow" id="loginWrap">
@@ -711,6 +712,8 @@
   </div>
   <div class="card">
     <div class="error-msg" id="loginError" role="alert"></div>
+    <label for="schoolCode">School Code</label>
+    <input type="text" id="schoolCode" placeholder="e.g. AHS" style="text-transform:uppercase;" />
     <label for="officerEmail">Email</label>
     <input type="email" id="officerEmail" autocomplete="email" />
     <label for="officerPassword" style="margin-top:12px;">Password</label>
@@ -1295,6 +1298,9 @@
       errEl.style.display = 'block';
     }
   }
+      const school_code = document.getElementById('schoolCode').value.trim();
+    // ...
+    body: JSON.stringify({ email, password, school_code }),
   function logout() {
     sessionStorage.removeItem('resultpro_officer');
     officer = null;

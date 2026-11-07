@@ -4,32 +4,61 @@ const pool = require('../db/pool');
 const { getGrade, rankByTotal, ordinal } = require('../utils/grading');
 const { upload } = require('../config/cloudinary');
 
-// GET active session and term set by the Exam Office
-router.get('/active-session', async (req, res) => {
+// ==========================================
+// LOGIN (Multi-School Enforced)
+// ==========================================
+router.post('/login', async (req, res) => {
+  const { email, password, school_code } = req.body;
+  
+  if (!email || !password) return res.status(400).json({ error: 'email and password are required' });
+  if (!school_code) return res.status(400).json({ error: 'School Code is required' });
+
   try {
-    const { rows } = await pool.query(
-      `SELECT current_session AS session, current_term AS term FROM school_settings LIMIT 1`
+    const schoolRes = await pool.query(
+      'SELECT id, status, name FROM schools WHERE code = $1',
+      [school_code.trim().toUpperCase()]
     );
-    if (rows.length === 0) {
-      return res.json({ session: '2026/2027', term: 'First Term' });
+
+    if (schoolRes.rows.length === 0) return res.status(404).json({ error: 'Invalid School Code' });
+    
+    const school = schoolRes.rows[0];
+    if (school.status === 'suspended') {
+      return res.status(403).json({ error: 'This school\'s subscription has been suspended.' });
     }
-    res.json(rows[0]);
+
+    const { rows } = await pool.query(
+      `SELECT id, name, email, school_id FROM teachers 
+       WHERE email = $1 AND password_hash = $2 AND school_id = $3`,
+      [email, password, school.id]
+    );
+
+    if (rows.length === 0) return res.status(401).json({ error: 'Incorrect email or password for this school' });
+
+    res.json({ 
+      teacher: rows[0],
+      school: { id: school.id, name: school.name, code: school_code.toUpperCase() }
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch active session and term' });
+    res.status(500).json({ error: 'Login failed' });
   }
 });
 
-async function getSchoolSettings() {
+// ==========================================
+// HELPERS
+// ==========================================
+async function getSchoolSettings(schoolId) {
   try {
-    const { rows } = await pool.query('SELECT * FROM school_settings WHERE id = 1');
-    return rows[0] || {
-      school_name: 'ResultPro Academy',
-      school_address: '',
-      school_phone: '',
-      school_email: '',
-      logo_url: '',
-      motto: ''
+    const { rows } = await pool.query('SELECT * FROM schools WHERE id = $1', [schoolId]);
+    if (rows.length === 0) return { school_name: 'ResultPro Academy' };
+    const s = rows[0];
+    return {
+      school_name: s.name,
+      school_address: s.address || '',
+      school_phone: s.phone || '',
+      school_email: s.email || '',
+      logo_url: s.logo_url || '',
+      motto: s.motto || ''
     };
   } catch (err) {
     console.error('Failed to fetch school settings:', err);
@@ -37,6 +66,32 @@ async function getSchoolSettings() {
   }
 }
 
+async function isFormTeacherOf(teacherId, className) {
+  const tId = parseInt(teacherId, 10);
+  if (isNaN(tId)) return false;
+  const { rows } = await pool.query(
+    `SELECT 1 FROM form_teacher_classes WHERE teacher_id = $1 AND class = $2`,
+    [tId, className]
+  );
+  return rows.length > 0;
+}
+
+// GET active session and term
+router.get('/active-session', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT current_session AS session, current_term AS term FROM school_settings LIMIT 1`
+    );
+    if (rows.length === 0) return res.json({ session: '2026/2027', term: 'First Term' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch active session and term' });
+  }
+});
+
+// ==========================================
+// ROUTES (Filtered by School)
+// ==========================================
 router.get('/my-class', async (req, res) => {
   let { teacher_id } = req.query;
   if (!teacher_id) return res.status(400).json({ error: 'teacher_id is required' });
@@ -50,20 +105,9 @@ router.get('/my-class', async (req, res) => {
     );
     res.json({ class: rows[0]?.class || null });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Failed to check form-teacher class' });
   }
 });
-
-async function isFormTeacherOf(teacherId, className) {
-  const tId = parseInt(teacherId, 10);
-  if (isNaN(tId)) return false;
-  const { rows } = await pool.query(
-    `SELECT 1 FROM form_teacher_classes WHERE teacher_id = $1 AND class = $2`,
-    [tId, className]
-  );
-  return rows.length > 0;
-}
 
 router.get('/broadsheet', async (req, res) => {
   let { class: className, term, session, teacher_id } = req.query;
@@ -71,7 +115,6 @@ router.get('/broadsheet', async (req, res) => {
     return res.status(400).json({ error: 'class, term, session and teacher_id are required' });
   }
   teacher_id = parseInt(teacher_id, 10);
-  if (isNaN(teacher_id)) return res.status(400).json({ error: 'teacher_id must be a number' });
 
   try {
     if (!(await isFormTeacherOf(teacher_id, className))) {
@@ -102,20 +145,14 @@ router.get('/broadsheet', async (req, res) => {
               m.assignment_score, m.test_score, r.exam_score, r.manual_ca_override
        FROM results r
        LEFT JOIN mid_term_results m
-         ON m.student_id = r.student_id 
-        AND m.subject_id = r.subject_id 
-        AND m.term = r.term 
-        AND m.session = r.session
+         ON m.student_id = r.student_id AND m.subject_id = r.subject_id AND m.term = r.term AND m.session = r.session
        WHERE r.class = $1 AND r.term = $2 AND r.session = $3`,
       [className, term, session]
     );
 
     const scoreMap = {};
     for (const row of scoresRes.rows) {
-      const midTermTotal =
-        row.assignment_score !== null || row.test_score !== null
-          ? Number(row.assignment_score || 0) + Number(row.test_score || 0)
-          : null;
+      const midTermTotal = (row.assignment_score !== null || row.test_score !== null) ? Number(row.assignment_score || 0) + Number(row.test_score || 0) : null;
       const ca = midTermTotal !== null ? midTermTotal : Number(row.manual_ca_override || 0);
       const exam = Number(row.exam_score || 0);
       const total = ca + exam;
@@ -123,8 +160,7 @@ router.get('/broadsheet', async (req, res) => {
     }
 
     const studentTotals = students.map((s) => {
-      let total = 0;
-      let subjectCount = 0;
+      let total = 0; let subjectCount = 0;
       subjects.forEach((sub) => {
         const cell = scoreMap[`${s.id}-${sub.id}`];
         if (cell) { total += cell.total; subjectCount++; }
@@ -142,82 +178,52 @@ router.get('/broadsheet', async (req, res) => {
 
       const subjectScores = subjects.map((sub) => {
         const cell = scoreMap[`${s.id}-${sub.id}`];
-        return cell
-          ? { subject_id: sub.id, total: cell.total, grade: cell.grade }
-          : { subject_id: sub.id, total: null, grade: null };
+        return cell ? { subject_id: sub.id, total: cell.total, grade: cell.grade } : { subject_id: sub.id, total: null, grade: null };
       });
 
       return {
-        student_id: s.id,
-        name: s.name,
-        admission_no: s.admission_no,
-        subject_scores: subjectScores,
-        total_score: totals.total,
-        max_obtainable: maxObtainable,
-        average,
-        class_position: ordinal(rankMap[s.id] || 1),
-        class_position_rank: rankMap[s.id] || 1,
+        student_id: s.id, name: s.name, admission_no: s.admission_no, subject_scores: subjectScores,
+        total_score: totals.total, max_obtainable: maxObtainable, average,
+        class_position: ordinal(rankMap[s.id] || 1), class_position_rank: rankMap[s.id] || 1,
       };
     });
 
     res.json({ class: className, term, session, subjects, rows });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Failed to build broadsheet' });
   }
 });
 
 router.get('/class-result-slips', async (req, res) => {
   let { class: className, term, session, teacher_id } = req.query;
-  if (!className || !term || !session || !teacher_id) {
-    return res.status(400).json({ error: 'class, term, session and teacher_id are required' });
-  }
+  if (!className || !term || !session || !teacher_id) return res.status(400).json({ error: 'Missing required fields' });
   teacher_id = parseInt(teacher_id, 10);
-  if (isNaN(teacher_id)) return res.status(400).json({ error: 'teacher_id must be a number' });
 
   try {
-    if (!(await isFormTeacherOf(teacher_id, className))) {
-      return res.status(403).json({ error: 'You are not the form teacher for this class' });
-    }
+    if (!(await isFormTeacherOf(teacher_id, className))) return res.status(403).json({ error: 'You are not the form teacher for this class' });
 
-    const [studentsRes, subjectsRes, schoolSettings] = await Promise.all([
+    const schoolIdRes = await pool.query('SELECT school_id FROM teachers WHERE id = $1', [teacher_id]);
+    const schoolSettings = await getSchoolSettings(schoolIdRes.rows[0]?.school_id);
+
+    const [studentsRes, subjectsRes] = await Promise.all([
       pool.query(`SELECT id, surname, first_name, middle_name, admission_no, photo_url FROM students WHERE class = $1 ORDER BY surname ASC`, [className]),
-      pool.query(
-        `SELECT DISTINCT sub.id, sub.name
-         FROM teacher_subjects ts
-         JOIN subjects sub ON sub.id = ts.subject_id
-         WHERE ts.class = $1
-         ORDER BY sub.name ASC`,
-        [className]
-      ),
-      getSchoolSettings()
+      pool.query(`SELECT DISTINCT sub.id, sub.name FROM teacher_subjects ts JOIN subjects sub ON sub.id = ts.subject_id WHERE ts.class = $1 ORDER BY sub.name ASC`, [className])
     ]);
 
-    const students = studentsRes.rows.map(s => ({
-      ...s,
-      name: `${s.surname} ${s.first_name}${s.middle_name ? ' ' + s.middle_name : ''}`
-    }));
+    const students = studentsRes.rows.map(s => ({ ...s, name: `${s.surname} ${s.first_name}${s.middle_name ? ' ' + s.middle_name : ''}` }));
     const subjects = subjectsRes.rows;
 
     const scoresRes = await pool.query(
-      `SELECT r.student_id, r.subject_id,
-              m.assignment_score, m.test_score, r.exam_score, r.manual_ca_override
+      `SELECT r.student_id, r.subject_id, m.assignment_score, m.test_score, r.exam_score, r.manual_ca_override
        FROM results r
-       LEFT JOIN mid_term_results m
-         ON m.student_id = r.student_id 
-        AND m.subject_id = r.subject_id 
-        AND m.term = r.term 
-        AND m.session = r.session
+       LEFT JOIN mid_term_results m ON m.student_id = r.student_id AND m.subject_id = r.subject_id AND m.term = r.term AND m.session = r.session
        WHERE r.class = $1 AND r.term = $2 AND r.session = $3`,
       [className, term, session]
     );
 
     const scoreMap = {};
     for (const row of scoresRes.rows) {
-      const midTermTotal =
-        row.assignment_score !== null || row.test_score !== null
-          ? Number(row.assignment_score || 0) + Number(row.test_score || 0)
-          : null;
+      const midTermTotal = (row.assignment_score !== null || row.test_score !== null) ? Number(row.assignment_score || 0) + Number(row.test_score || 0) : null;
       const ca = midTermTotal !== null ? midTermTotal : Number(row.manual_ca_override || 0);
       const exam = Number(row.exam_score || 0);
       const total = ca + exam;
@@ -226,12 +232,7 @@ router.get('/class-result-slips', async (req, res) => {
 
     const subjectRankings = {};
     for (const sub of subjects) {
-      const entries = students
-        .map((s) => {
-          const cell = scoreMap[`${s.id}-${sub.id}`];
-          return cell ? { studentId: s.id, total: cell.total } : null;
-        })
-        .filter(Boolean);
+      const entries = students.map((s) => { const cell = scoreMap[`${s.id}-${sub.id}`]; return cell ? { studentId: s.id, total: cell.total } : null; }).filter(Boolean);
       const ranked = rankByTotal(entries);
       const highest = ranked.length ? ranked[0].total : null;
       const map = {};
@@ -241,10 +242,7 @@ router.get('/class-result-slips', async (req, res) => {
 
     const classTotals = students.map((s) => {
       let total = 0;
-      subjects.forEach((sub) => {
-        const cell = scoreMap[`${s.id}-${sub.id}`];
-        if (cell) total += cell.total;
-      });
+      subjects.forEach((sub) => { const cell = scoreMap[`${s.id}-${sub.id}`]; if (cell) total += cell.total; });
       return { studentId: s.id, total };
     });
     const classRanked = rankByTotal(classTotals);
@@ -252,118 +250,79 @@ router.get('/class-result-slips', async (req, res) => {
     classRanked.forEach((r) => { classRankMap[r.studentId] = r.position; });
 
     const termRecordsRes = await pool.query(
-      `SELECT student_id, times_present, times_absent, total_days, form_teacher_comment, principal_comment
-       FROM term_records WHERE class = $1 AND term = $2 AND session = $3`,
+      `SELECT student_id, times_present, times_absent, total_days, form_teacher_comment, principal_comment FROM term_records WHERE class = $1 AND term = $2 AND session = $3`,
       [className, term, session]
     );
     const termRecordMap = {};
     termRecordsRes.rows.forEach((r) => { termRecordMap[r.student_id] = r; });
 
     const slips = students.map((s) => {
-      const studentSubjects = subjects
-        .map((sub) => {
-          const cell = scoreMap[`${s.id}-${sub.id}`];
-          if (!cell) return null;
-          const rank = subjectRankings[sub.id]?.[s.id] || { highest: null, position: '-' };
-          return {
-            subject_name: sub.name,
-            ca: cell.ca, exam: cell.exam, total: cell.total, grade: cell.grade,
-            highest: rank.highest, position: rank.position,
-          };
-        })
-        .filter(Boolean);
+      const studentSubjects = subjects.map((sub) => {
+        const cell = scoreMap[`${s.id}-${sub.id}`];
+        if (!cell) return null;
+        const rank = subjectRankings[sub.id]?.[s.id] || { highest: null, position: '-' };
+        return { subject_name: sub.name, ca: cell.ca, exam: cell.exam, total: cell.total, grade: cell.grade, highest: rank.highest, position: rank.position };
+      }).filter(Boolean);
 
       const totalScore = studentSubjects.reduce((sum, sub) => sum + sub.total, 0);
       const maxObtainable = studentSubjects.length * 100;
       const average = maxObtainable ? Number(((totalScore / maxObtainable) * 100).toFixed(1)) : 0;
-
       const termRecord = termRecordMap[s.id];
 
       return {
         student: { id: s.id, surname: s.surname, first_name: s.first_name, middle_name: s.middle_name, name: s.name, admission_no: s.admission_no, photo_url: s.photo_url },
         subjects: studentSubjects,
-        summary: {
-          total_score: totalScore,
-          max_obtainable: maxObtainable,
-          average,
-          class_position: ordinal(classRankMap[s.id] || 1),
-          class_size: students.length,
-        },
-        attendance: termRecord
-          ? { present: termRecord.times_present, absent: termRecord.times_absent, total_days: termRecord.total_days }
-          : null,
-        comments: termRecord
-          ? { form_teacher: termRecord.form_teacher_comment, principal: termRecord.principal_comment }
-          : null,
+        summary: { total_score: totalScore, max_obtainable: maxObtainable, average, class_position: ordinal(classRankMap[s.id] || 1), class_size: students.length },
+        attendance: termRecord ? { present: termRecord.times_present, absent: termRecord.times_absent, total_days: termRecord.total_days } : null,
+        comments: termRecord ? { form_teacher: termRecord.form_teacher_comment, principal: termRecord.principal_comment } : null,
       };
     });
 
     res.json({ class: className, term, session, school: schoolSettings, slips });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Failed to build class result slips' });
   }
 });
 
 router.get('/roster', async (req, res) => {
   let { class: className, term, session, teacher_id } = req.query;
-  if (!className || !term || !session || !teacher_id) {
-    return res.status(400).json({ error: 'class, term, session and teacher_id are required' });
-  }
+  if (!className || !term || !session || !teacher_id) return res.status(400).json({ error: 'Missing required fields' });
   teacher_id = parseInt(teacher_id, 10);
-  if (isNaN(teacher_id)) return res.status(400).json({ error: 'teacher_id must be a number' });
 
   try {
-    if (!(await isFormTeacherOf(teacher_id, className))) {
-      return res.status(403).json({ error: 'You are not the form teacher for this class' });
-    }
+    if (!(await isFormTeacherOf(teacher_id, className))) return res.status(403).json({ error: 'You are not the form teacher for this class' });
+
     const { rows } = await pool.query(
       `SELECT s.id AS student_id, s.surname, s.first_name, s.middle_name, s.admission_no, s.photo_url,
-              t.times_present, t.times_absent, t.total_days,
-              t.form_teacher_comment, t.principal_comment
+              t.times_present, t.times_absent, t.total_days, t.form_teacher_comment, t.principal_comment
        FROM students s
-       LEFT JOIN term_records t
-         ON t.student_id = s.id AND t.term = $2 AND t.session = $3
+       LEFT JOIN term_records t ON t.student_id = s.id AND t.term = $2 AND t.session = $3
        WHERE s.class = $1
        ORDER BY s.surname ASC`,
       [className, term, session]
     );
 
-    const roster = rows.map(s => ({
-      ...s,
-      name: `${s.surname} ${s.first_name}${s.middle_name ? ' ' + s.middle_name : ''}`
-    }));
-
+    const roster = rows.map(s => ({ ...s, name: `${s.surname} ${s.first_name}${s.middle_name ? ' ' + s.middle_name : ''}` }));
     res.json({ roster });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Failed to load form teacher roster' });
   }
 });
 
 router.post('/term-records', async (req, res) => {
   let { class: className, term, session, records, teacher_id } = req.body;
-  if (!className || !term || !session || !teacher_id || !Array.isArray(records)) {
-    return res.status(400).json({ error: 'class, term, session, teacher_id and records[] are required' });
-  }
+  if (!className || !term || !session || !teacher_id || !Array.isArray(records)) return res.status(400).json({ error: 'Missing required fields' });
   teacher_id = parseInt(teacher_id, 10);
-  if (isNaN(teacher_id)) return res.status(400).json({ error: 'teacher_id must be a number' });
 
-  if (!(await isFormTeacherOf(teacher_id, className))) {
-    return res.status(403).json({ error: 'You are not the form teacher for this class' });
-  }
+  if (!(await isFormTeacherOf(teacher_id, className))) return res.status(403).json({ error: 'You are not the form teacher for this class' });
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-
     for (const r of records) {
       const studentIdInt = parseInt(r.student_id, 10);
-      if (isNaN(studentIdInt)) {
-        throw new Error(`Invalid student_id in records: ${r.student_id}`);
-      }
+      if (isNaN(studentIdInt)) throw new Error(`Invalid student_id: ${r.student_id}`);
 
-      // Coerce integer fields — '' from an empty form input would now fail on integer columns
       const toIntOrNull = (v) => {
         if (v === null || v === undefined || String(v).trim() === '') return null;
         const n = Number(v);
@@ -371,14 +330,8 @@ router.post('/term-records', async (req, res) => {
         return n;
       };
 
-      const timesPresent = toIntOrNull(r.times_present);
-      const timesAbsent = toIntOrNull(r.times_absent);
-      const totalDays = toIntOrNull(r.total_days);
-
       await client.query(
-        `INSERT INTO term_records
-           (student_id, class, term, session, times_present, times_absent, total_days,
-            form_teacher_comment, principal_comment)
+        `INSERT INTO term_records (student_id, class, term, session, times_present, times_absent, total_days, form_teacher_comment, principal_comment)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
          ON CONFLICT (student_id, term, session)
          DO UPDATE SET
@@ -387,19 +340,13 @@ router.post('/term-records', async (req, res) => {
            total_days = COALESCE(EXCLUDED.total_days, term_records.total_days),
            form_teacher_comment = COALESCE(EXCLUDED.form_teacher_comment, term_records.form_teacher_comment),
            principal_comment = COALESCE(EXCLUDED.principal_comment, term_records.principal_comment)`,
-        [
-          studentIdInt, className, term, session,
-          timesPresent, timesAbsent, totalDays,
-          r.form_teacher_comment ?? null, r.principal_comment ?? null,
-        ]
+        [studentIdInt, className, term, session, toIntOrNull(r.times_present), toIntOrNull(r.times_absent), toIntOrNull(r.total_days), r.form_teacher_comment ?? null, r.principal_comment ?? null]
       );
     }
-
     await client.query('COMMIT');
     res.json({ success: true, saved: records.length });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error(err);
     res.status(400).json({ error: err.message || 'Failed to save term records' });
   } finally {
     client.release();
@@ -408,42 +355,25 @@ router.post('/term-records', async (req, res) => {
 
 router.post('/upload-photo', (req, res, next) => {
   upload.single('photo')(req, res, async (err) => {
-    if (err) {
-      console.error('MULTER/CLOUDINARY UPLOAD ERROR:', err);
-      return res.status(500).json({ error: 'Upload failed: ' + (err.message || err) });
-    }
+    if (err) return res.status(500).json({ error: 'Upload failed: ' + (err.message || err) });
 
     let { student_id, class: className, teacher_id } = req.body;
-
-    if (!student_id || !className || !teacher_id) {
-      return res.status(400).json({ error: 'student_id, class and teacher_id are required' });
-    }
-    if (!req.file) {
-      return res.status(400).json({ error: 'No photo file received. Make sure the form field name is "photo".' });
-    }
+    if (!student_id || !className || !teacher_id) return res.status(400).json({ error: 'Missing required fields' });
+    if (!req.file) return res.status(400).json({ error: 'No photo received.' });
 
     student_id = parseInt(student_id, 10);
     teacher_id = parseInt(teacher_id, 10);
-    if (isNaN(student_id) || isNaN(teacher_id)) {
-      return res.status(400).json({ error: 'student_id and teacher_id must be numbers' });
-    }
+    if (isNaN(student_id) || isNaN(teacher_id)) return res.status(400).json({ error: 'IDs must be numbers' });
 
     try {
-      // BUG FIX: was calling undefined isFormTeacher_teacher_of()
-      if (!(await isFormTeacherOf(teacher_id, className))) {
-        return res.status(403).json({ error: 'You are not the form teacher for this class' });
-      }
+      if (!(await isFormTeacherOf(teacher_id, className))) return res.status(403).json({ error: 'Not the form teacher' });
 
       const cloudUrl = req.file.path || req.file.secure_url;
-      if (!cloudUrl) {
-        throw new Error('Cloudinary did not return a file path.');
-      }
+      if (!cloudUrl) throw new Error('Cloudinary did not return a path.');
 
       await pool.query('UPDATE students SET photo_url = $1 WHERE id = $2', [cloudUrl, student_id]);
-
       return res.json({ success: true, photo_url: cloudUrl });
     } catch (dbOrLogicErr) {
-      console.error('DATABASE/LOGIC ERROR:', dbOrLogicErr);
       return res.status(500).json({ error: 'Failed to save photo: ' + (dbOrLogicErr.message || dbOrLogicErr) });
     }
   });

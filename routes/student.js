@@ -58,23 +58,47 @@ router.get('/active-session', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  const { admission_no, surname } = req.body;
+  const { admission_no, surname, school_code } = req.body;
+  
   if (!admission_no || !surname) {
     return res.status(400).json({ error: 'admission_no and surname are required' });
   }
+  if (!school_code) {
+    return res.status(400).json({ error: 'School Code is required' });
+  }
 
   try {
+    const schoolRes = await pool.query(
+      'SELECT id, status, name FROM schools WHERE code = $1',
+      [school_code.trim().toUpperCase()]
+    );
+
+    if (schoolRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Invalid School Code' });
+    }
+
+    const school = schoolRes.rows[0];
+    if (school.status === 'suspended') {
+      return res.status(403).json({ 
+        error: 'Your school\'s portal is temporarily unavailable. Please contact your school administration.' 
+      });
+    }
+
     const { rows } = await pool.query(
-      `SELECT id, surname, first_name, middle_name, admission_no, class, photo_url FROM students
-       WHERE admission_no = $1 AND surname ILIKE $2`,
-      [admission_no.trim(), `%${surname.trim()}%`]
+      `SELECT id, surname, first_name, middle_name, admission_no, class, photo_url 
+       FROM students
+       WHERE admission_no = $1 AND surname ILIKE $2 AND school_id = $3`,
+      [admission_no.trim(), `%${surname.trim()}%`, school.id]
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'No matching student found' });
+      return res.status(404).json({ error: 'No matching student found for this school' });
     }
 
-    res.json({ student: rows[0] });
+    res.json({ 
+      student: rows[0],
+      school: { id: school.id, name: school.name, code: school_code.toUpperCase() }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed' });
