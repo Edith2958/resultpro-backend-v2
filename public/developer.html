@@ -5,70 +5,264 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script>
+  // Prevent flash of light theme
+  (function() {
+    try {
+      var pref = localStorage.getItem('resultpro_theme');
+      var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', pref || (systemDark ? 'dark' : 'light'));
+    } catch (e) {}
+  })();
+</script>
 <title>ResultPro — Developer Panel</title>
 <style>
   :root {
-    --navy: #58CC02; --navy-light: #46A302; --gold: #FFC800; --cream: #F7F7F7;
-    --card: #FFFFFF; --border: #E5E5E5; --text: #3C3C3C; --text-soft: #777777;
-    --pass: #58A700; --pass-bg: #D7FFB8; --fail: #EA2B2B; --fail-bg: #FFDFE0;
-    --warn: #CE8E00; --warn-bg: #FFF4D1;
+    color-scheme: light;
+    --navy: #176345;
+    --navy-light: #104d36;
+    --gold: #d8ad55;
+    --cream: #f4f7f5;
+    --card: #ffffff;
+    --border: #e2eae5;
+    --text: #1d2c24;
+    --text-soft: #718078;
+    --pass: #18794e;
+    --pass-bg: #e5f5ec;
+    --fail: #b93838;
+    --fail-bg: #fff0ef;
+    --warn: #ce8e00;
+    --warn-bg: #fff4d1;
+    --surface-soft: #f8faf8;
+    --shadow-md: 0 12px 34px rgba(24, 55, 39, .075);
+    --radius-card: 18px;
+    --radius-control: 11px;
+    --ease-out-expo: cubic-bezier(.16,1,.3,1);
+    --ease-out-back: cubic-bezier(.34,1.56,.64,1);
+    
+    --input-bg: #fbfdfb;
+    --input-bg-focus: #fff;
+    --sec-btn-bg: #f5faf6;
+    --sec-btn-bg-hover: #eaf4ed;
+    --sec-btn-border: #dce9e0;
   }
+
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --navy: #2b8960;
+    --navy-light: #1f6a48;
+    --gold: #e6c477;
+    --cream: #1a2420;
+    --card: #232f29;
+    --border: #364740;
+    --text: #e6eeea;
+    --text-soft: #9caea4;
+    --pass: #6fcf97;
+    --pass-bg: #1f3d2c;
+    --fail: #e77;
+    --fail-bg: #3d2222;
+    --warn: #e0b85c;
+    --warn-bg: #3a2f18;
+    --surface-soft: #253029;
+    --shadow-md: 0 12px 34px rgba(0, 0, 0, .35);
+    
+    --input-bg: #1e2925;
+    --input-bg-focus: #253029;
+    --sec-btn-bg: #2a3833;
+    --sec-btn-bg-hover: #364740;
+    --sec-btn-border: #364740;
+  }
+
   * { box-sizing: border-box; }
-  body { margin:0; font-family: 'Nunito', Arial, sans-serif; background: var(--cream); color: var(--text); min-height:100vh; padding:24px 16px 60px; }
-  .wrap { max-width: 760px; margin: 0 auto; }
-  .wrap.narrow { max-width: 420px; }
-  .header { text-align:center; margin-bottom:22px; }
-  .header .crest { width:44px; height:44px; background:var(--navy); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; margin:0 auto 10px; }
-  .header h1 { font-size:20px; margin:0; font-weight:800; font-family: "Baloo 2", sans-serif; }
-  .header p { font-size:12px; color:var(--text-soft); margin:4px 0 0; }
-  .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:20px; margin-bottom:18px; }
-  .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; font-size:13px; }
-  .topbar .who { color:var(--text-soft); }
-  .topbar button { background:none; border:none; color:var(--navy); font-weight:bold; cursor:pointer; font-size:13px; }
-  label { font-size:11px; color:var(--text-soft); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.3px; }
-  input, select { width:100%; padding:9px 10px; font-size:13px; border:1px solid var(--border); border-radius:4px; background:var(--cream); color:var(--text); font-family:inherit; }
-  input:focus, select:focus { outline:2px solid var(--navy); outline-offset:1px; }
-  .add-form { display:grid; grid-template-columns: 1fr 1fr auto; gap:8px; align-items:end; margin-bottom:14px; }
-  @media (max-width:600px) { .add-form { grid-template-columns: 1fr; } }
-  button.primary { padding:10px 16px; font-size:13px; font-weight:700; font-family:'Baloo 2', sans-serif; text-transform:uppercase; letter-spacing:0.3px; border:none; border-radius:12px; background:var(--navy); color:#fff; cursor:pointer; white-space:nowrap; box-shadow: 0 4px 0 var(--navy-light); transition: transform 0.05s, box-shadow 0.05s; }
-  button.primary:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--navy-light); }
-  button.primary:hover { filter: brightness(1.05); }
-  button.primary:hover { background: var(--navy-light); }
-  .error-msg { font-size:13px; color:var(--fail); background:var(--fail-bg); border-radius:4px; padding:10px 12px; margin-bottom:14px; display:none; }
-  .list-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px; }
-  .list-row:last-child { border-bottom:none; }
-  .list-row .meta { color:var(--text-soft); font-size:12px; }
-  .status-pill { display:inline-block; padding:2px 8px; border-radius:3px; font-weight:bold; font-size:11px; }
-  .status-unused { background:var(--warn-bg); color:var(--warn); }
-  .status-active { background:var(--pass-bg); color:var(--pass); }
-  .status-exhausted { background:var(--fail-bg); color:var(--fail); }
-  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--navy); color:#fff; padding:12px 20px; border-radius:18px; font-size:13px; display:none; max-width:90%; }
-  .empty-note { text-align:center; color:var(--text-soft); font-size:13px; padding:16px 0; }
-  .section-title { font-size:14px; font-weight:bold; margin:0 0 14px; }
-  .code-list { font-family: monospace; font-size:13px; background:var(--cream); border-radius:4px; padding:12px; max-height:220px; overflow-y:auto; white-space:pre-line; margin-bottom:10px; }
-  .tabs { display:flex; gap:4px; margin-bottom:18px; background:var(--cream); border-radius:18px; padding:4px; }
-  .tabs button { flex:1; padding:8px 6px; border:none; border-radius:4px; background:transparent; color:var(--text-soft); font-size:12px; font-weight:bold; cursor:pointer; }
-  .tabs button.active { background:var(--navy); color:#fff; }
-  .pager { display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:12px; color:var(--text-soft); }
+  html { min-height: 100%; }
+  body {
+    margin: 0;
+    font-family: 'Nunito', Arial, sans-serif;
+    background:
+      radial-gradient(ellipse at 8% 0%, rgba(23, 99, 69, .06), transparent 32rem),
+      linear-gradient(180deg, var(--cream) 0%, var(--cream) 100%);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 34px 18px 72px;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .3s ease, color .3s ease;
+  }
+  .wrap { width: min(100%, 760px); margin: 0 auto; position: relative; }
+  .wrap.narrow { width: min(100%, 440px); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes viewSwap {
+    from { opacity: 0; transform: translateY(16px) scale(.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes dotPulse {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(43,137,96,.22); transform: scale(1); }
+    50%      { box-shadow: 0 0 0 6px rgba(43,137,96,.06); transform: scale(1.1); }
+  }
+
+  /* Theme Toggle */
+  .theme-toggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+    transition: transform .18s var(--ease-out-back), background .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .theme-toggle:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .theme-toggle:active { transform: scale(.94); }
+  .theme-toggle .icon-sun { display: none; }
+  .theme-toggle .icon-moon { display: inline; }
+  [data-theme="dark"] .theme-toggle .icon-sun { display: inline; }
+  [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+  .header { text-align: center; margin-bottom: 24px; animation: fadeUp .5s var(--ease-out-expo) both; }
+  .header .crest {
+    width: 58px; height: 58px;
+    background: linear-gradient(145deg, #247a56, #104b35);
+    color: #f4d58e;
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 19px;
+    margin: 0 auto 12px;
+    box-shadow: 0 7px 18px rgba(16, 77, 54, .18);
+    font-family: 'Baloo 2', sans-serif;
+  }
+  .header h1 { font-size: clamp(21px, 3vw, 27px); margin: 0; font-weight: 800; font-family: 'Baloo 2', sans-serif; color: var(--text); }
+  .header p { font-size: 12px; color: var(--text-soft); margin: 6px 0 0; font-weight: 700; letter-spacing: .35px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-md);
+    animation: fadeUp .5s var(--ease-out-expo) .1s both;
+    transition: background-color .3s ease, border-color .3s ease;
+  }
+  .card.view-enter { animation: viewSwap .45s var(--ease-out-expo) both; }
+
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 15px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-soft); }
+  .topbar .who { font-weight: 700; color: var(--text); }
+  .topbar button { background: var(--sec-btn-bg); border: 1px solid var(--border); color: var(--navy); padding: 7px 12px; border-radius: 9px; font-weight: 800; cursor: pointer; transition: background .15s ease; }
+  .topbar button:hover { background: var(--sec-btn-bg-hover); }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 22px; background: var(--sec-btn-bg); border-radius: 12px; padding: 4px; }
+  .tabs button { flex: 1; padding: 10px 6px; border: none; border-radius: 8px; background: transparent; color: var(--text-soft); font-size: 13px; font-weight: 800; cursor: pointer; transition: all .2s ease; }
+  .tabs button.active { background: var(--navy); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+  .tabs button:hover:not(.active) { color: var(--text); }
+
+  label { font-size: 10px; color: #596c61; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .85px; font-weight: 900; }
+  input, select {
+    width: 100%;
+    padding: 11px 13px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    background: var(--input-bg);
+    color: var(--text);
+    font-family: inherit;
+    font-weight: 700;
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+  input:focus, select:focus { border-color: var(--navy); background: var(--input-bg-focus); box-shadow: 0 0 0 3px rgba(49, 131, 93, .12); }
+
+  .add-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 18px; }
+  @media (max-width: 600px) { .add-form { grid-template-columns: 1fr; } }
+
+  button.primary {
+    padding: 11px 19px;
+    font-size: 12px;
+    font-weight: 900;
+    font-family: 'Nunito', Arial, sans-serif;
+    letter-spacing: .25px;
+    border: 1px solid var(--navy);
+    border-radius: 11px;
+    background: linear-gradient(135deg, #237b55, #145b3d);
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(23, 99, 69, .16);
+    transition: transform .18s var(--ease-out-back), box-shadow .18s var(--ease-out-expo);
+  }
+  button.primary:hover { background: linear-gradient(135deg, #2b8960, #176345); box-shadow: 0 8px 20px rgba(23, 99, 69, .26); transform: translateY(-2px); }
+  button.primary:active { transform: translateY(0) scale(.98); }
+  button.primary:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+  .list-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 13px; gap: 12px; }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .meta { color: var(--text-soft); font-size: 12px; }
+  
+  .status-pill { display: inline-block; padding: 4px 10px; border-radius: 8px; font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
+  .status-unused { background: var(--warn-bg); color: var(--warn); }
+  .status-active { background: var(--pass-bg); color: var(--pass); }
+  .status-exhausted { background: var(--fail-bg); color: var(--fail); }
+  .badge-draft { background: var(--cream); color: var(--text-soft); border: 1px solid var(--border); }
+
+  .empty-note { text-align: center; color: var(--text-soft); font-size: 13px; padding: 24px 16px; font-weight: 700; }
+  .section-title { font-size: 15px; font-weight: 800; font-family: 'Baloo 2', sans-serif; margin: 0 0 14px; color: var(--text); }
+
+  .code-list { font-family: monospace; font-size: 13px; background: var(--surface-soft); border: 1px solid var(--border); border-radius: 10px; padding: 14px; max-height: 220px; overflow-y: auto; white-space: pre-line; margin-bottom: 14px; color: var(--text); }
+  
+  .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 12px; color: var(--text-soft); font-weight: 700; }
+
+  .toast {
+    position: fixed; z-index: 9999; right: 20px; bottom: 22px; left: 20px; width: fit-content; max-width: min(520px, calc(100% - 40px));
+    margin: 0 auto; padding: 14px 20px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: #183f2e; color: #fff;
+    box-shadow: 0 16px 40px rgba(14, 48, 31, .28); font-size: 13px; font-weight: 800; text-align: center; display: none;
+  }
+  .toast.show { display: block; animation: fadeUp .3s var(--ease-out-back) both; }
+
+  @media (max-width: 500px) {
+    body { padding: 20px 12px 56px; }
+    .card { padding: 18px; }
+    .theme-toggle { width: 38px; height: 38px; top: 10px; right: 10px; font-size: 16px; }
+    .header .crest { width: 52px; height: 52px; }
+    .list-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .list-row > span:last-child { align-self: flex-end; }
+  }
 </style>
 </head>
 <body>
+
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+  <span class="icon-moon">🌙</span>
+  <span class="icon-sun">☀️</span>
+</button>
 
 <!-- LOGIN -->
 <div class="wrap narrow" id="loginWrap">
   <div class="header">
     <div class="crest">⚡</div>
     <h1>ResultPro</h1>
-    <p>Developer control panel</p>
+    <p>Developer Control Panel</p>
   </div>
   <div class="card">
-    <div class="error-msg" id="loginError"></div>
+    <div class="error-msg" id="loginError" style="display:none; color:var(--fail); background:var(--fail-bg); padding:10px; border-radius:8px; margin-bottom:14px; font-weight:700;"></div>
     <label for="devEmail">Email</label>
-    <input type="email" id="devEmail" autocomplete="email" />
-    <label for="devPassword" style="margin-top:12px;">Password</label>
+    <input type="email" id="devEmail" autocomplete="email" style="margin-bottom:14px;" />
+    <label for="devPassword">Password</label>
     <div style="position:relative; margin-bottom:16px;">
       <input type="password" id="devPassword" autocomplete="current-password" style="padding-right:64px;" />
-      <button type="button" onclick="togglePasswordVisibility('devPassword', this)" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); width:auto; padding:4px 10px; font-size:10px; background:var(--cream); color:var(--navy); box-shadow:none; border:1px solid var(--border); border-radius:8px; text-transform:none; font-family:'Nunito',Arial,sans-serif; font-weight:700;">Show</button>
+      <button type="button" onclick="togglePasswordVisibility('devPassword', this)" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); width:auto; padding:4px 10px; font-size:10px; background:var(--sec-btn-bg); color:var(--navy); box-shadow:none; border:1px solid var(--border); border-radius:8px; text-transform:none; font-weight:700; cursor:pointer;">Show</button>
     </div>
     <button class="primary" style="width:100%;" onclick="login()">Log in</button>
   </div>
@@ -79,7 +273,7 @@
   <div class="header">
     <div class="crest">⚡</div>
     <h1>ResultPro</h1>
-    <p>Developer panel — PIN management</p>
+    <p>Developer Dashboard</p>
   </div>
 
   <div class="card">
@@ -89,12 +283,13 @@
     </div>
 
     <div class="tabs">
-      <button class="active" onclick="switchTab('generate')">Generate PINs</button>
-      <button onclick="switchTab('view')">All PINs</button>
+      <button id="tabBtn-generate" class="active" onclick="switchTab('generate')">Generate PINs</button>
+      <button id="tabBtn-view" onclick="switchTab('view')">All PINs</button>
+      <button id="tabBtn-schools" onclick="switchTab('schools')">Manage Schools</button>
     </div>
 
     <!-- GENERATE -->
-    <div id="tab-generate">
+    <div id="tab-generate" class="view-enter">
       <p class="section-title">Generate a new batch</p>
       <div class="add-form">
         <div><label>How many PINs</label><input type="number" id="genCount" value="50" min="1" max="1000" /></div>
@@ -111,7 +306,7 @@
         <div><label>Search</label><input type="text" id="pinSearch" placeholder="PIN code or admission no." oninput="debouncedPinSearch()" /></div>
         <div><label>Status</label>
           <select id="pinStatusFilter" onchange="searchPins()">
-            <option value="">All</option>
+            <option value="">All Statuses</option>
             <option value="unused">Unused</option>
             <option value="active">Active (in use)</option>
             <option value="exhausted">Exhausted</option>
@@ -123,6 +318,22 @@
       <div class="pager" id="pinsPager"></div>
     </div>
 
+    <!-- MANAGE SCHOOLS -->
+    <div id="tab-schools" style="display:none;">
+      <p class="section-title">Manage Schools (Super Admin)</p>
+      
+      <div class="card" style="background:var(--surface-soft); border:1px solid var(--border); box-shadow:none; margin-bottom:20px; padding:16px;">
+        <p style="font-size:12px; font-weight:800; margin:0 0 12px;">Add a New School</p>
+        <div class="add-form" style="margin-bottom:0; padding-bottom:0; border:none;">
+          <div><label>School Name</label><input type="text" id="newSchoolName" placeholder="e.g. Greenfield Academy" /></div>
+          <div><label>School Code</label><input type="text" id="newSchoolCode" placeholder="e.g. GFA" maxlength="10" style="text-transform:uppercase;" /></div>
+          <button class="primary" onclick="createSchool()">Add School</button>
+        </div>
+      </div>
+
+      <div id="schoolsList"></div>
+    </div>
+
   </div>
 </div>
 
@@ -131,6 +342,9 @@
 <script>
   const API_BASE = window.location.origin;
   let admin = null;
+  let pinPage = 1;
+  const PINS_PER_PAGE = 25;
+  let pinSearchDebounceTimer;
 
   const saved = sessionStorage.getItem('resultpro_developer');
   if (saved) {
@@ -138,11 +352,21 @@
     boot();
   }
 
+  // --- THEME ---
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('resultpro_theme', next); } catch (e) {}
+  }
+
   function showToast(message) {
     const t = document.getElementById('toast');
     t.textContent = message;
-    t.style.display = 'block';
-    setTimeout(() => { t.style.display = 'none'; }, 3000);
+    t.classList.remove('show');
+    void t.offsetWidth;
+    t.classList.add('show');
+    setTimeout(() => { t.classList.remove('show'); }, 3000);
   }
 
   function togglePasswordVisibility(inputId, btn) {
@@ -191,11 +415,19 @@
   }
 
   function switchTab(tab) {
-    document.getElementById('tab-generate').style.display = tab === 'generate' ? 'block' : 'none';
-    document.getElementById('tab-view').style.display = tab === 'view' ? 'block' : 'none';
-    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+    ['generate', 'view', 'schools'].forEach(t => {
+      const el = document.getElementById('tab-' + t);
+      if (t === tab) {
+        el.style.display = 'block';
+        el.classList.remove('view-enter'); void el.offsetWidth; el.classList.add('view-enter');
+      } else {
+        el.style.display = 'none';
+      }
+      document.getElementById('tabBtn-' + t).classList.toggle('active', t === tab);
+    });
+    
     if (tab === 'view') searchPins();
+    if (tab === 'schools') loadSchools();
   }
 
   /* ---------------- GENERATE ---------------- */
@@ -211,7 +443,7 @@
       if (!res.ok) throw new Error(data.error);
       const codes = data.pins.map(p => p.code).join('\n');
       document.getElementById('generatedResult').innerHTML = `
-        <p style="font-size:12px; color:var(--text-soft); margin:0 0 8px;">${data.pins.length} PINs generated — copy this list to hand over to the exam office:</p>
+        <p style="font-size:12px; color:var(--text-soft); margin:0 0 8px; font-weight:700;">${data.pins.length} PINs generated — copy this list to hand over to the exam office:</p>
         <div class="code-list">${codes}</div>
         <button class="primary" onclick="copyGenerated()">Copy all codes</button>
       `;
@@ -229,11 +461,7 @@
       .catch(() => showToast('Could not copy — select and copy manually.'));
   }
 
-  /* ---------------- VIEW / SEARCH ---------------- */
-  let pinPage = 1;
-  const PINS_PER_PAGE = 25;
-  let pinSearchDebounceTimer;
-
+  /* ---------------- VIEW ---------------- */
   function debouncedPinSearch() {
     clearTimeout(pinSearchDebounceTimer);
     pinSearchDebounceTimer = setTimeout(searchPins, 350);
@@ -253,7 +481,6 @@
   async function searchPins() {
     const search = document.getElementById('pinSearch').value.trim();
     const status = document.getElementById('pinStatusFilter').value;
-
     const params = new URLSearchParams({ page: pinPage, pageSize: PINS_PER_PAGE });
     if (search) params.set('search', search);
     if (status) params.set('status', status);
@@ -262,15 +489,15 @@
       const res = await fetch(`${API_BASE}/api/developer/pins?${params.toString()}`);
       const data = await res.json();
       const pins = data.pins || [];
-
       const list = document.getElementById('pinsList');
+      
       list.innerHTML = pins.length
         ? pins.map(p => {
             const s = pinStatus(p);
             const who = p.student_admission_no ? `${p.student_name} (${p.student_admission_no})` : 'Not yet used';
             return `
               <div class="list-row">
-                <span style="font-family:monospace;">${p.code} <span class="meta">— ${who} — ${p.uses_count}/${p.max_uses} uses</span></span>
+                <span style="font-family:monospace; font-weight:700;">${p.code} <span class="meta" style="font-family:'Nunito',sans-serif;">— ${who} — ${p.uses_count}/${p.max_uses} uses</span></span>
                 <span class="status-pill ${s.cls}">${s.label}</span>
               </div>`;
           }).join('')
@@ -285,6 +512,96 @@
         </span>`;
     } catch (err) {
       showToast('Could not load PINs.');
+    }
+  }
+
+  /* ---------------- SCHOOLS (SAAS) ---------------- */
+  async function loadSchools() {
+    const list = document.getElementById('schoolsList');
+    list.innerHTML = `<p class="empty-note">Loading schools...</p>`;
+    
+    try {
+      const res = await fetch(`${API_BASE}/api/developer/schools`);
+      const data = await res.json();
+      const schools = data.schools || [];
+      
+      if (schools.length === 0) {
+        list.innerHTML = `<p class="empty-note">No schools yet. Add your first school above.</p>`;
+        return;
+      }
+
+      list.innerHTML = schools.map(s => {
+        const isActive = s.status === 'active';
+        const badge = isActive 
+          ? `<span class="status-pill status-active">Active</span>` 
+          : `<span class="status-pill status-exhausted">Suspended</span>`;
+          
+        const btnLabel = isActive ? 'Suspend' : 'Activate';
+        const btnColor = isActive ? 'var(--fail-bg); color:var(--fail);' : 'var(--pass-bg); color:var(--pass);';
+        const newStatus = isActive ? 'suspended' : 'active';
+
+        return `
+          <div class="list-row">
+            <span style="flex:1;">
+              <b style="font-size:14px; color:var(--text);">${s.name}</b> 
+              <span style="font-family:monospace; background:var(--sec-btn-bg); padding:2px 6px; border-radius:4px; margin-left:8px; font-weight:bold; color:var(--navy);">${s.code}</span>
+              <br>
+              <span class="meta">Added: ${new Date(s.created_at).toLocaleDateString()}</span>
+            </span>
+            <span style="display:flex; gap:8px; align-items:center;">
+              ${badge}
+              <button class="primary" style="background:${btnColor}; border:none; padding:6px 12px; font-size:11px; box-shadow:none;" onclick="toggleSchoolStatus(${s.id}, '${newStatus}')">${btnLabel}</button>
+            </span>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      list.innerHTML = `<p class="empty-note" style="color:var(--fail);">Failed to load schools.</p>`;
+    }
+  }
+
+  async function createSchool() {
+    const name = document.getElementById('newSchoolName').value.trim();
+    const code = document.getElementById('newSchoolCode').value.trim();
+
+    if (!name || !code) return showToast('School Name and Code are required.');
+
+    try {
+      const res = await fetch(`${API_BASE}/api/developer/schools`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, code })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      document.getElementById('newSchoolName').value = '';
+      document.getElementById('newSchoolCode').value = '';
+      
+      showToast(`School "${name}" created! Code: ${data.school.code}`);
+      loadSchools();
+    } catch (err) {
+      showToast(err.message || 'Failed to create school.');
+    }
+  }
+
+  async function toggleSchoolStatus(id, newStatus) {
+    const action = newStatus === 'suspended' ? 'suspend' : 'activate';
+    if (!confirm(`Are you sure you want to ${action} this school?`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/developer/schools/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      showToast(`School successfully ${newStatus === 'active' ? 'activated' : 'suspended'}.`);
+      loadSchools();
+    } catch (err) {
+      showToast(err.message || 'Failed to update status.');
     }
   }
 </script>

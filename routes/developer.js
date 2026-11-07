@@ -130,3 +130,60 @@ router.get('/pins', async (req, res) => {
 });
 
 module.exports = router;
+// ==========================================
+// MULTI-SCHOOL (SAAS) MANAGEMENT
+// ==========================================
+
+// Get all schools
+router.get('/schools', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM schools ORDER BY created_at DESC');
+    res.json({ schools: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load schools' });
+  }
+});
+
+// Create a new school
+router.post('/schools', async (req, res) => {
+  const { name, code, motto, email, phone, address } = req.body;
+  if (!name || !code) {
+    return res.status(400).json({ error: 'School name and code are required' });
+  }
+  
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO schools (name, code, motto, email, phone, address) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name.trim(), code.trim().toUpperCase(), motto || null, email || null, phone || null, address || null]
+    );
+    res.json({ school: rows[0] });
+  } catch (err) {
+    if (err.code === '23505') return res.status(400).json({ error: 'That School Code is already taken' });
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create school' });
+  }
+});
+
+// Toggle school status (Suspend / Activate)
+router.put('/schools/:id/status', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { status } = req.body;
+  
+  if (!['active', 'suspended'].includes(status)) {
+    return res.status(400).json({ error: 'Status must be active or suspended' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      'UPDATE schools SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'School not found' });
+    res.json({ school: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update status' });
+  }
+});
