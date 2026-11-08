@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
@@ -147,43 +148,42 @@ router.get('/schools', async (req, res) => {
 
 // Create a new school
 router.post('/schools', async (req, res) => {
-  const { name, code, motto, email, phone, address } = req.body;
-  if (!name || !code) {
-    return res.status(400).json({ error: 'School name and code are required' });
+  const { name, code, admin_email, admin_password } = req.body;
+  
+  if (!name || !code || !admin_email || !admin_password) {
+    return res.status(400).json({ error: 'School name, code, admin email, and admin password are required' });
   }
   
+  const client = await pool.connect();
   try {
-    const { rows } = await pool.query(
-      `INSERT INTO schools (name, code, motto, email, phone, address) 
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [name.trim(), code.trim().toUpperCase(), motto || null, email || null, phone || null, address || null]
+    await client.query('BEGIN');
+
+    // 1. Create the school
+    const schoolRes = await client.query(
+      `INSERT INTO schools (name, code) VALUES ($1, $2) RETURNING *`,
+      [name.trim(), code.trim().toUpperCase()]
     );
-    res.json({ school: rows[0] });
+    const school = schoolRes.rows[0];
+
+    // 2. Hash the admin password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(admin_password, salt);
+
+    // 3. Create the first Exam Officer for this school
+    await client.query(
+      `INSERT INTO exam_officers (name, email, password_hash, school_id) 
+       VALUES ($1, $2, $3, $4)`,
+      [name + ' Admin', admin_email.trim(), hashedPassword, school.id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ school });
   } catch (err) {
-    if (err.code === '23505') return res.status(400).json({ error: 'That School Code is already taken' });
+    await client.query('ROLLBACK');
+    if (err.code === '23505') return res.status(400).json({ error: 'That School Code or Admin Email is already taken' });
     console.error(err);
     res.status(500).json({ error: 'Failed to create school' });
-  }
-});
-
-// Toggle school status (Suspend / Activate)
-router.put('/schools/:id/status', async (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const { status } = req.body;
-  
-  if (!['active', 'suspended'].includes(status)) {
-    return res.status(400).json({ error: 'Status must be active or suspended' });
-  }
-
-  try {
-    const { rows } = await pool.query(
-      'UPDATE schools SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
-    );
-    if (rows.length === 0) return res.status(404).json({ error: 'School not found' });
-    res.json({ school: rows[0] });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to update status' });
+  } finally {
+    client.release();
   }
 });

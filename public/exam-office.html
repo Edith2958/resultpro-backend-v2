@@ -712,7 +712,7 @@
   </div>
   <div class="card">
     <div class="error-msg" id="loginError" role="alert"></div>
-    <label for="schoolCode">School Code</label>
+        <label for="schoolCode">School Code</label>
     <input type="text" id="schoolCode" placeholder="e.g. AHS" style="text-transform:uppercase;" />
     <label for="officerEmail">Email</label>
     <input type="email" id="officerEmail" autocomplete="email" />
@@ -1276,6 +1276,7 @@
       async function login() {
     const email = document.getElementById('officerEmail').value.trim();
     const password = document.getElementById('officerPassword').value;
+    const school_code = document.getElementById('schoolCode').value.trim();
     const schoolCode = document.getElementById('schoolCode').value.trim();
     const errEl = document.getElementById('loginError');
     
@@ -1297,11 +1298,7 @@
       const res = await fetch(`${API_BASE}/api/exam-office/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: email, 
-          password: password, 
-          school_code: schoolCode 
-        }),
+        body: JSON.stringify({ email, password, school_code }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
