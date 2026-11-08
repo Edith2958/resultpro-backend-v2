@@ -322,14 +322,13 @@
     <div id="tab-schools" style="display:none;">
       <p class="section-title">Manage Schools (Super Admin)</p>
       
-      <div class="card" style="background:var(--surface-soft); border:1px solid var(--border); box-shadow:none; margin-bottom:20px; padding:16px;">
-        <p style="font-size:12px; font-weight:800; margin:0 0 12px;">Add a New School</p>
-        <div class="add-form" style="margin-bottom:0; padding-bottom:0; border:none;">
+              <div class="add-form" style="margin-bottom:0; padding-bottom:0; border:none; grid-template-columns: 1fr 1fr;">
           <div><label>School Name</label><input type="text" id="newSchoolName" placeholder="e.g. Greenfield Academy" /></div>
           <div><label>School Code</label><input type="text" id="newSchoolCode" placeholder="e.g. GFA" maxlength="10" style="text-transform:uppercase;" /></div>
-          <button class="primary" onclick="createSchool()">Add School</button>
+          <div><label>Admin Email</label><input type="email" id="newSchoolAdminEmail" placeholder="admin@school.com" /></div>
+          <div><label>Admin Password</label><input type="text" id="newSchoolAdminPassword" placeholder="Temporary password" /></div>
+          <button class="primary" onclick="createSchool()" style="grid-column: span 2;">Create School & Admin</button>
         </div>
-      </div>
 
       <div id="schoolsList"></div>
     </div>
@@ -560,25 +559,31 @@
     }
   }
 
-  async function createSchool() {
+        async function createSchool() {
     const name = document.getElementById('newSchoolName').value.trim();
     const code = document.getElementById('newSchoolCode').value.trim();
+    const admin_email = document.getElementById('newSchoolAdminEmail').value.trim();
+    const admin_password = document.getElementById('newSchoolAdminPassword').value.trim();
 
-    if (!name || !code) return showToast('School Name and Code are required.');
+    if (!name || !code || !admin_email || !admin_password) {
+      return showToast('All fields are required (Name, Code, Email, Password).');
+    }
 
     try {
       const res = await fetch(`${API_BASE}/api/developer/schools`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, code })
+        body: JSON.stringify({ name, code, admin_email, admin_password })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
       document.getElementById('newSchoolName').value = '';
       document.getElementById('newSchoolCode').value = '';
+      document.getElementById('newSchoolAdminEmail').value = '';
+      document.getElementById('newSchoolAdminPassword').value = '';
       
-      showToast(`School "${name}" created! Code: ${data.school.code}`);
+      showToast(`School "${name}" and Admin created! Code: ${data.school.code}`);
       loadSchools();
     } catch (err) {
       showToast(err.message || 'Failed to create school.');
