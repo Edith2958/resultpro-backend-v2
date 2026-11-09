@@ -272,12 +272,14 @@ router.delete('/deadline-overrides/:id', async (req, res) => {
 });
 
 router.get('/students', async (req, res) => {
-  const { search, class: className, page = 1, pageSize = 25 } = req.query;
+  const { search, class: className, school_id, page = 1, pageSize = 25 } = req.query;
+  if (!school_id) return res.status(400).json({ error: 'school_id is required' });
+
   const limit = Math.min(Number(pageSize) || 25, 100);
   const offset = (Math.max(Number(page) || 1, 1) - 1) * limit;
 
-  const conditions = [];
-  const params = [];
+  const conditions = [`school_id = $1`];
+  const params = [school_id];
 
   if (search) {
     params.push(`%${search}%`);
@@ -287,7 +289,7 @@ router.get('/students', async (req, res) => {
     params.push(className);
     conditions.push(`class = $${params.length}`);
   }
-  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
   try {
     const countRes = await pool.query(`SELECT COUNT(*) FROM students ${whereClause}`, params);
@@ -311,7 +313,6 @@ router.get('/students', async (req, res) => {
     res.status(500).json({ error: 'Failed to load students' });
   }
 });
-
 router.post('/students', async (req, res) => {
   let { surname, first_name, middle_name, admission_no, class: className, term, session } = req.body;
   if (!surname || !first_name || !admission_no || !className) {
@@ -567,8 +568,11 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
 });
 
 router.get('/subjects', async (req, res) => {
+  const { school_id } = req.query;
+  if (!school_id) return res.status(400).json({ error: 'school_id is required' });
+
   try {
-    const { rows } = await pool.query('SELECT * FROM subjects ORDER BY name ASC');
+    const { rows } = await pool.query('SELECT * FROM subjects WHERE school_id = $1 ORDER BY name ASC', [school_id]);
     res.json({ subjects: rows });
   } catch (err) {
     console.error(err);
@@ -604,8 +608,11 @@ router.delete('/subjects/:id', async (req, res) => {
 });
 
 router.get('/teachers', async (req, res) => {
+  const { school_id } = req.query;
+  if (!school_id) return res.status(400).json({ error: 'school_id is required' });
+
   try {
-    const { rows } = await pool.query('SELECT id, name, email, created_at FROM teachers ORDER BY name ASC');
+    const { rows } = await pool.query('SELECT id, name, email, created_at FROM teachers WHERE school_id = $1 ORDER BY name ASC', [school_id]);
     res.json({ teachers: rows });
   } catch (err) {
     console.error(err);
@@ -646,8 +653,11 @@ const VALID_LEVELS = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
 const VALID_ARMS = ['A', 'B', 'C', 'D', 'E'];
 
 router.get('/classes', async (req, res) => {
+  const { school_id } = req.query;
+  if (!school_id) return res.status(400).json({ error: 'school_id is required' });
+
   try {
-    const { rows } = await pool.query('SELECT * FROM classes ORDER BY level ASC, arm ASC');
+    const { rows } = await pool.query('SELECT * FROM classes WHERE school_id = $1 ORDER BY level ASC, arm ASC', [school_id]);
     res.json({ classes: rows });
   } catch (err) {
     console.error(err);

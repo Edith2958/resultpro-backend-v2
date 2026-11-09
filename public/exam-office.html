@@ -701,7 +701,6 @@
 <body>
 
 <a href="#mainApp" class="visually-hidden">Skip to main content</a>
-    
 
 <!-- LOGIN -->
 <div class="wrap narrow" id="loginWrap">
@@ -712,7 +711,7 @@
   </div>
   <div class="card">
     <div class="error-msg" id="loginError" role="alert"></div>
-        <label for="schoolCode">School Code</label>
+    <label for="schoolCode">School Code</label>
     <input type="text" id="schoolCode" placeholder="e.g. AHS" style="text-transform:uppercase;" />
     <label for="officerEmail">Email</label>
     <input type="email" id="officerEmail" autocomplete="email" />
@@ -1273,16 +1272,15 @@
   });
 
   /* ============ LOGIN ============ */
-      async function login() {
+  async function login() {
     const email = document.getElementById('officerEmail').value.trim();
     const password = document.getElementById('officerPassword').value;
     const school_code = document.getElementById('schoolCode').value.trim();
-    const schoolCode = document.getElementById('schoolCode').value.trim();
     const errEl = document.getElementById('loginError');
     
     errEl.style.display = 'none';
 
-    if (!schoolCode) {
+    if (!school_code) {
       errEl.textContent = 'Please enter your School Code (e.g. AHS).';
       errEl.style.display = 'block';
       return;
@@ -1304,6 +1302,7 @@
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
       officer = data.officer;
+      sessionStorage.setItem('resultpro_school_id', data.school.id);
       sessionStorage.setItem('resultpro_officer', JSON.stringify(officer));
       boot();
     } catch (err) {
@@ -1311,11 +1310,10 @@
       errEl.style.display = 'block';
     }
   }
-      const school_code = document.getElementById('schoolCode').value.trim();
-    // ...
-    body: JSON.stringify({ email, password, school_code }),
+  
   function logout() {
     sessionStorage.removeItem('resultpro_officer');
+    sessionStorage.removeItem('resultpro_school_id');
     officer = null;
     document.getElementById('mainApp').style.display = 'none';
     document.getElementById('loginWrap').style.display = 'block';
@@ -1358,6 +1356,8 @@
   }
 
   /* ============ LOAD ============ */
+  const getSchoolId = () => sessionStorage.getItem('resultpro_school_id');
+  
   async function refreshAll() {
     await Promise.all([loadStudents(), loadSubjects(), loadTeachers(), loadClasses()]);
     await Promise.all([loadAssignments(), loadFormTeachers()]);
@@ -1412,7 +1412,7 @@
     const myToken = ++reqTokens.students;
     const search = document.getElementById('studentSearch').value.trim();
     const classFilter = document.getElementById('studentClassFilter').value;
-    const params = new URLSearchParams({ page: studentPage, pageSize: STUDENTS_PER_PAGE });
+    const params = new URLSearchParams({ page: studentPage, pageSize: STUDENTS_PER_PAGE, school_id: getSchoolId() });
     if (search) params.set('search', search);
     if (classFilter) params.set('class', classFilter);
 
@@ -1420,7 +1420,8 @@
     renderSkeleton(list, 3);
 
     try {
-      const res = await fetch(`${API_BASE}/api/exam-office/students?${params.toString()}`);
+      const url = `${API_BASE}/api/exam-office/students?${params.toString()}`;
+      const res = await fetch(url);
       if (myToken !== reqTokens.students) return; // stale
       const data = await res.json();
       const students = data.students || [];
@@ -1501,6 +1502,8 @@
     if (!file) { resultEl.innerHTML = ''; return showToast('Choose a file first.'); }
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('school_id', getSchoolId());
+    
     resultEl.innerHTML = `<p class="empty-note" style="padding:0;">Uploading and parsing file…</p>`;
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/students/bulk-import`, { method: 'POST', body: formData });
@@ -1542,7 +1545,7 @@
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/students`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ surname, first_name, middle_name, admission_no, class: className }),
+        body: JSON.stringify({ surname, first_name, middle_name, admission_no, class: className, school_id: getSchoolId() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -1560,7 +1563,7 @@
     const admission_no = document.getElementById('commentAdmNo').value.trim();
     if (!admission_no) return showToast('Enter an admission number.');
     try {
-      const res = await fetch(`${API_BASE}/api/exam-office/students?search=${encodeURIComponent(admission_no)}`);
+      const res = await fetch(`${API_BASE}/api/exam-office/students?search=${encodeURIComponent(admission_no)}&school_id=${getSchoolId()}`);
       const data = await res.json();
       const student = (data.students || []).find(s => String(s.admission_no).toLowerCase() === admission_no.toLowerCase());
       if (!student) {
@@ -1596,7 +1599,7 @@
   /* ============ SUBJECTS / TEACHERS / CLASSES ============ */
   async function loadSubjects() {
     try {
-      const res = await fetch(`${API_BASE}/api/exam-office/subjects`);
+      const res = await fetch(`${API_BASE}/api/exam-office/subjects?school_id=${getSchoolId()}`);
       const data = await res.json();
       cache.subjects = data.subjects || [];
       const list = document.getElementById('subjectsList');
@@ -1621,7 +1624,7 @@
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/subjects`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, school_id: getSchoolId() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -1634,7 +1637,7 @@
 
   async function loadTeachers() {
     try {
-      const res = await fetch(`${API_BASE}/api/exam-office/teachers`);
+      const res = await fetch(`${API_BASE}/api/exam-office/teachers?school_id=${getSchoolId()}`);
       const data = await res.json();
       cache.teachers = data.teachers || [];
       const list = document.getElementById('teachersList');
@@ -1663,7 +1666,7 @@
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/teachers`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, school_id: getSchoolId() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -1676,7 +1679,7 @@
 
   async function loadClasses() {
     try {
-      const res = await fetch(`${API_BASE}/api/exam-office/classes`);
+      const res = await fetch(`${API_BASE}/api/exam-office/classes?school_id=${getSchoolId()}`);
       const data = await res.json();
       cache.classes = data.classes || [];
       const list = document.getElementById('classesList');
@@ -1698,7 +1701,7 @@
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/classes`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ level, arm }),
+        body: JSON.stringify({ level, arm, school_id: getSchoolId() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -1710,7 +1713,7 @@
 
   async function loadAssignments() {
     try {
-      const res = await fetch(`${API_BASE}/api/exam-office/assignments`);
+      const res = await fetch(`${API_BASE}/api/exam-office/assignments?school_id=${getSchoolId()}`);
       const data = await res.json();
       const list = document.getElementById('assignmentsList');
       if (!(data.assignments || []).length) {
@@ -1733,7 +1736,7 @@
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/assignments`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher_id, subject_id, class: className }),
+        body: JSON.stringify({ teacher_id, subject_id, class: className, school_id: getSchoolId() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -1744,7 +1747,7 @@
 
   async function loadFormTeachers() {
     try {
-      const res = await fetch(`${API_BASE}/api/exam-office/form-teachers`);
+      const res = await fetch(`${API_BASE}/api/exam-office/form-teachers?school_id=${getSchoolId()}`);
       const data = await res.json();
       const list = document.getElementById('formTeachersList');
       if (!(data.formTeachers || []).length) {
@@ -1766,7 +1769,7 @@
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/form-teachers`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher_id, class: className }),
+        body: JSON.stringify({ teacher_id, class: className, school_id: getSchoolId() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -1809,7 +1812,7 @@
     const myToken = ++reqTokens.pins;
     const search = document.getElementById('officePinSearch').value.trim();
     const status = document.getElementById('officePinStatusFilter').value;
-    const params = new URLSearchParams({ page: officePinPage, pageSize: OFFICE_PINS_PER_PAGE });
+    const params = new URLSearchParams({ page: officePinPage, pageSize: OFFICE_PINS_PER_PAGE, school_id: getSchoolId() });
     if (search) params.set('search', search);
     if (status) params.set('status', status);
 
@@ -1863,7 +1866,7 @@
     const classFilter = document.getElementById('feeClassFilter').value;
     if (!session) return;
 
-    const params = new URLSearchParams({ term, session, page: feePage, pageSize: FEES_PER_PAGE });
+    const params = new URLSearchParams({ term, session, page: feePage, pageSize: FEES_PER_PAGE, school_id: getSchoolId() });
     if (search) params.set('search', search);
     if (classFilter) params.set('class', classFilter);
 
@@ -2002,7 +2005,7 @@
       info.textContent = (!s.teacher_deadline && !s.result_release_at)
         ? 'No dates set yet for this term — students can view results anytime, teachers have no deadline shown.'
         : 'These dates are live — students and teachers will see live countdowns based on what you save here.';
-       } catch (err) { showToast('Could not load current settings.'); }
+    } catch (err) { showToast('Could not load current settings.'); }
 
     loadDeadlineOverrides();
     attachDeadlineWatchers();
@@ -2040,7 +2043,7 @@
     const session = document.getElementById('tsSession').value.trim();
     if (!session) return;
     try {
-      const res = await fetch(`${API_BASE}/api/exam-office/deadline-overrides?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}`);
+      const res = await fetch(`${API_BASE}/api/exam-office/deadline-overrides?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}&school_id=${getSchoolId()}`);
       const data = await res.json();
       const list = document.getElementById('deadlineOverridesList');
       if (!(data.overrides || []).length) {
@@ -2064,7 +2067,7 @@
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/deadline-overrides`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher_id, class: className, term, session }),
+        body: JSON.stringify({ teacher_id, class: className, term, session, school_id: getSchoolId() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
