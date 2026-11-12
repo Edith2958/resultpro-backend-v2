@@ -105,7 +105,6 @@
     50%      { box-shadow: 0 0 0 6px rgba(43,137,96,.06); transform: scale(1.1); }
   }
 
-  /* Theme Toggle */
   .theme-toggle {
     position: fixed;
     top: 14px;
@@ -291,7 +290,11 @@
     <!-- GENERATE -->
     <div id="tab-generate" class="view-enter">
       <p class="section-title">Generate a new batch</p>
-      <div class="add-form">
+      <div class="add-form cols-4" style="grid-template-columns: 1fr 1fr 1fr auto;">
+        <div>
+          <label>Select School</label>
+          <select id="genSchoolSelect"></select>
+        </div>
         <div><label>How many PINs</label><input type="number" id="genCount" value="50" min="1" max="1000" /></div>
         <div><label>Max uses per PIN</label><input type="number" id="genMaxUses" value="5" min="1" max="20" /></div>
         <button class="primary" onclick="generatePins()">Generate</button>
@@ -302,7 +305,11 @@
     <!-- VIEW -->
     <div id="tab-view" style="display:none;">
       <p class="section-title">All PINs</p>
-      <div class="add-form">
+      <div class="add-form cols-4" style="grid-template-columns: 1fr 1fr 1fr auto;">
+        <div>
+          <label>Filter by School</label>
+          <select id="viewSchoolSelect" onchange="searchPins()"></select>
+        </div>
         <div><label>Search</label><input type="text" id="pinSearch" placeholder="PIN code or admission no." oninput="debouncedPinSearch()" /></div>
         <div><label>Status</label>
           <select id="pinStatusFilter" onchange="searchPins()">
@@ -322,13 +329,13 @@
     <div id="tab-schools" style="display:none;">
       <p class="section-title">Manage Schools (Super Admin)</p>
       
-              <div class="add-form" style="margin-bottom:0; padding-bottom:0; border:none; grid-template-columns: 1fr 1fr;">
-          <div><label>School Name</label><input type="text" id="newSchoolName" placeholder="e.g. Greenfield Academy" /></div>
-          <div><label>School Code</label><input type="text" id="newSchoolCode" placeholder="e.g. GFA" maxlength="10" style="text-transform:uppercase;" /></div>
-          <div><label>Admin Email</label><input type="email" id="newSchoolAdminEmail" placeholder="admin@school.com" /></div>
-          <div><label>Admin Password</label><input type="text" id="newSchoolAdminPassword" placeholder="Temporary password" /></div>
-          <button class="primary" onclick="createSchool()" style="grid-column: span 2;">Create School & Admin</button>
-        </div>
+      <div class="add-form" style="margin-bottom:0; padding-bottom:0; border:none; grid-template-columns: 1fr 1fr;">
+        <div><label>School Name</label><input type="text" id="newSchoolName" placeholder="e.g. Greenfield Academy" /></div>
+        <div><label>School Code</label><input type="text" id="newSchoolCode" placeholder="e.g. GFA" maxlength="10" style="text-transform:uppercase;" /></div>
+        <div><label>Admin Email</label><input type="email" id="newSchoolAdminEmail" placeholder="admin@school.com" /></div>
+        <div><label>Admin Password</label><input type="text" id="newSchoolAdminPassword" placeholder="Temporary password" /></div>
+        <button class="primary" onclick="createSchool()" style="grid-column: span 2;">Create School & Admin</button>
+      </div>
 
       <div id="schoolsList"></div>
     </div>
@@ -344,6 +351,7 @@
   let pinPage = 1;
   const PINS_PER_PAGE = 25;
   let pinSearchDebounceTimer;
+  let allSchools = [];
 
   const saved = sessionStorage.getItem('resultpro_developer');
   if (saved) {
@@ -351,7 +359,6 @@
     boot();
   }
 
-  // --- THEME ---
   function toggleTheme() {
     const current = document.documentElement.getAttribute('data-theme') || 'light';
     const next = current === 'dark' ? 'light' : 'dark';
@@ -407,10 +414,11 @@
     document.getElementById('loginWrap').style.display = 'block';
   }
 
-  function boot() {
+  async function boot() {
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
     document.getElementById('whoAmI').textContent = `Logged in as ${admin.name}`;
+    await fetchSchoolsForDropdowns();
   }
 
   function switchTab(tab) {
@@ -429,17 +437,39 @@
     if (tab === 'schools') loadSchools();
   }
 
+  // Load schools into the dropdowns for PIN generation/viewing
+  async function fetchSchoolsForDropdowns() {
+    try {
+      const res = await fetch(`${API_BASE}/api/developer/schools`);
+      const data = await res.json();
+      allSchools = data.schools || [];
+      
+      const options = allSchools.map(s => `<option value="${s.id}">${s.name} (${s.code})</option>`).join('');
+      const noSchools = '<option value="">No schools found</option>';
+      
+      document.getElementById('genSchoolSelect').innerHTML = allSchools.length ? options : noSchools;
+      document.getElementById('viewSchoolSelect').innerHTML = allSchools.length ? options : noSchools;
+    } catch (err) {
+      console.error('Failed to load schools for dropdowns', err);
+    }
+  }
+
   /* ---------------- GENERATE ---------------- */
   async function generatePins() {
+    const school_id = document.getElementById('genSchoolSelect').value;
+    if (!school_id) return showToast('Please select a school first.');
+
     const count = document.getElementById('genCount').value;
     const max_uses = document.getElementById('genMaxUses').value;
+    
     try {
       const res = await fetch(`${API_BASE}/api/developer/pins/generate`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ count, max_uses, generated_by: admin.id }),
+        body: JSON.stringify({ count, max_uses, generated_by: admin.id, school_id }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      
       const codes = data.pins.map(p => p.code).join('\n');
       document.getElementById('generatedResult').innerHTML = `
         <p style="font-size:12px; color:var(--text-soft); margin:0 0 8px; font-weight:700;">${data.pins.length} PINs generated — copy this list to hand over to the exam office:</p>
@@ -478,9 +508,12 @@
   }
 
   async function searchPins() {
+    const school_id = document.getElementById('viewSchoolSelect').value;
+    if (!school_id) return; // Don't search if no school selected
+
     const search = document.getElementById('pinSearch').value.trim();
     const status = document.getElementById('pinStatusFilter').value;
-    const params = new URLSearchParams({ page: pinPage, pageSize: PINS_PER_PAGE });
+    const params = new URLSearchParams({ page: pinPage, pageSize: PINS_PER_PAGE, school_id });
     if (search) params.set('search', search);
     if (status) params.set('status', status);
 
@@ -559,7 +592,7 @@
     }
   }
 
-        async function createSchool() {
+  async function createSchool() {
     const name = document.getElementById('newSchoolName').value.trim();
     const code = document.getElementById('newSchoolCode').value.trim();
     const admin_email = document.getElementById('newSchoolAdminEmail').value.trim();
@@ -585,6 +618,7 @@
       
       showToast(`School "${name}" and Admin created! Code: ${data.school.code}`);
       loadSchools();
+      fetchSchoolsForDropdowns(); // Refresh dropdowns
     } catch (err) {
       showToast(err.message || 'Failed to create school.');
     }

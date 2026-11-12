@@ -7,6 +7,16 @@ const XLSX = require('xlsx');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
+function friendlyDeleteError(err, whatYoureDeleting) {
+  if (err.code === '23503') {
+    return `Can't delete this ${whatYoureDeleting} — it's already linked to existing records (scores, assignments, etc). Remove those first.`;
+  }
+  return `Failed to delete ${whatYoureDeleting}`;
+}
+
+// ==========================================
+// LOGIN & SETTINGS
+// ==========================================
 router.post('/login', async (req, res) => {
   const { email, password, school_code } = req.body;
   
@@ -14,7 +24,6 @@ router.post('/login', async (req, res) => {
   if (!school_code) return res.status(400).json({ error: 'School Code is required' });
 
   try {
-    // 1. Find the school
     const schoolRes = await pool.query('SELECT id, status, name, code FROM schools WHERE code = $1', [school_code.trim().toUpperCase()]);
     if (schoolRes.rows.length === 0) return res.status(404).json({ error: 'Invalid School Code' });
     
@@ -23,7 +32,6 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ error: 'This school\'s subscription has been suspended.' });
     }
 
-    // 2. Find the officer by email
     const { rows } = await pool.query(
       `SELECT id, name, email, password_hash, school_id FROM exam_officers 
        WHERE email = $1 AND school_id = $2`,
@@ -33,12 +41,9 @@ router.post('/login', async (req, res) => {
     if (rows.length === 0) return res.status(401).json({ error: 'Incorrect email or password' });
 
     const officer = rows[0];
-
-    // 3. Compare the typed password with the hashed password in the DB
     const isMatch = await bcrypt.compare(password, officer.password_hash);
     if (!isMatch) return res.status(401).json({ error: 'Incorrect email or password' });
 
-    // 4. Remove password_hash before sending to frontend
     delete officer.password_hash;
 
     res.json({ officer, school: { id: school.id, name: school.name, code: school.code } });
@@ -47,13 +52,29 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Login failed' });
   }
 });
+
+router.get('/settings', async (req, res) => {
+  const { school_id } = req.query;
+  if (!school_id) return res.status(400).json({ error: 'school_id is required' });
+  try {
+    const { rows } = await pool.query('SELECT current_term, current_session FROM school_settings WHERE school_id = $1 ORDER BY id DESC LIMIT 1', [school_id]);
+    if (rows.length === 0) {
+      return res.json({ settings: { current_term: 'First Term', current_session: '2026/2027' } });
+    }
+    res.json({ settings: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load school settings' });
+  }
+});
+
 router.post('/settings', async (req, res) => {
-  const { current_term, current_session } = req.body;
-  if (!current_term || !current_session) {
-    return res.status(400).json({ error: 'current_term and current_session are required' });
+  const { current_term, current_session, school_id } = req.body;
+  if (!current_term || !current_session || !school_id) {
+    return res.status(400).json({ error: 'current_term, current_session and school_id are required' });
   }
   try {
-    const checkRes = await pool.query('SELECT id FROM school_settings LIMIT 1');
+    const checkRes = await pool.query('SELECT id FROM school_settings WHERE school_id = $1 LIMIT 1', [school_id]);
     
     let rows;
     if (checkRes.rows.length > 0) {
@@ -64,12 +85,11 @@ router.post('/settings', async (req, res) => {
       rows = updateRes.rows;
     } else {
       const insertRes = await pool.query(
-        `INSERT INTO school_settings (current_term, current_session) VALUES ($1, $2) RETURNING current_term, current_session`,
-        [current_term, current_session]
+        `INSERT INTO school_settings (current_term, current_session, school_id) VALUES ($1, $2, $3) RETURNING current_term, current_session`,
+        [current_term, current_session, school_id]
       );
       rows = insertRes.rows;
     }
-
     res.json({ success: true, settings: rows[0] });
   } catch (err) {
     console.error(err);
@@ -103,17 +123,20 @@ router.post('/term-records', async (req, res) => {
   }
 });
 
+// ==========================================
+// FEES
+// ==========================================
 router.get('/fee-status', async (req, res) => {
-  const { term, session, class: className, search, page = 1, pageSize = 25 } = req.query;
-  if (!term || !session) {
-    return res.status(400).json({ error: 'term and session are required' });
+  const { term, session, class: className, search, page = 1, pageSize = 25, school_id } = req.query;
+  if (!term || !session || !school_id) {
+    return res.status(400).json({ error: 'term, session and school_id are required' });
   }
 
   const limit = Math.min(Number(pageSize) || 25, 100);
   const offset = (Math.max(Number(page) || 1, 1) - 1) * limit;
 
-  const conditions = [];
-  const params = [];
+  const conditions = [`s.school_id = $1`];
+  const params = [school_id];
 
   if (search) {
     params.push(`%${search}%`);
@@ -123,7 +146,7 @@ router.get('/fee-status', async (req, res) => {
     params.push(className);
     conditions.push(`s.class = $${params.length}`);
   }
-  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
   try {
     const countRes = await pool.query(`SELECT COUNT(*) FROM students s ${whereClause}`, params);
@@ -174,13 +197,18 @@ router.post('/fee-status', async (req, res) => {
   }
 });
 
+// ==========================================
+// PINS & DEADLINES
+// ==========================================
 router.get('/pins', async (req, res) => {
-  const { status, search, page = 1, pageSize = 25 } = req.query;
+  const { status, search, page = 1, pageSize = 25, school_id } = req.query;
+  if (!school_id) return res.status(400).json({ error: 'school_id is required' });
+
   const limit = Math.min(Number(pageSize) || 25, 100);
   const offset = (Math.max(Number(page) || 1, 1) - 1) * limit;
 
-  const conditions = [];
-  const params = [];
+  const conditions = [`p.school_id = $1`];
+  const params = [school_id];
 
   if (status === 'unused') conditions.push(`p.student_id IS NULL`);
   if (status === 'active') conditions.push(`p.student_id IS NOT NULL AND p.uses_count < p.max_uses`);
@@ -189,7 +217,7 @@ router.get('/pins', async (req, res) => {
     params.push(`%${search}%`);
     conditions.push(`(p.code ILIKE $${params.length} OR s.admission_no ILIKE $${params.length} OR s.surname ILIKE $${params.length} OR s.first_name ILIKE $${params.length})`);
   }
-  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
   try {
     const countRes = await pool.query(
@@ -220,18 +248,18 @@ router.get('/pins', async (req, res) => {
 });
 
 router.get('/deadline-overrides', async (req, res) => {
-  const { term, session } = req.query;
-  if (!term || !session) {
-    return res.status(400).json({ error: 'term and session are required' });
+  const { term, session, school_id } = req.query;
+  if (!term || !session || !school_id) {
+    return res.status(400).json({ error: 'term, session and school_id are required' });
   }
   try {
     const { rows } = await pool.query(
       `SELECT d.id, d.class, t.id AS teacher_id, t.name AS teacher_name
        FROM deadline_overrides d
        JOIN teachers t ON t.id = d.teacher_id
-       WHERE d.term = $1 AND d.session = $2
+       WHERE d.term = $1 AND d.session = $2 AND t.school_id = $3
        ORDER BY d.class ASC, t.name ASC`,
-      [term, session]
+      [term, session, school_id]
     );
     res.json({ overrides: rows });
   } catch (err) {
@@ -271,6 +299,9 @@ router.delete('/deadline-overrides/:id', async (req, res) => {
   }
 });
 
+// ==========================================
+// STUDENTS
+// ==========================================
 router.get('/students', async (req, res) => {
   const { search, class: className, school_id, page = 1, pageSize = 25 } = req.query;
   if (!school_id) return res.status(400).json({ error: 'school_id is required' });
@@ -313,17 +344,18 @@ router.get('/students', async (req, res) => {
     res.status(500).json({ error: 'Failed to load students' });
   }
 });
+
 router.post('/students', async (req, res) => {
-  let { surname, first_name, middle_name, admission_no, class: className, term, session } = req.body;
-  if (!surname || !first_name || !admission_no || !className) {
-    return res.status(400).json({ error: 'surname, first_name, admission_no and class are required' });
+  let { surname, first_name, middle_name, admission_no, class: className, term, session, school_id } = req.body;
+  if (!surname || !first_name || !admission_no || !className || !school_id) {
+    return res.status(400).json({ error: 'Missing required fields including school_id' });
   }
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    const existingRes = await client.query('SELECT id, class FROM students WHERE admission_no = $1', [admission_no.trim()]);
+    const existingRes = await client.query('SELECT id, class FROM students WHERE admission_no = $1 AND school_id = $2', [admission_no.trim(), school_id]);
     
     let studentId;
     
@@ -335,31 +367,26 @@ router.post('/students', async (req, res) => {
         return res.status(400).json({ error: `Student with admission number ${admission_no} is already in ${className}` });
       }
 
-      const updateRes = await client.query(
+      await client.query(
         `UPDATE students 
          SET surname = $1, first_name = $2, middle_name = $3, class = $4
-         WHERE id = $5
-         RETURNING id, surname, first_name, middle_name,
-                   CONCAT(surname, ' ', first_name, CASE WHEN middle_name IS NOT NULL AND middle_name != '' THEN CONCAT(' ', middle_name) ELSE '' END) AS name,
-                   admission_no, class, photo_url`,
+         WHERE id = $5`,
         [surname.trim(), first_name.trim(), middle_name ? middle_name.trim() : null, className, existing.id]
       );
       studentId = existing.id;
       
     } else {
       const insertRes = await client.query(
-        `INSERT INTO students (surname, first_name, middle_name, admission_no, class)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING id, surname, first_name, middle_name,
-                   CONCAT(surname, ' ', first_name, CASE WHEN middle_name IS NOT NULL AND middle_name != '' THEN CONCAT(' ', middle_name) ELSE '' END) AS name,
-                   admission_no, class, photo_url`,
-        [surname.trim(), first_name.trim(), middle_name ? middle_name.trim() : null, admission_no.trim(), className]
+        `INSERT INTO students (surname, first_name, middle_name, admission_no, class, school_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id`,
+        [surname.trim(), first_name.trim(), middle_name ? middle_name.trim() : null, admission_no.trim(), className, school_id]
       );
       studentId = insertRes.rows[0].id;
     }
 
     if (!term || !session) {
-      const settingsRes = await client.query('SELECT current_term, current_session FROM school_settings ORDER BY id DESC LIMIT 1');
+      const settingsRes = await client.query('SELECT current_term, current_session FROM school_settings WHERE school_id = $1 ORDER BY id DESC LIMIT 1', [school_id]);
       if (settingsRes.rows.length > 0) {
         term = term || settingsRes.rows[0].current_term;
         session = session || settingsRes.rows[0].current_session;
@@ -442,6 +469,9 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
     return res.status(400).json({ error: 'No file received. Upload an .xlsx or .csv file.' });
   }
 
+  const school_id = req.body.school_id;
+  if (!school_id) return res.status(400).json({ error: 'school_id is required' });
+
   let rows;
   try {
     const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
@@ -458,7 +488,7 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
   let activeTerm = 'First Term';
   let activeSession = '2026/2027';
   try {
-    const settingsRes = await pool.query('SELECT current_term, current_session FROM school_settings ORDER BY id DESC LIMIT 1');
+    const settingsRes = await pool.query('SELECT current_term, current_session FROM school_settings WHERE school_id = $1 ORDER BY id DESC LIMIT 1', [school_id]);
     if (settingsRes.rows.length > 0) {
       activeTerm = settingsRes.rows[0].current_term;
       activeSession = settingsRes.rows[0].current_session;
@@ -510,14 +540,13 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
     try {
       await client.query('BEGIN');
 
-      // 1. Handle Brand New Students (no admission number provided)
       if (!admissionNo) {
         const year = new Date().getFullYear();
         const random = Math.floor(1000 + Math.random() * 9000);
         admissionNo = `ADM-${year}-${random}`;
       }
 
-      const existingRes = await client.query('SELECT id, class FROM students WHERE admission_no = $1', [admissionNo]);
+      const existingRes = await client.query('SELECT id, class FROM students WHERE admission_no = $1 AND school_id = $2', [admissionNo, school_id]);
       
       let studentId;
 
@@ -538,9 +567,9 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
         
       } else {
         const studentRes = await client.query(
-          `INSERT INTO students (surname, first_name, middle_name, admission_no, class) 
-           VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-          [surname, firstName, middleName || null, admissionNo, className]
+          `INSERT INTO students (surname, first_name, middle_name, admission_no, class, school_id) 
+           VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+          [surname, firstName, middleName || null, admissionNo, className, school_id]
         );
         studentId = studentRes.rows[0].id;
       }
@@ -555,7 +584,7 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
 
       await client.query('COMMIT');
       results.processed++;
-        } catch (err) {
+    } catch (err) {
       await client.query('ROLLBACK');
       console.error(`BULK IMPORT FAILED — Row ${rowNum}:`, err.message, '| Code:', err.code);
       results.skipped.push({ row: rowNum, reason: `DB Error: ${err.message}` });
@@ -567,6 +596,9 @@ router.post('/students/bulk-import', upload.single('file'), async (req, res) => 
   res.json(results);
 });
 
+// ==========================================
+// SUBJECTS / TEACHERS / CLASSES
+// ==========================================
 router.get('/subjects', async (req, res) => {
   const { school_id } = req.query;
   if (!school_id) return res.status(400).json({ error: 'school_id is required' });
@@ -581,12 +613,13 @@ router.get('/subjects', async (req, res) => {
 });
 
 router.post('/subjects', async (req, res) => {
-  const { name } = req.body;
-  if (!name) return res.status(400).json({ error: 'name is required' });
+  const { name, school_id } = req.body;
+  if (!name || !school_id) return res.status(400).json({ error: 'name and school_id are required' });
+  
   try {
     const { rows } = await pool.query(
-      'INSERT INTO subjects (name) VALUES ($1) RETURNING *',
-      [name.trim()]
+      'INSERT INTO subjects (name, school_id) VALUES ($1, $2) RETURNING *',
+      [name.trim(), school_id]
     );
     res.json({ subject: rows[0] });
   } catch (err) {
@@ -621,14 +654,18 @@ router.get('/teachers', async (req, res) => {
 });
 
 router.post('/teachers', async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'name, email and password are required' });
+  const { name, email, password, school_id } = req.body;
+  if (!name || !email || !password || !school_id) {
+    return res.status(400).json({ error: 'name, email, password and school_id are required' });
   }
+  
   try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const { rows } = await pool.query(
-      'INSERT INTO teachers (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email',
-      [name.trim(), email.trim(), password]
+      'INSERT INTO teachers (name, email, password_hash, school_id) VALUES ($1, $2, $3, $4) RETURNING id, name, email',
+      [name.trim(), email.trim(), hashedPassword, school_id]
     );
     res.json({ teacher: rows[0] });
   } catch (err) {
@@ -666,15 +703,15 @@ router.get('/classes', async (req, res) => {
 });
 
 router.post('/classes', async (req, res) => {
-  const { level, arm } = req.body;
-  if (!VALID_LEVELS.includes(level) || !VALID_ARMS.includes(arm)) {
-    return res.status(400).json({ error: `level must be one of ${VALID_LEVELS.join(', ')} and arm one of ${VALID_ARMS.join(', ')}` });
+  const { level, arm, school_id } = req.body;
+  if (!VALID_LEVELS.includes(level) || !VALID_ARMS.includes(arm) || !school_id) {
+    return res.status(400).json({ error: 'level, arm and school_id are required' });
   }
   const name = `${level}${arm}`;
   try {
     const { rows } = await pool.query(
-      'INSERT INTO classes (level, arm, name) VALUES ($1, $2, $3) RETURNING *',
-      [level, arm, name]
+      'INSERT INTO classes (level, arm, name, school_id) VALUES ($1, $2, $3, $4) RETURNING *',
+      [level, arm, name, school_id]
     );
     res.json({ class: rows[0] });
   } catch (err) {
@@ -695,14 +732,22 @@ router.delete('/classes/:id', async (req, res) => {
   }
 });
 
+// ==========================================
+// ASSIGNMENTS & FORM TEACHERS
+// ==========================================
 router.get('/assignments', async (req, res) => {
+  const { school_id } = req.query;
+  if (!school_id) return res.status(400).json({ error: 'school_id is required' });
+
   try {
     const { rows } = await pool.query(
       `SELECT ts.id, ts.class, t.id AS teacher_id, t.name AS teacher_name, sub.id AS subject_id, sub.name AS subject_name
        FROM teacher_subjects ts
        JOIN teachers t ON t.id = ts.teacher_id
        JOIN subjects sub ON sub.id = ts.subject_id
-       ORDER BY ts.class ASC, t.name ASC`
+       WHERE t.school_id = $1
+       ORDER BY ts.class ASC, t.name ASC`,
+      [school_id]
     );
     res.json({ assignments: rows });
   } catch (err) {
@@ -744,12 +789,17 @@ router.delete('/assignments/:id', async (req, res) => {
 });
 
 router.get('/form-teachers', async (req, res) => {
+  const { school_id } = req.query;
+  if (!school_id) return res.status(400).json({ error: 'school_id is required' });
+
   try {
     const { rows } = await pool.query(
       `SELECT ftc.id, ftc.class, t.id AS teacher_id, t.name AS teacher_name
        FROM form_teacher_classes ftc
        JOIN teachers t ON t.id = ftc.teacher_id
-       ORDER BY ftc.class ASC`
+       WHERE t.school_id = $1
+       ORDER BY ftc.class ASC`,
+      [school_id]
     );
     res.json({ formTeachers: rows });
   } catch (err) {

@@ -4,6 +4,9 @@ const router = express.Router();
 const pool = require('../db/pool');
 const crypto = require('crypto');
 
+// ==========================================
+// DEVELOPER LOGIN
+// ==========================================
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -24,7 +27,9 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 9-character alphanumeric PIN, uppercase, excludes ambiguous chars (I, O, 0, 1)
+// ==========================================
+// PIN MANAGEMENT (Now tied to schools)
+// ==========================================
 function generatePinCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
@@ -36,7 +41,10 @@ function generatePinCode() {
 }
 
 router.post('/pins/generate', async (req, res) => {
-  const { count, max_uses = 5, generated_by } = req.body;
+  const { count, max_uses = 5, generated_by, school_id } = req.body;
+  
+  if (!school_id) return res.status(400).json({ error: 'school_id is required to generate PINs' });
+
   const howMany = Number(count);
   if (!howMany || howMany < 1 || howMany > 1000 || !Number.isInteger(howMany)) {
     return res.status(400).json({ error: 'count must be between 1 and 1000' });
@@ -58,14 +66,12 @@ router.post('/pins/generate', async (req, res) => {
     }
 
     for (const code of uniqueCodes) {
-      // Explicitly set uses_count = 0 so it can never be NULL, even if the
-      // column DEFAULT gets dropped during a future migration.
       const { rows } = await client.query(
-        `INSERT INTO result_pins (code, max_uses, uses_count, generated_by) 
-         VALUES ($1, $2, 0, $3) 
+        `INSERT INTO result_pins (code, max_uses, uses_count, generated_by, school_id) 
+         VALUES ($1, $2, 0, $3, $4) 
          ON CONFLICT (code) DO NOTHING 
          RETURNING *`,
-        [code, maxUsesInt, generated_by || null]
+        [code, maxUsesInt, generated_by || null, school_id]
       );
 
       if (rows.length > 0) {
@@ -85,21 +91,27 @@ router.post('/pins/generate', async (req, res) => {
 });
 
 router.get('/pins', async (req, res) => {
-  const { status, search, page = 1, pageSize = 25 } = req.query;
+  const { status, search, page = 1, pageSize = 25, school_id } = req.query;
+  
+  if (!school_id) return res.status(400).json({ error: 'school_id is required to view PINs' });
+
   const limit = Math.min(Number(pageSize) || 25, 100);
   const offset = (Math.max(Number(page) || 1, 1) - 1) * limit;
 
-  const conditions = [];
-  const params = [];
+  // Start by filtering by the school that generated the PIN
+  const conditions = [`p.school_id = $1`];
+  const params = [school_id];
 
   if (status === 'unused') conditions.push(`p.student_id IS NULL`);
   if (status === 'active') conditions.push(`p.student_id IS NOT NULL AND p.uses_count < p.max_uses`);
   if (status === 'exhausted') conditions.push(`p.uses_count >= p.max_uses`);
+  
   if (search) {
     params.push(`%${search}%`);
     conditions.push(`(p.code ILIKE $${params.length} OR s.admission_no ILIKE $${params.length})`);
   }
-  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
   try {
     const countRes = await pool.query(
@@ -130,7 +142,6 @@ router.get('/pins', async (req, res) => {
   }
 });
 
-module.exports = router;
 // ==========================================
 // MULTI-SCHOOL (SAAS) MANAGEMENT
 // ==========================================
@@ -187,3 +198,27 @@ router.post('/schools', async (req, res) => {
     client.release();
   }
 });
+
+// Toggle school status (Suspend / Activate)
+router.put('/schools/:id/status', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { status } = req.body;
+  
+  if (!['active', 'suspended'].includes(status)) {
+    return res.status(400).json({ error: 'Status must be active or suspended' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      'UPDATE schools SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'School not found' });
+    res.json({ school: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
+module.exports = router;
