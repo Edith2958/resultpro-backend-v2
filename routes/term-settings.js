@@ -5,21 +5,19 @@ const pool = require('../db/pool');
 function toTimestampOrNull(val, fieldName) {
   if (val === null || val === undefined || String(val).trim() === '') return null;
   const d = new Date(val);
-  if (isNaN(d.getTime())) {
-    throw new Error(`${fieldName} is not a valid date`);
-  }
+  if (isNaN(d.getTime())) throw new Error(`${fieldName} is not a valid date`);
   return d.toISOString();
 }
 
 router.get('/', async (req, res) => {
-  const { term, session } = req.query;
-  if (!term || !session) {
-    return res.status(400).json({ error: 'term and session are required' });
+  const { term, session, school_id } = req.query;
+  if (!term || !session || !school_id) {
+    return res.status(400).json({ error: 'term, session and school_id are required' });
   }
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM term_settings WHERE term = $1 AND session = $2',
-      [term, session]
+      'SELECT * FROM term_settings WHERE term = $1 AND session = $2 AND school_id = $3',
+      [term, session, school_id]
     );
     res.json({ settings: rows[0] || { term, session, teacher_deadline: null, result_release_at: null } });
   } catch (err) {
@@ -29,9 +27,9 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { term, session, teacher_deadline, result_release_at } = req.body;
-  if (!term || !session) {
-    return res.status(400).json({ error: 'term and session are required' });
+  const { term, session, teacher_deadline, result_release_at, school_id } = req.body;
+  if (!term || !session || !school_id) {
+    return res.status(400).json({ error: 'term, session and school_id are required' });
   }
 
   let deadlineIso, releaseIso;
@@ -42,7 +40,6 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: err.message });
   }
 
-  // Release must be strictly after the teacher submission deadline.
   if (deadlineIso && releaseIso && new Date(releaseIso) <= new Date(deadlineIso)) {
     return res.status(400).json({
       error: 'Result release date must be AFTER the teacher submission deadline.',
@@ -52,12 +49,12 @@ router.post('/', async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `INSERT INTO term_settings (term, session, teacher_deadline, result_release_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW())
-       ON CONFLICT (term, session)
+      `INSERT INTO term_settings (term, session, teacher_deadline, result_release_at, school_id, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       ON CONFLICT (term, session, school_id)
        DO UPDATE SET teacher_deadline = $3, result_release_at = $4, updated_at = NOW()
        RETURNING *`,
-      [term, session, deadlineIso, releaseIso]
+      [term, session, deadlineIso, releaseIso, school_id]
     );
     res.json({ settings: rows[0] });
   } catch (err) {

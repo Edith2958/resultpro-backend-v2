@@ -1084,12 +1084,17 @@
     setTimeout(() => { el.textContent = msg; }, 30);
   }
 
-  async function fetchInitialSchoolSettings() {
+    async function fetchInitialSchoolSettings() {
     try {
-      const res = await fetch(`${API_BASE}/api/settings`);
+      const schoolId = sessionStorage.getItem('resultpro_school_id');
+      if (!schoolId) return; // Don't fetch if not logged in yet
+      
+      const res = await fetch(`${API_BASE}/api/settings?school_id=${schoolId}`);
       const data = await res.json();
       if (data.settings) updateSchoolHeader(data.settings);
-    } catch (err) { console.error('Could not load school settings for header:', err); }
+    } catch (err) { 
+      console.error('Could not load school settings for header:', err); 
+    }
   }
   fetchInitialSchoolSettings();
 
@@ -1947,9 +1952,9 @@
   }
 
   /* ============ SETTINGS ============ */
-  async function loadSchoolSettings() {
+    async function loadSchoolSettings() {
     try {
-      const res = await fetch(`${API_BASE}/api/settings`);
+      const res = await fetch(`${API_BASE}/api/settings?school_id=${getSchoolId()}`);
       const data = await res.json();
       if (data.settings) {
         document.getElementById('schoolName').value = data.settings.school_name || '';
@@ -1960,9 +1965,10 @@
       }
     } catch (err) { console.error('Failed to load settings:', err); }
   }
-  document.getElementById('schoolSettingsForm').addEventListener('submit', async (e) => {
+    document.getElementById('schoolSettingsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData();
+    formData.append('school_id', getSchoolId()); // <--- ADD THIS LINE
     formData.append('school_name', document.getElementById('schoolName').value.trim());
     formData.append('motto', document.getElementById('schoolMotto').value.trim());
     formData.append('school_email', document.getElementById('schoolEmail').value.trim());
@@ -1991,12 +1997,12 @@
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  async function loadTermSettings() {
+    async function loadTermSettings() {
     const term = document.getElementById('tsTerm').value;
     const session = document.getElementById('tsSession').value.trim();
     if (!session) return;
     try {
-      const res = await fetch(`${API_BASE}/api/term-settings?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}`);
+      const res = await fetch(`${API_BASE}/api/term-settings?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}&school_id=${getSchoolId()}`);
       const data = await res.json();
       const s = data.settings || {};
       document.getElementById('tsTeacherDeadline').value = s.teacher_deadline ? toDatetimeLocal(s.teacher_deadline.endsWith('Z') || s.teacher_deadline.includes('+') ? s.teacher_deadline : s.teacher_deadline + 'Z') : '';
@@ -2121,10 +2127,10 @@
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/term-settings`, {
+            const res = await fetch(`${API_BASE}/api/term-settings`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          term, session,
+          term, session, school_id: getSchoolId(),
           teacher_deadline: teacherDeadline ? teacherDeadline.toISOString() : null,
           result_release_at: resultRelease ? resultRelease.toISOString() : null,
         }),
