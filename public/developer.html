@@ -580,9 +580,10 @@
               <br>
               <span class="meta">Added: ${new Date(s.created_at).toLocaleDateString()}</span>
             </span>
-            <span style="display:flex; gap:8px; align-items:center;">
+                        <span style="display:flex; gap:8px; align-items:center;">
               ${badge}
               <button class="primary" style="background:${btnColor}; border:none; padding:6px 12px; font-size:11px; box-shadow:none;" onclick="toggleSchoolStatus(${s.id}, '${newStatus}')">${btnLabel}</button>
+              <button class="primary" style="background:var(--fail-bg); color:var(--fail); border:none; padding:6px 12px; font-size:11px; box-shadow:none;" onclick="deleteSchool(${s.id}, '${s.name}')">Delete</button>
             </span>
           </div>
         `;
@@ -641,6 +642,23 @@
       loadSchools();
     } catch (err) {
       showToast(err.message || 'Failed to update status.');
+    }
+  }
+    async function deleteSchool(id, name) {
+    // Double confirmation for safety!
+    if (!confirm(`Are you sure you want to PERMANENTLY delete "${name}"?`)) return;
+    if (!confirm(`WARNING: This will permanently wipe ALL students, teachers, and results for "${name}". This cannot be undone. Are you absolutely sure?`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/developer/schools/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      showToast(`School "${name}" deleted permanently.`);
+      loadSchools();
+      fetchSchoolsForDropdowns(); // Refresh PIN dropdowns
+    } catch (err) {
+      showToast(err.message || 'Failed to delete school.');
     }
   }
 </script>

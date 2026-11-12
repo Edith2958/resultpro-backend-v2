@@ -222,3 +222,19 @@ router.put('/schools/:id/status', async (req, res) => {
 });
 
 module.exports = router;
+// Delete a school permanently
+router.delete('/schools/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  try {
+    // Because of ON DELETE CASCADE in the database, deleting the school
+    // will automatically delete all their students, teachers, exams, etc.
+    const { rows } = await pool.query('DELETE FROM schools WHERE id = $1 RETURNING *', [id]);
+    
+    if (rows.length === 0) return res.status(404).json({ error: 'School not found' });
+    
+    res.json({ success: true, message: 'School and all associated data deleted.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete school' });
+  }
+});
