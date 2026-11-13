@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
 const { getGrade, getMidTermRemark } = require('../utils/grading');
+const bcrypt = require('bcrypt');
 
 function parseScore(val, maxLimit, fieldName) {
   if (val === undefined) {
@@ -400,6 +401,38 @@ router.post('/fullterm-scores', async (req, res) => {
     res.status(400).json({ error: err.message || 'Failed to save full-term scores' });
   } finally {
     client.release();
+  }
+});
+
+// ==========================================
+// CHANGE PASSWORD
+// ==========================================
+router.put('/change-password', async (req, res) => {
+  const { teacher_id, current_password, new_password } = req.body;
+  
+  if (!teacher_id || !current_password || !new_password) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    const { rows } = await pool.query('SELECT password_hash FROM teachers WHERE id = $1', [teacher_id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Teacher not found' });
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(current_password, rows[0].password_hash);
+    if (!isMatch) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(new_password, salt);
+
+    // Save
+    await pool.query('UPDATE teachers SET password_hash = $1 WHERE id = $2', [newHash, teacher_id]);
+    
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to change password' });
   }
 });
 

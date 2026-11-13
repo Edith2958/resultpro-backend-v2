@@ -705,6 +705,7 @@ button:focus-visible {
     <div class="topbar">
       <span class="who" id="whoAmI"></span>
       <button onclick="logout()">Log out</button>
+      <button onclick="openPasswordModal()" style="margin-right: 8px; background: var(--sec-btn-bg); color: var(--navy); border: 1px solid var(--border); padding: 5px 10px; border-radius: 6px; cursor: pointer;">Change Password</button>
     </div>
 
     <div class="filters">
@@ -1307,6 +1308,64 @@ button:focus-visible {
       showToast('Saved for the whole class.');
     } catch (err) {
       showToast(err.message || 'Could not save.');
+    }
+  }
+</script>
+<!-- PASSWORD MODAL -->
+<div id="passwordModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: var(--card); width: 100%; max-width: 400px; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+    <h3 style="margin: 0 0 16px; font-family: 'Baloo 2', sans-serif; color: var(--text);">Change Password</h3>
+    
+    <label style="font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase;">Current Password</label>
+    <input type="password" id="currentPass" style="width: 100%; margin-bottom: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); color: var(--text);" />
+    
+    <label style="font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase;">New Password</label>
+    <input type="password" id="newPass" style="width: 100%; margin-bottom: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); color: var(--text);" />
+    
+    <label style="font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase;">Confirm New Password</label>
+    <input type="password" id="confirmPass" style="width: 100%; margin-bottom: 20px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); color: var(--text);" />
+    
+    <div style="display: flex; gap: 10px;">
+      <button onclick="document.getElementById('passwordModal').style.display='none'" style="flex: 1; padding: 10px; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 8px; cursor: pointer; font-weight: bold;">Cancel</button>
+      <button onclick="submitPasswordChange()" class="primary" style="flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold;">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openPasswordModal() {
+    document.getElementById('passwordModal').style.display = 'flex';
+    document.getElementById('currentPass').value = '';
+    document.getElementById('newPass').value = '';
+    document.getElementById('confirmPass').value = '';
+  }
+
+  async function submitPasswordChange() {
+    const currentPass = document.getElementById('currentPass').value;
+    const newPass = document.getElementById('newPass').value;
+    const confirmPass = document.getElementById('confirmPass').value;
+
+    if (!currentPass || !newPass || !confirmPass) return showToast('Please fill all fields.');
+    if (newPass !== confirmPass) return showToast('New passwords do not match.');
+    if (newPass.length < 6) return showToast('New password must be at least 6 characters.');
+
+    try {
+      const res = await fetch(`${API_BASE}/api/teacher/change-password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          teacher_id: teacher.id, 
+          current_password: currentPass, 
+          new_password: newPass 
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      showToast('Password changed successfully!');
+      document.getElementById('passwordModal').style.display = 'none';
+    } catch (err) {
+      showToast(err.message || 'Failed to change password.');
     }
   }
 </script>

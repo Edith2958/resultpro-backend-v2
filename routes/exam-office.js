@@ -838,5 +838,33 @@ router.delete('/form-teachers/:id', async (req, res) => {
     res.status(400).json({ error: friendlyDeleteError(err, 'form teacher assignment') });
   }
 });
+// ==========================================
+// CHANGE PASSWORD
+// ==========================================
+router.put('/change-password', async (req, res) => {
+  const { officer_id, current_password, new_password } = req.body;
+  
+  if (!officer_id || !current_password || !new_password) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    const { rows } = await pool.query('SELECT password_hash FROM exam_officers WHERE id = $1', [officer_id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Officer not found' });
+
+    const isMatch = await bcrypt.compare(current_password, rows[0].password_hash);
+    if (!isMatch) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(new_password, salt);
+
+    await pool.query('UPDATE exam_officers SET password_hash = $1 WHERE id = $2', [newHash, officer_id]);
+    
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});
 
 module.exports = router;
