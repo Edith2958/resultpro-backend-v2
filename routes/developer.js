@@ -220,8 +220,6 @@ router.put('/schools/:id/status', async (req, res) => {
     res.status(500).json({ error: 'Failed to update status' });
   }
 });
-
-module.exports = router;
 // Delete a school permanently
 router.delete('/schools/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
@@ -238,3 +236,32 @@ router.delete('/schools/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete school' });
   }
 });
+// Public route for the Gateway to verify a school code
+router.get('/public/school-lookup', async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.status(400).json({ error: 'School code is required' });
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT s.id, s.name, s.status, st.logo_url 
+       FROM schools s
+       LEFT JOIN school_settings st ON st.school_id = s.id
+       WHERE s.code = $1`,
+      [code.trim().toUpperCase()]
+    );
+    
+    if (rows.length === 0) return res.status(404).json({ error: 'School not found' });
+    
+    const school = rows[0];
+    if (school.status === 'suspended') {
+      return res.status(403).json({ error: 'This school\'s subscription is suspended.' });
+    }
+
+    res.json({ school });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Lookup failed' });
+  }
+});
+
+module.exports = router;

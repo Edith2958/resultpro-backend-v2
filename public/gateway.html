@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<title>ResultPro — Gateway</title>
+<style>
+  :root {
+    --brand-color: #176345;
+    --brand-light: #237b55;
+    --bg-1: #f4f7f5;
+    --bg-2: #eef3ef;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --text: #1d2c24;
+    --text-soft: #718078;
+    --border: #e2eae5;
+    --shadow: 0 24px 64px rgba(24, 55, 39, 0.12);
+    --ease-out-back: cubic-bezier(.34,1.56,.64,1);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: 'Nunito', Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    color: var(--text); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
+    transition: background 0.8s ease;
+    overflow-x: hidden;
+  }
+
+  /* Subtle ambient glow that shifts with the brand color */
+  body::before {
+    content: ''; position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 800px; background: radial-gradient(circle, var(--brand-color) 0%, transparent 60%);
+    opacity: 0.08; pointer-events: none; transition: background 0.8s ease;
+  }
+
+  .wrap { width: 100%; max-width: 420px; position: relative; z-index: 1; }
+  
+  @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes logoPop { 0% { opacity: 0; transform: scale(0.5) rotate(-10deg); } 70% { transform: scale(1.1) rotate(3deg); } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .header { text-align: center; margin-bottom: 32px; animation: slideUp 0.6s var(--ease-out-back) both; }
+  
+  .logo-wrap {
+    width: 80px; height: 80px; margin: 0 auto 16px; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* The glowing ring around the logo */
+  .logo-wrap::after {
+    content: ''; position: absolute; inset: -6px; border-radius: 26px;
+    background: var(--brand-color); opacity: 0.15; filter: blur(8px); z-index: -1;
+    transition: background 0.8s ease;
+  }
+  .logo-box {
+    width: 100%; height: 100%; background: #fff; border-radius: 20px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.05);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    color: var(--brand-color); font-size: 32px; font-family: 'Baloo 2', sans-serif; font-weight: 800;
+    transition: color 0.8s ease;
+  }
+  .logo-box img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+  
+  .header h1 { font-size: 28px; margin: 0 0 6px; font-weight: 800; font-family: 'Baloo 2', sans-serif; color: var(--text); letter-spacing: -0.5px; }
+  .header p { font-size: 14px; color: var(--text-soft); margin: 0; font-weight: 600; }
+
+  .card {
+    background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.6); border-radius: 24px; padding: 32px 24px;
+    box-shadow: var(--shadow); animation: slideUp 0.5s var(--ease-out-back) 0.1s both;
+  }
+  
+  .error-msg {
+    font-size: 13px; color: #b93838; background: #fff0ef; padding: 12px 16px; border-radius: 12px;
+    margin-bottom: 20px; display: none; font-weight: 700; border: 1px solid #f3d0cd;
+  }
+
+  /* --- STEP 1: INPUT --- */
+  label { font-size: 11px; color: var(--text-soft); display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 900; text-align: center; }
+  
+  .input-group { position: relative; margin-bottom: 20px; }
+  .input-group input {
+    width: 100%; padding: 18px 20px; font-size: 18px; border: 2px solid var(--border); border-radius: 16px;
+    background: #fbfdfb; color: var(--text); font-family: 'Baloo 2', sans-serif; font-weight: 800;
+    text-align: center; text-transform: uppercase; letter-spacing: 2px; outline: none;
+    transition: all 0.3s ease;
+  }
+  .input-group input:focus { border-color: var(--brand-color); background: #fff; box-shadow: 0 0 0 4px rgba(23, 99, 69, 0.1); }
+  .input-group input::placeholder { color: #cbd6ce; letter-spacing: normal; font-family: 'Nunito'; font-weight: 600; }
+
+  button.primary {
+    width: 100%; padding: 16px; font-family: 'Nunito', Arial, sans-serif; font-size: 15px; font-weight: 900;
+    border: none; border-radius: 16px; background: var(--brand-color); color: #fff; cursor: pointer;
+    box-shadow: 0 8px 20px rgba(23, 99, 69, 0.25); transition: all 0.2s var(--ease-out-back);
+  }
+  button.primary:hover { background: var(--brand-light); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(23, 99, 69, 0.3); }
+  button.primary:active { transform: translateY(0) scale(0.98); }
+  button.primary:disabled { opacity: 0.7; cursor: wait; }
+
+  /* --- STEP 2: ROLE SELECTION --- */
+  #roleSelection { display: none; animation: fadeIn 0.4s ease both; }
+  .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+  
+  .role-btn {
+    background: #fff; border: 2px solid var(--border); border-radius: 16px; padding: 20px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; text-decoration: none;
+    color: var(--text); font-weight: 800; font-size: 13px; transition: all 0.25s var(--ease-out-back);
+  }
+  .role-btn:hover { border-color: var(--brand-color); background: #fbfdfb; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(23, 99, 69, 0.08); }
+  .role-btn .icon { 
+    font-size: 26px; width: 50px; height: 50px; background: #f0f5f1; border-radius: 14px; 
+    display: flex; align-items: center; justify-content: center; transition: background 0.2s ease; 
+  }
+  .role-btn:hover .icon { background: var(--brand-color); color: #fff; }
+
+  .reset-btn { margin-top: 24px; background: none; border: none; color: var(--text-soft); font-size: 13px; font-weight: 700; cursor: pointer; display: block; margin-left: auto; margin-right: auto; transition: color 0.2s ease; }
+  .reset-btn:hover { color: var(--text); }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="logo-wrap">
+      <div class="logo-box" id="gatewayCrest">⚡</div>
+    </div>
+    <h1 id="gatewayTitle">ResultPro</h1>
+    <p id="gatewaySubtitle">Welcome to your portal</p>
+  </div>
+
+  <div class="card">
+    <!-- STEP 1: ENTER CODE -->
+    <div id="codeEntry">
+      <div class="error-msg" id="gatewayError"></div>
+      <label for="schoolCodeInput">School Code</label>
+      <div class="input-group">
+        <input type="text" id="schoolCodeInput" placeholder="e.g. AHS" maxlength="10" onkeypress="if(event.key==='Enter') verifyCode()" />
+      </div>
+      <button class="primary" onclick="verifyCode()" id="verifyBtn">Continue</button>
+    </div>
+
+    <!-- STEP 2: SELECT ROLE -->
+    <div id="roleSelection">
+      <p style="text-align:center; font-size:14px; font-weight:800; color:var(--text); margin:0 0 20px;">How are you logging in?</p>
+      
+      <div class="role-grid">
+        <a href="#" id="btnStudent" class="role-btn"><span class="icon">🎓</span> Student</a>
+        <a href="#" id="btnTeacher" class="role-btn"><span class="icon">🧑‍🏫</span> Teacher</a>
+        <a href="#" id="btnForm" class="role-btn"><span class="icon">📋</span> Form Teacher</a>
+        <a href="#" id="btnExam" class="role-btn"><span class="icon">🏢</span> Exam Office</a>
+      </div>
+      
+      <button onclick="resetGateway()" class="reset-btn">Use a different code</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = window.location.origin;
+
+  async function verifyCode() {
+    const code = document.getElementById('schoolCodeInput').value.trim().toUpperCase();
+    const err = document.getElementById('gatewayError');
+    const btn = document.getElementById('verifyBtn');
+    
+    if (!code) {
+      err.textContent = 'Please enter a school code.';
+      err.style.display = 'block';
+      return;
+    }
+
+    btn.textContent = 'Verifying...';
+    btn.disabled = true;
+    err.style.display = 'none';
+
+    try {
+      const res = await fetch(`${API_BASE}/api/developer/public/school-lookup?code=${encodeURIComponent(code)}`);
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Invalid School Code');
+      }
+      
+      const data = await res.json();
+      const school = data.school;
+
+      // 1. Update Text & Logo
+      document.getElementById('gatewayTitle').textContent = school.name;
+      document.getElementById('gatewaySubtitle').textContent = "Select your portal below";
+      
+      const crestEl = document.getElementById('gatewayCrest');
+      if (school.logo_url) {
+        const logoUrl = school.logo_url.startsWith('http') ? school.logo_url : `${API_BASE}${school.logo_url}`;
+        crestEl.innerHTML = `<img src="${logoUrl}" />`;
+      } else {
+        crestEl.textContent = school.name.substring(0,2).toUpperCase();
+      }
+
+      // 2. Hide code entry, show roles
+      document.getElementById('codeEntry').style.display = 'none';
+      document.getElementById('roleSelection').style.display = 'block';
+
+      // 3. Attach the code to the links
+      document.getElementById('btnStudent').href = `/student?school=${code}`;
+      document.getElementById('btnTeacher').href = `/teacher?school=${code}`;
+      document.getElementById('btnForm').href = `/form-teacher?school=${code}`;
+      document.getElementById('btnExam').href = `/exam-office?school=${code}`;
+
+    } catch (err) {
+      err.textContent = err.message || 'Invalid School Code.';
+      err.style.display = 'block';
+    } finally {
+      btn.textContent = 'Continue';
+      btn.disabled = false;
+    }
+  }
+
+  function resetGateway() {
+    document.getElementById('schoolCodeInput').value = '';
+    document.getElementById('roleSelection').style.display = 'none';
+    document.getElementById('codeEntry').style.display = 'block';
+    document.getElementById('gatewayTitle').textContent = 'ResultPro';
+    document.getElementById('gatewaySubtitle').textContent = 'Welcome to your portal';
+    document.getElementById('gatewayCrest').innerHTML = '⚡';
+    document.getElementById('gatewayError').style.display = 'none';
+  }
+</script>
+</body>
+</html>
