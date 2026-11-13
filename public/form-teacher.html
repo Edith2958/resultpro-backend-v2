@@ -675,8 +675,7 @@ button:focus-visible {
   </div>
   <div class="card">
     <div class="error-msg" id="loginError"></div>
-        <label for="schoolCode">School Code</label>
-    <input type="text" id="schoolCode" placeholder="e.g. AHS" autocomplete="off" style="text-transform:uppercase;" />
+        
     <label for="teacherEmail">Email</label>
     <input type="email" id="teacherEmail" placeholder="e.g. adeyemi@school.com" />
     <label for="teacherPassword" style="margin-top:12px;">Password</label>
@@ -770,6 +769,12 @@ button:focus-visible {
 <div class="toast" id="toast"></div>
 
 <script>
+    // Auto-read school code from the Gateway URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlSchoolCode = urlParams.get('school');
+  if (urlSchoolCode) {
+    window.hiddenSchoolCode = urlSchoolCode.toUpperCase();
+  }
   const API_BASE = window.location.origin;
   let teacher = null;
   let myClass = null;
@@ -924,7 +929,7 @@ button:focus-visible {
     }
 
        try {
-      const schoolCode = document.getElementById('schoolCode').value.trim();
+        const school_code = window.hiddenSchoolCode || '';
       if (!schoolCode) throw new Error('Please enter your School Code.');
 
       const res = await fetch(`${API_BASE}/api/form-teacher/login`, {

@@ -1714,8 +1714,7 @@
     </div>
 
         <div id="identityFields">
-      <label for="schoolCode">School Code</label>
-      <input type="text" id="schoolCode" placeholder="e.g. AHS" autocomplete="off" style="text-transform:uppercase;" />
+      
 
       <label for="admissionNo">Admission number</label>
       <input type="text" id="admissionNo" placeholder="e.g. 245" autocomplete="off" />
@@ -1947,6 +1946,12 @@
 
   const API_BASE = window.location.origin;
   const SESSION_KEY = 'resultpro_student_session';
+    // Auto-read school code from the Gateway URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlSchoolCode = urlParams.get('school');
+  if (urlSchoolCode) {
+    window.hiddenSchoolCode = urlSchoolCode.toUpperCase();
+  }
   let releaseCountdownInterval;
   let currentSchoolBranding = null;
 
@@ -2243,7 +2248,7 @@
     const isLoggedIn = !!session;
 
     let admissionNo, surname;
-    const schoolCode = document.getElementById('schoolCode').value.trim();
+        const schoolCode = window.hiddenSchoolCode || '';
 
     if (isLoggedIn) {
       admissionNo = session.admission_no;
@@ -2252,11 +2257,7 @@
       admissionNo = document.getElementById('admissionNo').value.trim();
       surname = document.getElementById('surname').value.trim();
       
-      if (!schoolCode) {
-        document.getElementById('schoolCode').classList.add('invalid');
-        showError('Please enter your School Code (e.g., AHS).');
-        return;
-      }
+      
     }
 
     const term = document.getElementById('termSelect').value;

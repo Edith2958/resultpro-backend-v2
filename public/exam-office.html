@@ -711,8 +711,7 @@
   </div>
   <div class="card">
     <div class="error-msg" id="loginError" role="alert"></div>
-    <label for="schoolCode">School Code</label>
-    <input type="text" id="schoolCode" placeholder="e.g. AHS" style="text-transform:uppercase;" />
+    
     <label for="officerEmail">Email</label>
     <input type="email" id="officerEmail" autocomplete="email" />
     <label for="officerPassword" style="margin-top:12px;">Password</label>
@@ -1060,6 +1059,12 @@
 
 <script>
   const API_BASE = window.location.origin;
+    // Auto-read school code from the Gateway URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlSchoolCode = urlParams.get('school');
+  if (urlSchoolCode) {
+    window.hiddenSchoolCode = urlSchoolCode.toUpperCase();
+  }
   let officer = null;
   let cache = { subjects: [], teachers: [], classes: [], students: [] };
   let activeCommentStudentId = null;
@@ -1283,7 +1288,7 @@
   async function login() {
     const email = document.getElementById('officerEmail').value.trim();
     const password = document.getElementById('officerPassword').value;
-    const school_code = document.getElementById('schoolCode').value.trim();
+    const school_code = window.hiddenSchoolCode || '';
     const errEl = document.getElementById('loginError');
     
     errEl.style.display = 'none';
