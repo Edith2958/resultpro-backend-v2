@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { getGrade, rankByTotal, ordinal } = require('../utils/grading');
 const { upload } = require('../config/cloudinary');
+const bcrypt = require('bcrypt');
 
 // ==========================================
 // LOGIN (Multi-School Enforced)
