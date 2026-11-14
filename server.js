@@ -43,12 +43,24 @@ app.use('/api/form-teacher', formTeacherRouter);
 app.use('/api/settings', settingsRouter);
 
 // Frontend HTML Page Routes
+app.get('/gateway', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'gateway.html'));
+});
+
 app.get('/student', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'student.html'));
 });
 
 app.get('/exam-office', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'exam-office.html'));
+});
+
+app.get('/teacher', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'teacher.html'));
+});
+
+app.get('/form-teacher', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'form-teacher.html'));
 });
 
 app.get('/verify', (req, res) => {
