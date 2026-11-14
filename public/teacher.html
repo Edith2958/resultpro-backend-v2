@@ -179,6 +179,331 @@
     #loginWrap .card { padding: 22px 19px; }
     .save-row button { flex: 1 1 140px; }
   }
+
+  /* =========================================================
+     PREMIUM UI LAYER
+     Keeps the existing screens, IDs, API contract and workflow.
+     ========================================================= */
+  :root {
+    --navy: #176b4b;
+    --navy-light: #10553b;
+    --gold: #d5ad62;
+    --cream: #f3f6f4;
+    --card: #ffffff;
+    --border: #e3ebe6;
+    --text: #172820;
+    --text-soft: #718078;
+    --surface-soft: #f7faf8;
+    --pass: #168653;
+    --pass-bg: #e7f6ed;
+    --fail: #c33e45;
+    --fail-bg: #fff0f0;
+    --warn: #a96d08;
+    --warn-bg: #fff6df;
+    --shadow-sm: 0 3px 12px rgba(19, 54, 37, .045);
+    --shadow-md: 0 18px 48px rgba(19, 54, 37, .075);
+    --radius-card: 20px;
+    --radius-control: 12px;
+    --sec-btn-bg: #f5faf7;
+    --sec-btn-border: #dce9e1;
+  }
+
+  [data-theme="dark"] {
+    --navy: #42a879;
+    --navy-light: #2d8b61;
+    --gold: #e5c27f;
+    --cream: #111b16;
+    --card: #1d2a23;
+    --border: #34473c;
+    --text: #edf4ef;
+    --text-soft: #a0b2a7;
+    --surface-soft: #223129;
+    --pass: #75d39d;
+    --pass-bg: #203e2d;
+    --fail: #ff8585;
+    --fail-bg: #402528;
+    --warn: #e6bd68;
+    --warn-bg: #3b321e;
+    --shadow-sm: 0 3px 12px rgba(0,0,0,.12);
+    --shadow-md: 0 18px 48px rgba(0,0,0,.22);
+    --sec-btn-bg: #26372e;
+    --sec-btn-border: #3b5044;
+  }
+
+  html { scroll-padding-top: 24px; }
+  body {
+    padding: 42px 22px 80px;
+    background:
+      radial-gradient(ellipse at 4% 2%, rgba(35, 126, 84, .10), transparent 34rem),
+      radial-gradient(ellipse at 96% 12%, rgba(213, 173, 98, .075), transparent 28rem),
+      var(--cream);
+    font-family: "Nunito", system-ui, sans-serif;
+    letter-spacing: .005em;
+  }
+  .wrap { width: min(100%, 1040px); }
+  .wrap.narrow { width: min(100%, 460px); }
+
+  .school-header { margin-bottom: 30px; }
+  .school-header .crest {
+    width: 66px;
+    height: 66px;
+    border: 4px solid var(--card);
+    border-radius: 21px;
+    background: linear-gradient(145deg, #2b9366, #104b35);
+    box-shadow: 0 10px 24px rgba(16, 77, 54, .2);
+  }
+  .school-header h1 {
+    font-size: clamp(24px, 3.2vw, 31px);
+    letter-spacing: -.7px;
+    line-height: 1.2;
+  }
+  .school-header p {
+    margin-top: 8px;
+    font-size: 11px;
+    letter-spacing: 1.15px;
+    text-transform: uppercase;
+  }
+
+  .card {
+    padding: 28px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(10px);
+  }
+  #loginWrap .card { padding: 34px; }
+  #loginWrap .school-header { margin-bottom: 30px; }
+
+  .dash-greeting {
+    min-height: 82px;
+    margin-bottom: 22px;
+    padding: 20px 23px;
+    border-radius: 17px;
+    background: linear-gradient(115deg, var(--surface-soft), var(--card));
+    box-shadow: none;
+  }
+  .dash-greeting .greet-line {
+    font-size: clamp(20px, 2.6vw, 25px);
+    letter-spacing: -.6px;
+  }
+  .dash-greeting .greet-sub {
+    font-size: 11px;
+    letter-spacing: .1px;
+  }
+
+  .topbar {
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+    font-size: 12px;
+  }
+  .topbar button {
+    min-height: 35px;
+    padding: 8px 13px;
+    border-radius: 10px;
+  }
+
+  label {
+    margin-bottom: 8px;
+    font-size: 10px;
+    letter-spacing: .95px;
+  }
+  input, select, textarea {
+    min-height: 44px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  input:hover, select:hover, textarea:hover {
+    border-color: color-mix(in srgb, var(--navy) 38%, var(--border));
+  }
+  input:focus-visible, select:focus-visible, textarea:focus-visible,
+  button:focus-visible {
+    outline: 3px solid rgba(43, 137, 96, .22);
+    outline-offset: 2px;
+  }
+
+  .filters { gap: 14px; }
+  .mode-toggle {
+    padding: 5px;
+    gap: 7px;
+    margin-bottom: 22px;
+    border-radius: 13px;
+  }
+  .mode-toggle button {
+    min-height: 42px;
+    border-radius: 10px;
+    transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+  }
+  .mode-toggle button.active {
+    background: var(--card);
+    box-shadow: 0 3px 10px rgba(20, 50, 34, .09);
+  }
+
+  button.primary, button.ghost {
+    min-height: 43px;
+    border-radius: 12px;
+    font-size: 12px;
+    letter-spacing: .1px;
+  }
+  button.primary {
+    background: linear-gradient(135deg, #25845b, #14583d);
+    box-shadow: 0 6px 15px rgba(23, 99, 69, .18);
+  }
+  button.primary:hover {
+    box-shadow: 0 10px 22px rgba(23, 99, 69, .23);
+  }
+  button.ghost {
+    background: var(--sec-btn-bg);
+  }
+  .load-btn-row { margin-top: 19px; }
+  .load-btn-row .primary { min-width: 150px; }
+
+  #rosterCard { overflow: hidden; }
+  .status-bar {
+    margin: 0 0 17px;
+    padding: 0 0 15px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 800;
+  }
+  .badge {
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: .55px;
+  }
+
+  .desktop-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+  }
+  .desktop-table thead th {
+    padding: 14px 10px;
+    background: var(--surface-soft);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 9px;
+    letter-spacing: .85px;
+  }
+  .desktop-table thead th:first-child { border-radius: 10px 0 0 10px; }
+  .desktop-table thead th:last-child { border-radius: 0 10px 10px 0; }
+  .desktop-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .desktop-table tbody tr { transition: background .16s ease; }
+  .desktop-table tbody tr:hover { background: var(--surface-soft); }
+  .desktop-table tbody tr:last-child td { border-bottom: 0; }
+  td .student-name { font-size: 13px; }
+  .score-input {
+    min-height: 39px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .total-cell {
+    color: var(--navy);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mobile-cards { gap: 13px; }
+  .m-card {
+    padding: 16px;
+    border-radius: 15px;
+    box-shadow: var(--shadow-sm);
+  }
+  .m-card-head {
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .m-card-head span:last-child {
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+    font-weight: 900;
+  }
+  .m-card-grid { gap: 10px; margin-top: 12px; }
+  .m-card-grid label { font-size: 9px; }
+
+  .save-row {
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+  .save-row button { min-width: 145px; }
+
+  .empty-note {
+    padding: 48px 20px;
+    border-radius: 16px;
+    line-height: 1.7;
+  }
+  .toast {
+    bottom: 26px;
+    padding: 13px 19px;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 14px;
+    box-shadow: 0 12px 35px rgba(0,0,0,.2);
+  }
+
+  #passwordModal {
+    backdrop-filter: blur(5px);
+    background: rgba(10, 24, 17, .58) !important;
+  }
+  #passwordModal > div {
+    max-width: 430px !important;
+    border-radius: 20px !important;
+    padding: 28px !important;
+    box-shadow: 0 24px 70px rgba(0,0,0,.24) !important;
+  }
+  #passwordModal h3 { font-size: 22px; letter-spacing: -.35px; }
+  #passwordModal input { margin-top: 6px; }
+
+  @media (min-width: 900px) {
+    #appWrap > .card:first-of-type { padding: 30px; }
+    .filters { grid-template-columns: 1.25fr .8fr .9fr; }
+  }
+  @media (max-width: 768px) {
+    body { padding: 28px 16px 64px; }
+    .card { padding: 22px; }
+    .desktop-table { display: none; }
+    .mobile-cards { display: flex; }
+    .save-row { justify-content: stretch; }
+    .save-row button { flex: 1 1 0; min-width: 0; }
+  }
+  @media (max-width: 600px) {
+    body { padding: 22px 12px 54px; }
+    .school-header { margin-bottom: 22px; }
+    .school-header .crest { width: 58px; height: 58px; border-radius: 18px; }
+    .card, #loginWrap .card { padding: 19px; margin-bottom: 14px; border-radius: 16px; }
+    .dash-greeting { padding: 16px; }
+    .dash-greeting .greet-sub { white-space: normal; }
+    .topbar { align-items: flex-start; flex-wrap: wrap; }
+    .topbar > span:last-child { display: flex; flex-wrap: wrap; gap: 7px; }
+    .topbar button { margin-left: 0 !important; }
+    .filters { grid-template-columns: 1fr; gap: 13px; }
+    .load-btn-row .primary { width: 100%; }
+    .save-row { gap: 8px; }
+    .save-row button { padding: 10px 8px; font-size: 11px; }
+    .m-card-grid { gap: 7px; }
+    .score-input { padding: 8px 6px; font-size: 12px; }
+    #passwordModal > div { padding: 22px !important; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+  }
+
 </style>
 <script>
   (function() {
@@ -564,8 +889,8 @@
         <div class="m-card" style="--i:${i}">
           <div class="m-card-head"><span>${s.name}</span> <span id="m-total-${i}" style="color:var(--navy);">${s.total_score ?? '—'}</span></div>
           <div class="m-card-grid">
-            <div><label>Assignment (15)</label><input class="score-input" type="number" min="0" max="15" value="${s.assignment_score ?? ''}" oninput="updateMidTermRow(${i})" /></div>
-            <div><label>Test (15)</label><input class="score-input" type="number" min="0" max="15" value="${s.test_score ?? ''}" oninput="updateMidTermRow(${i})" /></div>
+            <div><label>Assignment (15)</label><input class="score-input" type="number" min="0" max="15" step="1" inputmode="numeric" value="${s.assignment_score ?? ''}" id="m-assignment-${i}" oninput="updateMidTermRow(${i})" /></div>
+            <div><label>Test (15)</label><input class="score-input" type="number" min="0" max="15" step="1" inputmode="numeric" value="${s.test_score ?? ''}" id="m-test-${i}" oninput="updateMidTermRow(${i})" /></div>
             <div><label>Remark</label><div style="padding-top:8px;"><span id="m-remark-${i}" class="${s.remark === 'Pass' ? 'remark-pass' : s.remark === 'Fail' ? 'remark-fail' : ''}">${s.remark ?? '—'}</span></div></div>
           </div>
         </div>`).join('');
@@ -586,8 +911,8 @@
           <div class="m-card-head"><span>${s.name}</span> <span id="m-total-${i}" style="color:var(--navy);">${s.total_score ?? '—'}</span></div>
           ${s.needs_manual_ca ? '<p style="font-size:10px; color:var(--warn); font-weight:700; margin:0 0 8px;">No mid-term record — enter CA manually</p>' : ''}
           <div class="m-card-grid" style="grid-template-columns: 1fr 1fr 1fr;">
-            <div><label>CA (30)</label>${s.needs_manual_ca ? `<input class="score-input" type="number" min="0" max="30" value="${s.ca ?? ''}" oninput="updateFullTermRow(${i})" />` : `<input class="score-input" type="number" value="${s.ca ?? 0}" disabled />`}</div>
-            <div><label>Exam (70)</label><input class="score-input" type="number" min="0" max="70" value="${s.exam_score ?? ''}" oninput="updateFullTermRow(${i})" /></div>
+            <div><label>CA (30)</label>${s.needs_manual_ca ? `<input class="score-input" type="number" min="0" max="30" step="1" inputmode="numeric" value="${s.ca ?? ''}" id="m-ca-${i}" oninput="updateFullTermRow(${i})" />` : `<input class="score-input" type="number" value="${s.ca ?? 0}" disabled />`}</div>
+            <div><label>Exam (70)</label><input class="score-input" type="number" min="0" max="70" step="1" inputmode="numeric" value="${s.exam_score ?? ''}" id="m-exam-${i}" oninput="updateFullTermRow(${i})" /></div>
             <div><label>Grade</label><div style="padding-top:8px;" id="m-grade-${i}">${s.grade ? `<span class="grade-pill grade-${s.grade}">${s.grade}</span>` : '—'}</div></div>
           </div>
         </div>`).join('');
@@ -596,8 +921,11 @@
   }
 
   function updateMidTermRow(i) {
-    const assignment = document.getElementById(`assignment-${i}`).value;
-    const test = document.getElementById(`test-${i}`).value;
+    const desktopVisible = document.querySelector('.desktop-table').offsetParent !== null;
+    const assignmentInput = document.getElementById(desktopVisible ? `assignment-${i}` : `m-assignment-${i}`);
+    const testInput = document.getElementById(desktopVisible ? `test-${i}` : `m-test-${i}`);
+    const assignment = assignmentInput ? assignmentInput.value : '';
+    const test = testInput ? testInput.value : '';
     const hasAny = assignment !== '' || test !== '';
     const total = hasAny ? (Number(assignment) || 0) + (Number(test) || 0) : null;
 
@@ -634,10 +962,11 @@
   }
 
   function updateFullTermRow(i) {
-    const caInput = document.getElementById(`ca-${i}`);
+    const desktopVisible = document.querySelector('.desktop-table').offsetParent !== null;
+    const caInput = document.getElementById(desktopVisible ? `ca-${i}` : `m-ca-${i}`);
     const ca = caInput ? (caInput.value === '' ? null : Number(caInput.value)) : currentRoster[i].ca;
-    const examInput = document.getElementById(`exam-${i}`);
-    const exam = examInput.value === '' ? null : Number(examInput.value);
+    const examInput = document.getElementById(desktopVisible ? `exam-${i}` : `m-exam-${i}`);
+    const exam = examInput && examInput.value !== '' ? Number(examInput.value) : null;
 
     currentRoster[i].manual_ca_override = currentRoster[i].needs_manual_ca ? ca : null;
     currentRoster[i].exam_score = exam;
@@ -687,6 +1016,22 @@
 
   async function saveScores(status) {
     const { className, subjectId, term, session } = getFilters();
+    if (!currentRoster.length) {
+      showToast('Load a class before saving scores.');
+      return;
+    }
+    const invalidScore = currentRoster.some(s => {
+      if (mode === 'midterm') {
+        return (s.assignment_score != null && (!Number.isInteger(s.assignment_score) || s.assignment_score < 0 || s.assignment_score > 15)) ||
+               (s.test_score != null && (!Number.isInteger(s.test_score) || s.test_score < 0 || s.test_score > 15));
+      }
+      return (s.exam_score != null && (!Number.isInteger(s.exam_score) || s.exam_score < 0 || s.exam_score > 70)) ||
+             (s.manual_ca_override != null && (!Number.isInteger(s.manual_ca_override) || s.manual_ca_override < 0 || s.manual_ca_override > 30));
+    });
+    if (invalidScore) {
+      showToast('Please check the score values and allowed ranges.');
+      return;
+    }
     const endpoint = mode === 'midterm' ? 'midterm-scores' : 'fullterm-scores';
     const scores = mode === 'midterm'
       ? currentRoster.map(s => ({ student_id: s.student_id, assignment_score: s.assignment_score, test_score: s.test_score, status }))
