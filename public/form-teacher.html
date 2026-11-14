@@ -717,7 +717,60 @@ button:focus-visible {
  .slip-subject-table thead th,.slip-subject-table tbody td{padding:5px 6px!important}
 }
 
+
+/* PREMIUM FORM-TEACHER EXPERIENCE — aligned with teacher.html */
+:root{color-scheme:light;--navy:#176b4b;--navy-light:#10553b;--gold:#d6b16d;--cream:#f4f7f5;--card:#fff;--border:#e3ebe6;--text:#182920;--text-soft:#748279;--surface-soft:#f7faf8;--pass:#168653;--pass-bg:#e8f6ee;--fail:#c23f48;--fail-bg:#fff0f0;--warn:#a96e0b;--warn-bg:#fff6e2;--shadow-sm:0 4px 14px rgba(20,54,37,.05);--shadow-md:0 18px 50px rgba(20,54,37,.075);--radius-card:21px;--radius-control:12px;--sec-btn-bg:#f5faf7;--sec-btn-border:#dce9e1}
+[data-theme="dark"]{color-scheme:dark;--navy:#49ad7e;--navy-light:#2d8b61;--gold:#e5c27f;--cream:#111a15;--card:#1c2922;--border:#34483c;--text:#edf4ef;--text-soft:#a2b4a8;--surface-soft:#223229;--pass:#75d39d;--pass-bg:#203e2d;--fail:#ff8989;--fail-bg:#402528;--warn:#e6bd68;--warn-bg:#3b321e;--shadow-sm:0 4px 14px rgba(0,0,0,.13);--shadow-md:0 18px 50px rgba(0,0,0,.24);--sec-btn-bg:#26372e;--sec-btn-border:#3b5044}
+html{scroll-behavior:smooth;scroll-padding-top:22px}
+body{padding:42px 22px 82px;background:radial-gradient(ellipse at 5% 0%,rgba(35,126,84,.105),transparent 34rem),radial-gradient(ellipse at 96% 10%,rgba(214,177,109,.08),transparent 29rem),var(--cream);color:var(--text);font-family:"Nunito",system-ui,sans-serif;line-height:1.6;transition:background .3s,color .3s}
+.wrap{width:min(100%,1060px)}.wrap.narrow{width:min(100%,460px)}
+.school-header{margin-bottom:30px}.school-header .crest{width:66px;height:66px;border:4px solid var(--card);border-radius:21px;background:linear-gradient(145deg,#2b9366,#104b35);box-shadow:0 10px 25px rgba(16,77,54,.2)}
+.school-header h1{font-size:clamp(24px,3.3vw,32px);line-height:1.2;letter-spacing:-.8px;color:var(--text)}.school-header p{margin-top:8px;font-size:10px;letter-spacing:1.25px;text-transform:uppercase}
+.card{padding:29px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);box-shadow:var(--shadow-md);transition:background .3s,border-color .3s}
+#loginWrap .card{padding:35px}#loginWrap .school-header{margin-bottom:30px}
+.dash-greeting{min-height:86px;margin-bottom:22px;padding:20px 23px;border:1px solid var(--border);border-radius:17px;background:linear-gradient(115deg,var(--surface-soft),var(--card));box-shadow:none}
+.dash-greeting .greet-line{font-size:clamp(20px,2.6vw,26px);letter-spacing:-.7px}.dash-greeting .greet-sub{font-size:11px}
+.topbar{padding-bottom:18px;margin-bottom:22px;border-bottom:1px solid var(--border);flex-wrap:wrap}.topbar .who{color:var(--text);font-weight:800}
+.topbar button{min-height:36px;padding:8px 13px;border:1px solid var(--sec-btn-border);border-radius:10px;background:var(--sec-btn-bg);color:var(--navy);font-weight:800}
+label{margin-bottom:8px;font-size:10px;letter-spacing:.95px}
+input,select,textarea{min-height:45px;padding:11px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface-soft);color:var(--text);font-size:13px}
+input:hover,select:hover,textarea:hover{border-color:color-mix(in srgb,var(--navy) 40%,var(--border))}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid rgba(43,137,96,.22);outline-offset:2px}
+.filters{gap:14px}button.primary,button.ghost,button.small{min-height:44px;border-radius:12px;font-size:12px;letter-spacing:.1px}
+button.primary{background:linear-gradient(135deg,#27865d,#14583d);box-shadow:0 6px 16px rgba(23,99,69,.18)}button.primary:hover{box-shadow:0 10px 23px rgba(23,99,69,.24)}
+button.ghost,button.small{background:var(--sec-btn-bg);border-color:var(--sec-btn-border);color:var(--navy)}.load-btn-row{margin-top:19px}
+.student-row{padding:20px 0;border-bottom-color:var(--border)}.avatar{border-color:var(--border);background:linear-gradient(145deg,#e7f3ea,#d5e9db);color:#176345}.student-fields .name{color:var(--text);font-size:15px}
+#rosterCard,#broadsheetCard,#allSlipsCard{overflow:hidden}#broadsheetCard,#allSlipsCard{animation:viewSwap .5s var(--ease-out-expo) both}
+.report-toolbar{border-color:var(--border);border-radius:15px;background:linear-gradient(135deg,var(--surface-soft),var(--card))}.report-toolbar strong{color:var(--text)}.report-toolbar small{color:var(--text-soft)}
+.report-tools input,.report-tools select{background:var(--card);color:var(--text)}.report-kpi{border-color:var(--border);border-radius:14px;background:var(--card);box-shadow:var(--shadow-sm)}
+.report-kpi span,.report-kpi em{color:var(--text-soft)}.report-kpi strong{color:var(--text)}.table-shell{border-color:var(--border);border-radius:14px;background:var(--card)}
+#broadsheetTable tbody td{background:var(--card);color:var(--text);border-bottom-color:var(--border)!important}#broadsheetTable tbody tr:nth-child(even) td{background:var(--surface-soft)}
+.empty-note{border-color:var(--border);background:var(--surface-soft)}
+.theme-toggle{margin-left:auto}
+.individual-result-tools{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin:0 0 18px;padding:15px;border:1px solid var(--border);border-radius:15px;background:linear-gradient(135deg,var(--surface-soft),var(--card))}
+.individual-result-tools .field{flex:1 1 230px;min-width:0}.individual-result-tools .field label{margin-bottom:7px}.individual-result-tools select{width:100%;background:var(--card)}
+.individual-result-tools .hint{flex:1 0 100%;margin:0;color:var(--text-soft);font-size:11px}
+.result-slip-page{border:1px solid var(--border);border-radius:18px;background:#fff;color:#20352a;box-shadow:var(--shadow-sm);margin:0 0 20px;padding:24px}
+.result-slip-page[hidden]{display:none!important}
+@media(max-width:700px){body{padding:22px 12px 58px}.card{padding:18px;margin-bottom:15px;border-radius:16px}#loginWrap .card{padding:24px 20px}.school-header{margin-bottom:20px}.school-header .crest{width:56px;height:56px}.filters{grid-template-columns:1fr}.topbar{gap:9px}.report-kpis,.bulk-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.individual-result-tools{align-items:stretch}.individual-result-tools button{flex:1 1 100%}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+@media print{
+ @page{size:A4 portrait;margin:10mm}
+ body{padding:0!important;background:#fff!important;color:#111!important;font-family:Arial,sans-serif}
+ #loginWrap,.topbar,.filters,.load-btn-row,#rosterCard,#emptyNote,.toast,.dash-greeting,.report-toolbar,.individual-result-tools{display:none!important}
+ #appWrap{display:block!important;width:100%!important;max-width:none!important}
+ #broadsheetCard,#allSlipsCard{display:block!important;overflow:visible!important;border:0!important;padding:0!important;margin:0!important;box-shadow:none!important}
+ #broadsheetCard:not(.print-active),#allSlipsCard:not(.print-active){display:none!important}
+ #allSlipsContainer{display:block!important}
+ .result-slip-page{display:block!important;break-after:page;page-break-after:always;border:0!important;border-radius:0!important;box-shadow:none!important;padding:3mm!important;margin:0!important}
+ .result-slip-page:last-child{break-after:auto;page-break-after:auto}
+ #allSlipsContainer.print-individual .result-slip-page{display:none!important}
+ #allSlipsContainer.print-individual .result-slip-page.print-target{display:block!important}
+ .result-slip-page table{font-size:8pt!important}.result-slip-page th,.result-slip-page td{border:1px solid #888!important;color:#111!important}
+}
+
 </style>
+<script>(function(){try{var p=localStorage.getItem('resultpro_theme');if(p)document.documentElement.setAttribute('data-theme',p);}catch(e){}})();</script>
 </head>
 <body>
 
@@ -757,6 +810,7 @@ button:focus-visible {
 
     <div class="topbar">
       <span class="who" id="whoAmI"></span>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" type="button">◐ Theme</button>
       <button onclick="logout()">Log out</button>
       <button onclick="openPasswordModal()" style="margin-right: 8px; background: var(--sec-btn-bg); color: var(--navy); border: 1px solid var(--border); padding: 5px 10px; border-radius: 6px; cursor: pointer;">Change Password</button>
     </div>
@@ -798,7 +852,7 @@ button:focus-visible {
           <option value="name">Sort: Name (A-Z)</option>
           <option value="position">Sort: Position (1st first)</option>
         </select>
-        <button onclick="window.print()">Print</button>
+        <button onclick="printBroadsheet()">Print</button>
       </span>
     </div>
     <div class="table-shell" style="overflow-x:auto;">
@@ -809,12 +863,23 @@ button:focus-visible {
   <div class="card" id="allSlipsCard" style="display:none;">
     <div class="topbar" style="margin-bottom:14px;">
       <span class="who" id="allSlipsTitle"></span>
-      <button class="primary" onclick="window.print()">Print / Save all as PDF</button>
+      <button class="primary" onclick="printAllResultSlips()">Print / Save all as PDF</button>
     </div>
     
-    <!-- SEARCH BAR for Individual Result -->
-    <div style="margin-bottom: 20px;">
-      <input type="text" id="slipSearch" placeholder="Search student name or admission number..." oninput="filterSlips()" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface-soft);" />
+    <div class="individual-result-tools">
+      <div class="field">
+        <label for="slipSearch">Find an individual student</label>
+        <input type="search" id="slipSearch" placeholder="Search name or admission number…" oninput="filterSlips()" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="individualSlipSelect">Select result to print</label>
+        <select id="individualSlipSelect" onchange="selectIndividualSlip(this.value)">
+          <option value="">Choose a student…</option>
+        </select>
+      </div>
+      <button class="primary" type="button" onclick="printIndividualSlip()">Print selected result</button>
+      <button class="ghost" type="button" onclick="clearIndividualSlip()">Show all results</button>
+      <p class="hint">Search by student name or admission number, select the learner, then print only that student's result. Use “Print / Save all as PDF” for the complete class set.</p>
     </div>
 
     <div id="allSlipsContainer"></div>
@@ -978,6 +1043,18 @@ button:focus-visible {
     if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) return photoUrl;
     return `${API_BASE}${photoUrl}`;
   }
+  function toggleTheme() {
+    const root = document.documentElement;
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('resultpro_theme', next); } catch (err) {}
+    syncThemeButton();
+  }
+  function syncThemeButton() {
+    const btn = document.getElementById('themeToggle');
+    if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀ Light mode' : '◐ Dark mode';
+  }
+
   function togglePasswordVisibility(inputId, btn) {
     const input = document.getElementById(inputId);
     if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
@@ -1033,6 +1110,7 @@ button:focus-visible {
   }
 
   async function boot() {
+    syncThemeButton();
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
     startGreetingClock();
@@ -1262,7 +1340,7 @@ button:focus-visible {
       const attendance = slip.attendance ? `${reportEscape(slip.attendance.present ?? '—')} / ${reportEscape(slip.attendance.total_days ?? '—')}` : '—';
       
       return `
-        <article class="result-slip-page" data-search="${reportEscape((s.name || '') + ' ' + (s.admission_no || '')).toLowerCase()}" id="slip-${idx}">
+        <article class="result-slip-page" data-search="${reportEscape((s.name || '') + ' ' + (s.admission_no || '')).toLowerCase()}" data-student-name="${reportEscape(s.name || 'Student')}" data-admission="${reportEscape(s.admission_no || '')}" id="slip-${idx}">
           <header class="slip-school-head">
             <div class="slip-crest">${logo}</div>
             <div><div class="slip-kicker">OFFICIAL STUDENT ACADEMIC REPORT</div>
@@ -1293,21 +1371,85 @@ button:focus-visible {
     }).join('');
     
     container.innerHTML = bulkSummary + pages;
+    populateIndividualSlipSelect();
+    clearIndividualSlip();
+  }
+
+  function printAllResultSlips() {
+    const card = document.getElementById('allSlipsCard');
+    const container = document.getElementById('allSlipsContainer');
+    clearIndividualSlip();
+    card.classList.add('print-active');
+    container.classList.remove('print-individual');
+    window.print();
+    setTimeout(() => card.classList.remove('print-active'), 700);
+  }
+
+  function populateIndividualSlipSelect() {
+    const select = document.getElementById('individualSlipSelect');
+    if (!select) return;
+    const slips = [...document.querySelectorAll('.result-slip-page')];
+    select.innerHTML = '<option value="">Choose a student…</option>' + slips.map((slip, index) => {
+      const name = slip.getAttribute('data-student-name') || `Student ${index + 1}`;
+      const admission = slip.getAttribute('data-admission') || '';
+      return `<option value="${slip.id}">${reportEscape(name)}${admission ? ` — ${reportEscape(admission)}` : ''}</option>`;
+    }).join('');
+  }
+
+  function selectIndividualSlip(id) {
+    document.querySelectorAll('.result-slip-page').forEach(slip => { slip.hidden = !!id && slip.id !== id; });
+    if (id) document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
   function filterSlips() {
     const query = document.getElementById('slipSearch').value.toLowerCase().trim();
-    const slips = document.querySelectorAll('.result-slip-page');
-    
-    slips.forEach(slip => {
-      const text = slip.getAttribute('data-search') || '';
-      if (text.includes(query)) {
-        slip.style.display = 'block';
-      } else {
-        slip.style.display = 'none';
-      }
-    });
+    const select = document.getElementById('individualSlipSelect');
+    const slips = [...document.querySelectorAll('.result-slip-page')];
+    slips.forEach(slip => { slip.hidden = !!query && !(slip.getAttribute('data-search') || '').includes(query); });
+    if (select) {
+      [...select.options].forEach((option, index) => {
+        if (index === 0) return;
+        const target = document.getElementById(option.value);
+        option.hidden = !!query && (!target || !(target.getAttribute('data-search') || '').includes(query));
+      });
+      if (select.value && !document.getElementById(select.value)?.getAttribute('data-search')?.includes(query)) select.value = '';
+    }
+    if (!query) slips.forEach(slip => slip.hidden = false);
   }
+
+  function clearIndividualSlip() {
+    const search = document.getElementById('slipSearch');
+    const select = document.getElementById('individualSlipSelect');
+    if (search) search.value = '';
+    if (select) select.value = '';
+    document.querySelectorAll('.result-slip-page').forEach(slip => { slip.hidden = false; slip.classList.remove('print-target'); });
+    document.getElementById('allSlipsContainer')?.classList.remove('print-individual');
+  }
+
+  function printIndividualSlip() {
+    const id = document.getElementById('individualSlipSelect')?.value;
+    if (!id) { showToast('Please search for and select a student first.'); return; }
+    const target = document.getElementById(id);
+    if (!target) { showToast('The selected result could not be found.'); return; }
+    document.querySelectorAll('.result-slip-page').forEach(slip => slip.classList.toggle('print-target', slip.id === id));
+    document.getElementById('allSlipsCard').classList.add('print-active');
+    document.getElementById('allSlipsContainer').classList.add('print-individual');
+    window.print();
+    setTimeout(() => {
+      document.getElementById('allSlipsCard').classList.remove('print-active');
+      document.getElementById('allSlipsContainer').classList.remove('print-individual');
+      document.querySelectorAll('.result-slip-page').forEach(slip => slip.classList.remove('print-target'));
+    }, 700);
+  }
+
+  function printBroadsheet() {
+    const card = document.getElementById('broadsheetCard');
+    card.classList.add('print-active');
+    window.print();
+    setTimeout(() => card.classList.remove('print-active'), 700);
+  }
+
+
 
   /* ==========================================================
      BROADSHEET
