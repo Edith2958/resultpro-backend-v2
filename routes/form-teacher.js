@@ -14,11 +14,7 @@ router.post('/login', async (req, res) => {
   if (!school_code) return res.status(400).json({ error: 'School Code is required' });
 
   try {
-    const schoolRes = await pool.query(
-      'SELECT id, status, name FROM schools WHERE code = $1',
-      [school_code.trim().toUpperCase()]
-    );
-
+    const schoolRes = await pool.query('SELECT id, status FROM schools WHERE code = $1', [school_code.trim().toUpperCase()]);
     if (schoolRes.rows.length === 0) return res.status(404).json({ error: 'Invalid School Code' });
     
     const school = schoolRes.rows[0];
@@ -27,23 +23,25 @@ router.post('/login', async (req, res) => {
     }
 
     const { rows } = await pool.query(
-      `SELECT id, name, email, school_id FROM teachers 
-       WHERE email = $1 AND password_hash = $2 AND school_id = $3`,
-      [email, password, school.id]
+      `SELECT id, name, email, password_hash, school_id FROM teachers 
+       WHERE email = $1 AND school_id = $2`,
+      [email, school.id]
     );
+    
+    if (rows.length === 0) return res.status(401).json({ error: 'Incorrect email or password' });
 
-    if (rows.length === 0) return res.status(401).json({ error: 'Incorrect email or password for this school' });
+    const teacher = rows[0];
+    const isMatch = await bcrypt.compare(password, teacher.password_hash);
+    if (!isMatch) return res.status(401).json({ error: 'Incorrect email or password' });
 
-    res.json({ 
-      teacher: rows[0],
-      school: { id: school.id, name: school.name, code: school_code.toUpperCase() }
-    });
+    delete teacher.password_hash;
+
+    res.json({ teacher, school: { id: school.id, name: school.name, code: school_code.toUpperCase() } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed' });
   }
 });
-
 // ==========================================
 // HELPERS
 // ==========================================
