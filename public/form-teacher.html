@@ -769,6 +769,89 @@ button.ghost,button.small{background:var(--sec-btn-bg);border-color:var(--sec-bt
  .result-slip-page table{font-size:8pt!important}.result-slip-page th,.result-slip-page td{border:1px solid #888!important;color:#111!important}
 }
 
+
+/* ELITE RESULT SLIP — branded, print-first A4 report */
+#allSlipsContainer{gap:26px}
+.result-slip-page{isolation:isolate;position:relative;background:#fff!important;color:#24372c!important;border:1px solid #d9e5dc!important;border-radius:18px!important;padding:25px 28px 20px!important;box-shadow:0 14px 34px rgba(19,59,38,.075)!important;overflow:hidden}
+.result-slip-page:before{height:7px;background:linear-gradient(90deg,#124a32 0%,#2c8b5d 58%,#d7b46d 100%)}
+.slip-watermark{position:absolute;z-index:-1;right:25px;top:170px;font-size:150px;line-height:1;font-weight:1000;letter-spacing:-12px;color:rgba(26,103,68,.035);pointer-events:none}
+.slip-report-topline{display:flex;justify-content:space-between;gap:12px;padding-bottom:8px;border-bottom:1px solid #e9efe9;color:#89988e;font-size:8px;font-weight:900;letter-spacing:1.15px}
+.slip-school-head{grid-template-columns:70px minmax(0,1fr) auto!important;gap:15px!important;align-items:center!important;padding:17px 0 15px!important;margin-bottom:13px!important;border-bottom:2px solid #1c6444!important}
+.slip-crest{width:68px;height:68px;border-radius:16px;background:#174d35;box-shadow:0 5px 14px rgba(23,77,53,.14);border:3px solid #f0f5f1}
+.slip-crest img{object-fit:contain!important;padding:4px;background:#fff}
+.slip-school-identity{min-width:0}
+.slip-school-head h2{font-family:Georgia,serif!important;font-size:clamp(19px,2.5vw,26px)!important;letter-spacing:-.35px!important}
+.slip-kicker{font-size:8px!important;letter-spacing:1.5px!important;color:#9b7b3d!important}
+.slip-school-head .slip-motto{font-family:Georgia,serif!important;font-size:11px!important;font-style:italic;color:#63786a!important}
+.slip-school-head .slip-contact{font-size:9px!important;line-height:1.45!important;color:#78867d!important}
+.slip-report-stamp{padding:8px 10px;border:1px solid #d6e3d9;border-radius:8px;color:#245b3d;text-align:center;font-size:8px;font-weight:1000;line-height:1.55;letter-spacing:1px}
+.slip-period-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0;padding:10px 13px;border-radius:8px;background:#173f2d;color:#fff}
+.slip-period-banner span{font-size:8px;font-weight:900;letter-spacing:1.2px;color:#e2c98f}
+.slip-period-banner strong{font-size:11px;letter-spacing:.4px}
+.slip-student-panel{display:grid;grid-template-columns:58px minmax(0,1fr) auto;align-items:center;gap:13px;padding:13px 14px;border:1px solid #e2ebe4;border-radius:12px;background:#f8fbf8}
+.slip-student-avatar{width:56px;height:56px;flex-basis:56px;border:2px solid #fff;box-shadow:0 0 0 1px #dce8df;border-radius:12px}
+.slip-student-avatar img{object-fit:cover}
+.slip-student-name>span,.slip-student-reference>span{display:block;color:#8a978e;font-size:8px;font-weight:900;letter-spacing:.9px}
+.slip-student-name h3{margin:3px 0 0;font-family:Georgia,serif;font-size:18px;line-height:1.2;color:#173f2d}
+.slip-student-reference{text-align:right}
+.slip-student-reference strong{display:block;margin-top:4px;color:#244e35;font-size:11px}
+.slip-meta-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:11px 0 19px}
+.slip-meta-item{padding:8px 10px;border-bottom:2px solid #e4ece6;background:#fbfcfb}
+.slip-meta-item span{display:block;color:#87948b;font-size:7px;font-weight:900;letter-spacing:.7px}
+.slip-meta-item strong{display:block;margin-top:3px;color:#344c3c;font-size:10px}
+.slip-section{margin-top:8px}
+.slip-section-heading{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+.slip-section-heading>span{display:flex;width:27px;height:27px;align-items:center;justify-content:center;border-radius:8px;background:#eaf3ec;color:#236341;font-size:9px;font-weight:1000}
+.slip-section-heading h4{margin:0;color:#1b4830;font-family:Georgia,serif;font-size:15px}
+.slip-section-heading p{margin:1px 0 0;color:#87948b;font-size:9px}
+.slip-stat-grid{grid-template-columns:repeat(auto-fit,minmax(105px,1fr))!important;gap:7px!important;margin-bottom:13px!important}
+.slip-stat{padding:9px 10px!important;border-color:#e4ece6!important;border-radius:9px!important;background:#fff}
+.slip-stat span{font-size:7px!important;letter-spacing:.55px!important}
+.slip-stat strong{font-size:15px!important;color:#1a5034!important}
+.slip-stat strong small{font-size:9px;color:#87948b}
+.slip-stat-highlight{background:#f6faf7}
+.slip-subject-table{font-size:9px!important;border:1px solid #e0e9e2;border-radius:8px;overflow:hidden}
+.slip-subject-table thead th{padding:9px 7px!important;background:#214f37!important;font-size:7px!important;letter-spacing:.65px}
+.slip-subject-table tbody td{padding:8px 7px!important;color:#34483a}
+.slip-subject-table tbody td:first-child{font-weight:800;color:#263d2e}
+.slip-grade{background:#edf5ef;color:#1c6742}
+.slip-comments{margin-top:14px!important;gap:9px}
+.slip-comment{padding:10px 12px!important;border-radius:8px!important;background:#fbfcfb!important}
+.slip-comment label{font-size:7px!important;letter-spacing:.8px}
+.slip-comment p{font-size:10px!important;color:#34483a}
+.slip-signatures{display:grid;grid-template-columns:1fr .65fr 1fr;align-items:end;gap:20px;margin:23px 0 13px;min-height:65px}
+.slip-signature{text-align:center}
+.slip-sign-line{height:25px;border-bottom:1px solid #87968b;margin-bottom:5px}
+.slip-signature strong{display:block;color:#344b3b;font-size:9px}
+.slip-signature span{display:block;color:#98a39b;font-size:7px}
+.slip-signature-seal{display:flex;justify-content:center;align-items:center}
+.slip-seal{width:52px;height:52px;border:1px dashed #a8b9ad;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;color:#9aa99e;font-size:7px;font-weight:900;letter-spacing:.5px;line-height:1.35;transform:rotate(-12deg)}
+.slip-footer{margin-top:13px!important;padding-top:8px!important;border-top:1px solid #e3ebe5!important;color:#8a978e!important;font-size:7px!important}
+@media(max-width:650px){.slip-school-head{grid-template-columns:54px 1fr!important}.slip-crest{width:52px;height:52px}.slip-report-stamp{display:none}.slip-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.slip-student-panel{grid-template-columns:48px 1fr}.slip-student-avatar{width:46px;height:46px;flex-basis:46px}.slip-student-reference{grid-column:2;text-align:left}.slip-signatures{gap:10px}.slip-watermark{font-size:90px}}
+@media print{
+ @page{size:A4 portrait;margin:8mm}
+ body{background:#fff!important}
+ #allSlipsCard{display:block!important}
+ #allSlipsContainer{display:block!important}
+ .result-slip-page{width:100%!important;min-height:0!important;padding:5mm 5mm 4mm!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;break-after:page;page-break-after:always;overflow:visible!important}
+ .result-slip-page:before{height:4px}
+ .slip-school-head{padding:11px 0 10px!important;margin-bottom:9px!important}
+ .slip-period-banner{margin:9px 0;padding:7px 10px}
+ .slip-student-panel{padding:9px 11px}
+ .slip-meta-grid{margin:8px 0 12px;gap:5px}
+ .slip-meta-item{padding:6px 8px}
+ .slip-stat-grid{gap:5px!important;margin-bottom:9px!important}
+ .slip-stat{padding:7px 8px!important}
+ .slip-subject-table thead th,.slip-subject-table tbody td{padding:6px 6px!important}
+ .slip-comments{margin-top:10px!important}
+ .slip-signatures{margin:16px 0 9px;min-height:52px}
+ .slip-sign-line{height:20px}
+ .slip-footer{margin-top:8px!important}
+ .result-slip-page:last-child{break-after:auto;page-break-after:auto}
+ .result-slip-page[hidden]{display:none!important}
+ #allSlipsContainer.print-individual .result-slip-page:not(.print-target){display:none!important}
+}
+
 </style>
 <script>(function(){try{var p=localStorage.getItem('resultpro_theme');if(p)document.documentElement.setAttribute('data-theme',p);}catch(e){}})();</script>
 </head>
@@ -1333,40 +1416,62 @@ button.ghost,button.small{background:var(--sec-btn-bg);border-color:var(--sec-bt
         </tr>`).join('');
       const comments = slip.comments || {};
       const commentBlock = (comments.form_teacher || comments.principal) ? `
-        <div class="slip-comments">
+        <section class="slip-comments">
           ${comments.form_teacher ? `<div class="slip-comment"><label>FORM TEACHER'S COMMENT</label><p>${reportEscape(comments.form_teacher)}</p></div>` : ''}
           ${comments.principal ? `<div class="slip-comment"><label>PRINCIPAL'S COMMENT</label><p>${reportEscape(comments.principal)}</p></div>` : ''}
-        </div>` : '';
+        </section>` : '';
       const attendance = slip.attendance ? `${reportEscape(slip.attendance.present ?? '—')} / ${reportEscape(slip.attendance.total_days ?? '—')}` : '—';
-      
+      const overallGrade = summary.grade ? `<div class="slip-stat slip-stat-highlight"><span>Overall grade</span><strong>${reportEscape(summary.grade)}</strong></div>` : '';
+      const overallRemark = summary.remark ? `<div class="slip-stat slip-stat-highlight"><span>Overall remark</span><strong>${reportEscape(summary.remark)}</strong></div>` : '';
+      const studentMeta = [
+        ['CLASS', data.class || '—'],
+        ['ADMISSION NO.', s.admission_no || '—'],
+        ['TERM', data.term || '—'],
+        ['ACADEMIC SESSION', data.session || '—']
+      ].map(([label, value]) => `<div class="slip-meta-item"><span>${label}</span><strong>${reportEscape(value)}</strong></div>`).join('');
+
       return `
         <article class="result-slip-page" data-search="${reportEscape((s.name || '') + ' ' + (s.admission_no || '')).toLowerCase()}" data-student-name="${reportEscape(s.name || 'Student')}" data-admission="${reportEscape(s.admission_no || '')}" id="slip-${idx}">
+          <div class="slip-watermark" aria-hidden="true">${reportEscape(getInitials(schoolName))}</div>
+          <div class="slip-report-topline"><span>STUDENT PERFORMANCE REPORT</span><span>OFFICIAL SCHOOL COPY</span></div>
           <header class="slip-school-head">
             <div class="slip-crest">${logo}</div>
-            <div><div class="slip-kicker">OFFICIAL STUDENT ACADEMIC REPORT</div>
+            <div class="slip-school-identity">
+              <div class="slip-kicker">LEARNING • CHARACTER • EXCELLENCE</div>
               <h2>${reportEscape(schoolName)}</h2>
-              ${school.motto ? `<p>${reportEscape(school.motto)}</p>` : ''}
-              ${details ? `<p>${details}</p>` : ''}
+              ${school.motto ? `<p class="slip-motto">${reportEscape(school.motto)}</p>` : ''}
+              ${details ? `<p class="slip-contact">${details}</p>` : ''}
             </div>
+            <div class="slip-report-stamp">ACADEMIC<br>REPORT</div>
           </header>
-          <div class="slip-student-head">
+          <div class="slip-period-banner"><span>TERMINAL REPORT</span><strong>${reportEscape(data.term || '—')} · ${reportEscape(data.session || '—')}</strong></div>
+          <section class="slip-student-panel">
             <div class="slip-student-avatar">${avatar}</div>
-            <div><h3>${reportEscape(s.name || 'Student')}</h3>
-              <p>${reportEscape(data.class)} &nbsp;·&nbsp; Admission No. ${reportEscape(s.admission_no || '—')} &nbsp;·&nbsp; ${reportEscape(data.term)}, ${reportEscape(data.session)}</p>
+            <div class="slip-student-name"><span>STUDENT NAME</span><h3>${reportEscape(s.name || 'Student')}</h3></div>
+            <div class="slip-student-reference"><span>STUDENT RECORD</span><strong>${reportEscape(s.admission_no || '—')}</strong></div>
+          </section>
+          <section class="slip-meta-grid">${studentMeta}</section>
+          <section class="slip-section">
+            <div class="slip-section-heading"><span>01</span><div><h4>Academic performance</h4><p>Subject-by-subject assessment summary</p></div></div>
+            <div class="slip-stat-grid">
+              <div class="slip-stat"><span>Total score</span><strong>${reportEscape(summary.total_score ?? '—')}<small> / ${reportEscape(summary.max_obtainable ?? '—')}</small></strong></div>
+              <div class="slip-stat"><span>Average</span><strong>${reportEscape(summary.average ?? '—')}${summary.average !== undefined ? '%' : ''}</strong></div>
+              <div class="slip-stat"><span>Class position</span><strong>${reportEscape(summary.class_position ?? '—')}<small> / ${reportEscape(summary.class_size ?? slips.length)}</small></strong></div>
+              <div class="slip-stat"><span>Attendance</span><strong>${attendance}</strong></div>
+              ${overallGrade}${overallRemark}
             </div>
-          </div>
-          <div class="slip-stat-grid">
-            <div class="slip-stat"><span>Total score</span><strong>${reportEscape(summary.total_score ?? '—')}<small style="font-size:10px;color:#839087"> / ${reportEscape(summary.max_obtainable ?? '—')}</small></strong></div>
-            <div class="slip-stat"><span>Average</span><strong>${reportEscape(summary.average ?? '—')}${summary.average !== undefined ? '%' : ''}</strong></div>
-            <div class="slip-stat"><span>Class position</span><strong>${reportEscape(summary.class_position ?? '—')}<small style="font-size:10px;color:#839087"> / ${reportEscape(summary.class_size ?? slips.length)}</small></strong></div>
-            <div class="slip-stat"><span>Attendance</span><strong>${attendance}</strong></div>
-          </div>
-          <table class="slip-subject-table">
-            <thead><tr><th>Subject</th><th>CA</th><th>Exam</th><th>Total</th><th>Highest</th><th>Position</th><th>Grade</th></tr></thead>
-            <tbody>${subjectRows || '<tr><td colspan="7" style="text-align:center">No subject records available</td></tr>'}</tbody>
-          </table>
+            <table class="slip-subject-table">
+              <thead><tr><th>Subject</th><th>CA</th><th>Exam</th><th>Total</th><th>Highest</th><th>Position</th><th>Grade</th></tr></thead>
+              <tbody>${subjectRows || '<tr><td colspan="7" style="text-align:center">No subject records available</td></tr>'}</tbody>
+            </table>
+          </section>
           ${commentBlock}
-          <footer class="slip-footer"><span>${reportEscape(data.term)} · ${reportEscape(data.session)}</span><span>${idx+1} of ${slips.length} &nbsp;|&nbsp; ${reportEscape(schoolName)}</span></footer>
+          <section class="slip-signatures">
+            <div class="slip-signature"><div class="slip-sign-line"></div><strong>Form Teacher</strong><span>Signature &amp; date</span></div>
+            <div class="slip-signature slip-signature-seal"><div class="slip-seal">SCHOOL<br>SEAL</div></div>
+            <div class="slip-signature"><div class="slip-sign-line"></div><strong>Principal</strong><span>Signature &amp; date</span></div>
+          </section>
+          <footer class="slip-footer"><span>Generated from the school academic record</span><span>${reportEscape(data.term || '')} · ${reportEscape(data.session || '')} &nbsp;|&nbsp; ${idx+1} of ${slips.length}</span></footer>
         </article>`;
     }).join('');
     
