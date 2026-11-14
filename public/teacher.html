@@ -8,270 +8,186 @@
 <title id="pageTitle">Teacher — Enter Scores</title>
 <style>
   :root {
-    --navy: #58CC02;
-    --navy-light: #46A302;
-    --gold: #FFC800;
-    --cream: #F7F7F7;
-    --card: #FFFFFF;
-    --border: #E5E5E5;
-    --text: #3C3C3C;
-    --text-soft: #777777;
-    --pass: #58A700;
-    --pass-bg: #D7FFB8;
-    --fail: #EA2B2B;
-    --fail-bg: #FFDFE0;
-    --warn: #CE8E00;
-    --warn-bg: #FFF4D1;
+    color-scheme: light;
+    --navy: #176345;
+    --navy-light: #104d36;
+    --gold: #d8ad55;
+    --cream: #f4f7f5;
+    --card: #ffffff;
+    --border: #e2eae5;
+    --text: #1d2c24;
+    --text-soft: #718078;
+    --pass: #18794e;
+    --pass-bg: #e5f5ec;
+    --fail: #b93838;
+    --fail-bg: #fff0ef;
+    --warn: #ce8e00;
+    --warn-bg: #fff4d1;
+    --surface-soft: #f8faf8;
+    --shadow-sm: 0 2px 8px rgba(24, 55, 39, .045);
+    --shadow-md: 0 12px 34px rgba(24, 55, 39, .075);
+    --radius-card: 18px;
+    --radius-control: 11px;
+    --ease-out-expo: cubic-bezier(.16,1,.3,1);
+    --ease-out-back: cubic-bezier(.34,1.56,.64,1);
+    --sec-btn-bg: #f5faf6;
+    --sec-btn-border: #dce9e0;
+  }
+
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --navy: #2b8960;
+    --navy-light: #1f6a48;
+    --gold: #e6c477;
+    --cream: #1a2420;
+    --card: #232f29;
+    --border: #364740;
+    --text: #e6eeea;
+    --text-soft: #9caea4;
+    --pass: #6fcf97;
+    --pass-bg: #1f3d2c;
+    --fail: #e77;
+    --fail-bg: #3d2222;
+    --warn: #e0b85c;
+    --warn-bg: #3a2f18;
+    --surface-soft: #253029;
+    --shadow-md: 0 12px 34px rgba(0,0,0,.35);
+    --sec-btn-bg: #2a3833;
+    --sec-btn-border: #364740;
   }
 
   * { box-sizing: border-box; }
-
+  html { min-height: 100%; scroll-behavior: smooth; }
   body {
     margin: 0;
-    font-family: 'Nunito', Arial, sans-serif;
-    background: var(--cream);
-    color: var(--text);
     min-height: 100vh;
-    padding: 24px 16px 60px;
+    padding: 34px 18px 72px;
+    background: radial-gradient(ellipse at 8% 0%, rgba(23, 99, 69, .075), transparent 32rem), linear-gradient(180deg, var(--cream) 0%, var(--cream) 100%);
+    color: var(--text);
+    font-family: 'Nunito', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    transition: background .3s ease, color .3s ease;
   }
+  button, input, select, textarea { font: inherit; }
+  button { -webkit-tap-highlight-color: transparent; }
+  .wrap { width: min(100%, 900px); margin: 0 auto; }
+  .wrap.narrow { width: min(100%, 440px); }
 
-  .wrap { max-width: 900px; margin: 0 auto; }
-  .wrap.narrow { max-width: 420px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes crestPop { 0% { opacity: 0; transform: scale(.6) rotate(-8deg); } 60% { opacity: 1; transform: scale(1.06) rotate(2deg); } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+  @keyframes rowArrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes viewSwap { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes dotPulse { 0%, 100% { box-shadow: 0 0 0 2px rgba(43,137,96,.22); transform: scale(1); } 50% { box-shadow: 0 0 0 6px rgba(43,137,96,.06); transform: scale(1.1); } }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-  .school-header { text-align: center; margin-bottom: 22px; }
+  .school-header { text-align: center; margin: 0 auto 25px; padding: 5px 12px 0; animation: fadeUp .55s var(--ease-out-expo) both; }
   .school-header .crest {
-    width: 44px; height: 44px;
-    background: var(--navy); color: var(--gold);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: bold; font-size: 16px;
-    margin: 0 auto 10px;
-    overflow: hidden;
+    width: 58px; height: 58px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; border: 3px solid rgba(255,255,255,.92); border-radius: 18px;
+    background: linear-gradient(145deg, #247a56, #104b35); color: #f4d58e;
+    box-shadow: 0 7px 18px rgba(16, 77, 54, .18); font-family: 'Baloo 2', sans-serif; font-size: 19px; font-weight: 800;
+    animation: crestPop .6s var(--ease-out-back) both; animation-delay: .1s;
   }
   .school-header .crest img { width: 100%; height: 100%; object-fit: cover; }
-  .school-header h1 { font-size: 20px; margin: 0; font-weight: 800; font-family: "Baloo 2", sans-serif; }
-  .school-header p { font-size: 12px; color: var(--text-soft); margin: 4px 0 0; }
+  .school-header h1 { margin: 0; color: var(--text); font-family: 'Baloo 2', sans-serif; font-size: clamp(21px, 3vw, 27px); font-weight: 800; letter-spacing: -.35px; animation: fadeUp .5s var(--ease-out-expo) .15s both; }
+  .school-header p { margin: 6px 0 0; color: var(--text-soft); font-size: 12px; font-weight: 700; letter-spacing: .35px; animation: fadeUp .5s var(--ease-out-expo) .22s both; }
 
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 20px;
-    margin-bottom: 18px;
-  }
+  .card { margin: 0 0 20px; padding: 24px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card); box-shadow: var(--shadow-md); animation: fadeUp .5s var(--ease-out-expo) .28s both; transition: background .3s ease, border-color .3s ease; }
+  #loginWrap .card { padding: 30px; }
+  #loginWrap .school-header { margin-bottom: 26px; }
 
-  .topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
-    font-size: 13px;
-  }
-  .topbar .who { color: var(--text-soft); }
-  .topbar button {
-    background: none;
-    border: none;
-    color: var(--navy);
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 13px;
-  }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); color: var(--text-soft); font-size: 13px; }
+  .topbar .who { color: var(--text); font-weight: 700; }
+  .topbar button { padding: 7px 12px; border: 1px solid var(--sec-btn-border); border-radius: 9px; background: var(--sec-btn-bg); color: var(--navy); font-size: 12px; font-weight: 800; cursor: pointer; transition: background .18s ease; }
+  .topbar button:hover { background: var(--border); }
 
-  .mode-toggle {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 18px;
-    background: var(--cream);
-    border-radius: 18px;
-    padding: 4px;
-  }
-  .mode-toggle button {
-    flex: 1;
-    padding: 9px;
-    border: none;
-    border-radius: 4px;
-    background: transparent;
-    color: var(--text-soft);
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  .mode-toggle button.active {
-    background: var(--navy);
-    color: #fff;
-  }
+  .dash-greeting { margin: 0 0 18px; padding: 18px 22px; border-radius: 16px; background: linear-gradient(135deg, var(--surface-soft) 0%, var(--card) 100%); border: 1px solid var(--border); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 4px 14px rgba(0,0,0,.05); display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; animation: fadeUp .5s var(--ease-out-back) both; }
+  .dash-greeting .greet-line { font-family: 'Baloo 2', sans-serif; font-size: clamp(18px, 2.6vw, 22px); font-weight: 800; color: var(--text); letter-spacing: -.3px; }
+  .dash-greeting .greet-sub { color: var(--text-soft); font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .dash-greeting .greet-sub .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--navy); margin-right: 6px; vertical-align: middle; animation: dotPulse 2.4s ease-in-out infinite; }
 
-  .filters {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    align-items: end;
-  }
-  @media (max-width: 700px) {
-    .filters { grid-template-columns: repeat(2, 1fr); }
-  }
+  label { display: block; margin: 0 0 6px; color: var(--text-soft); font-size: 10px; font-weight: 900; letter-spacing: .85px; line-height: 1.4; text-transform: uppercase; }
+  input, select, textarea { width: 100%; min-width: 0; padding: 11px 13px; border: 1px solid var(--border); border-radius: var(--radius-control); outline: none; background: var(--surface-soft); color: var(--text); font-family: inherit; font-size: 13px; font-weight: 700; transition: all .2s ease; }
+  input:focus, select:focus, textarea:focus { border-color: var(--navy); background: var(--card); box-shadow: 0 0 0 3px rgba(49, 131, 93, .12); }
+  
+  .filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: end; }
+  @media (max-width: 700px) { .filters { grid-template-columns: 1fr; } }
 
-  label {
-    font-size: 11px;
-    color: var(--text-soft);
-    display: block;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
+  button.primary, button.ghost { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 39px; font-family: 'Nunito', Arial, sans-serif; font-size: 12px; font-weight: 900; cursor: pointer; transition: all .18s var(--ease-out-back); }
+  button.primary { padding: 11px 19px; border: 1px solid var(--navy); border-radius: 11px; background: linear-gradient(135deg, #237b55, #145b3d); color: #fff; box-shadow: 0 4px 10px rgba(23, 99, 69, .16); }
+  button.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(23, 99, 69, .26); }
+  button.primary:active { transform: translateY(0) scale(.98); }
+  button.primary:disabled { opacity: .55; cursor: not-allowed; }
+  button.ghost { padding: 9px 15px; border: 1px solid var(--border); border-radius: 10px; background: transparent; color: var(--navy); }
+  button.ghost:hover { background: var(--sec-btn-bg); transform: translateY(-1px); }
 
-  input, select {
-    width: 100%;
-    padding: 9px 10px;
-    font-size: 13px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background: var(--cream);
-    color: var(--text);
-    font-family: inherit;
-  }
-  input:focus, select:focus { outline: 2px solid var(--navy); outline-offset: 1px; }
+  .load-btn-row { margin-top: 16px; }
+  .save-row { display: flex; gap: 10px; margin-top: 22px; }
 
-  button.primary {
-    padding: 11px 18px;
-    font-size: 13px;
-    font-weight: 700;
-    font-family: 'Baloo 2', sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    border: none;
-    border-radius: 12px;
-    background: var(--navy);
-    color: #fff;
-    cursor: pointer;
-    width: 100%;
-    box-shadow: 0 4px 0 var(--navy-light);
-    transition: transform 0.05s, box-shadow 0.05s;
-  }
-  button.primary:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--navy-light); }
-  button.primary:hover { filter: brightness(1.05); }
-  button.primary:disabled { background: #CCCCCC; box-shadow: 0 4px 0 #AAAAAA; cursor: not-allowed; }
+  .error-msg { display: none; margin: 0 0 16px; padding: 11px 13px; border: 1px solid var(--fail); border-radius: 10px; background: var(--fail-bg); color: var(--fail); font-size: 12px; font-weight: 800; }
 
-  button.ghost {
-    padding: 10px 18px;
-    font-size: 13px;
-    font-weight: bold;
-    border: 1px solid var(--navy);
-    border-radius: 4px;
-    background: transparent;
-    color: var(--navy);
-    cursor: pointer;
-  }
+  .mode-toggle { display: flex; gap: 6px; margin-bottom: 18px; background: var(--surface-soft); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+  .mode-toggle button { flex: 1; padding: 9px; border: none; border-radius: 8px; background: transparent; color: var(--text-soft); font-size: 13px; font-weight: bold; cursor: pointer; }
+  .mode-toggle button.active { background: var(--card); color: var(--navy); box-shadow: 0 2px 6px rgba(0,0,0,.05); }
 
-  .load-btn-row { margin-top: 12px; }
-  .load-btn-row button.primary { width: auto; padding: 10px 18px; }
-
-  .error-msg {
-    font-size: 13px;
-    color: var(--fail);
-    background: var(--fail-bg);
-    border-radius: 4px;
-    padding: 10px 12px;
-    margin-bottom: 14px;
-    display: none;
-  }
-
-  .status-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    font-size: 12px;
-    color: var(--text-soft);
-  }
-
-  .badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: bold;
-  }
+  .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--text-soft); }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; }
   .badge-draft { background: var(--warn-bg); color: var(--warn); }
   .badge-ready { background: var(--pass-bg); color: var(--pass); }
 
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th {
-    text-align: left;
-    color: var(--text-soft);
-    font-weight: normal;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    padding: 8px 6px;
-    border-bottom: 1px solid var(--border);
-  }
+  /* Desktop Table */
+  .desktop-table { width: 100%; border-collapse: collapse; font-size: 13px; display: table; }
+  th { text-align: left; color: var(--text-soft); font-weight: 900; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; padding: 12px 6px; border-bottom: 1px solid var(--border); }
   th.num, td.num { text-align: right; }
-  td { padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  td { padding: 10px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  td .student-name { font-weight: 800; color: var(--text); }
+  td .student-flag { font-size: 10px; color: var(--warn); margin-top: 2px; font-weight: 700; }
 
-  td .student-name { font-weight: bold; }
-  td .student-flag {
-    font-size: 10px;
-    color: var(--warn);
-    margin-top: 2px;
-  }
+  /* Mobile Cards */
+  .mobile-cards { display: none; flex-direction: column; gap: 12px; }
+  .m-card { background: var(--surface-soft); border: 1px solid var(--border); border-radius: 12px; padding: 14px; animation: rowArrive .4s var(--ease-out-expo) both; animation-delay: calc(var(--i) * 40ms); }
+  .m-card-head { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 800; font-size: 14px; color: var(--text); }
+  .m-card-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .m-card-grid label { font-size: 9px; margin-bottom: 4px; }
 
-  .score-input {
-    width: 60px;
-    padding: 6px 8px;
-    text-align: right;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-size: 13px;
-  }
-  .score-input:disabled {
-    background: var(--cream);
-    color: var(--text-soft);
-    border-style: dashed;
-  }
+  .score-input { width: 100%; padding: 8px 10px; text-align: right; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 700; background: var(--card); color: var(--text); }
+  .score-input:focus { border-color: var(--navy); outline: none; }
+  .score-input:disabled { background: var(--surface-soft); color: var(--text-soft); border-style: dashed; }
 
-  .total-cell { font-weight: bold; }
-
-  .remark-pass { color: var(--pass); font-weight: bold; font-size: 11px; }
-  .remark-fail { color: var(--fail); font-weight: bold; font-size: 11px; }
-
-  .grade-pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-weight: bold;
-    font-size: 11px;
-  }
+  .remark-pass { color: var(--pass); font-weight: 800; font-size: 11px; }
+  .remark-fail { color: var(--fail); font-weight: 800; font-size: 11px; }
+  .grade-pill { display: inline-block; padding: 3px 8px; border-radius: 6px; font-weight: 900; font-size: 11px; }
   .grade-A, .grade-B { background: var(--pass-bg); color: var(--pass); }
   .grade-C, .grade-D, .grade-E { background: var(--warn-bg); color: var(--warn); }
   .grade-F { background: var(--fail-bg); color: var(--fail); }
 
-  .save-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 18px;
+  .empty-note { padding: 38px 16px; border: 1px dashed var(--border); border-radius: 13px; background: var(--surface-soft); color: var(--text-soft); font-size: 13px; font-weight: 700; text-align: center; }
+  .skeleton-row { height: 50px; border-radius: 10px; background: linear-gradient(90deg, var(--surface-soft) 25%, var(--border) 50%, var(--surface-soft) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; margin-bottom: 10px; }
+
+  .toast { position: fixed; z-index: 1000; right: 20px; bottom: 22px; left: 20px; width: fit-content; max-width: 520px; margin: 0 auto; padding: 14px 20px; border-radius: 12px; background: var(--navy); color: #fff; font-size: 13px; font-weight: 800; text-align: center; display: none; animation: fadeUp .3s var(--ease-out-back) both; }
+
+  @media (max-width: 768px) {
+    .desktop-table { display: none; }
+    .mobile-cards { display: flex; }
   }
 
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--navy);
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 18px;
-    font-size: 13px;
-    display: none;
-  }
-
-  .empty-note {
-    text-align: center;
-    color: var(--text-soft);
-    font-size: 13px;
-    padding: 30px 0;
+  @media (max-width: 600px) {
+    body { padding: 20px 12px 56px; }
+    .card { padding: 17px; margin-bottom: 14px; border-radius: 15px; }
+    #loginWrap .card { padding: 22px 19px; }
+    .save-row button { flex: 1 1 140px; }
   }
 </style>
+<script>
+  (function() {
+    try {
+      var pref = localStorage.getItem('resultpro_theme');
+      if (pref) document.documentElement.setAttribute('data-theme', pref);
+    } catch (e) {}
+  })();
+</script>
 </head>
 <body>
 
@@ -284,21 +200,19 @@
   </div>
   <div class="card">
     <div class="error-msg" id="loginError"></div>
-        
     <label for="teacherEmail">Email</label>
     <input type="email" id="teacherEmail" placeholder="e.g. adeyemi@school.com" />
     <label for="teacherPassword" style="margin-top:12px;">Password</label>
     <div style="position:relative; margin-bottom:16px;">
       <input type="password" id="teacherPassword" style="padding-right:64px;" />
-      <button type="button" onclick="togglePasswordVisibility('teacherPassword', this)" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); width:auto; padding:4px 10px; font-size:10px; background:var(--cream); color:var(--navy); box-shadow:none; border:1px solid var(--border); border-radius:8px; text-transform:none; font-family:'Nunito',Arial,sans-serif; font-weight:700;">Show</button>
+      <button type="button" onclick="togglePasswordVisibility('teacherPassword', this)" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); width:auto; padding:4px 10px; font-size:10px; background:var(--surface-soft); color:var(--navy); box-shadow:none; border:1px solid var(--border); border-radius:8px; text-transform:none; font-family:'Nunito',Arial,sans-serif; font-weight:700;">Show</button>
     </div>
-    <button class="primary" onclick="login()">Log in</button>
+    <button class="primary" style="width:100%;" onclick="login()">Log in</button>
   </div>
 </div>
 
 <!-- MAIN APP -->
 <div class="wrap" id="appWrap" style="display:none;">
-
   <div class="school-header">
     <div class="crest" id="appCrest">GS</div>
     <h1 id="appSchoolName">School Portal</h1>
@@ -306,15 +220,22 @@
   </div>
 
   <div class="card">
+    <div class="dash-greeting" id="dashGreeting">
+      <span class="greet-line" id="greetLine">Welcome back</span>
+      <span class="greet-sub" id="greetSub"><span class="dot"></span>Logged in as <span id="whoAmISubtle">—</span></span>
+    </div>
+
     <div class="topbar">
       <span class="who" id="whoAmI"></span>
-      <button onclick="logout()">Log out</button>
-      <button onclick="openPasswordModal()" style="margin-right: 8px; background: var(--sec-btn-bg); color: var(--navy); border: 1px solid var(--border); padding: 5px 10px; border-radius: 6px; cursor: pointer;">Change Password</button>
+      <span>
+        <button onclick="logout()">Log out</button>
+        <button onclick="openPasswordModal()" style="margin-left: 8px;">Change Password</button>
+      </span>
     </div>
 
     <div class="mode-toggle">
-      <button id="midTermTab" class="active" onclick="switchMode('midterm')">Mid-term (Assignment + Test)</button>
-      <button id="fullTermTab" onclick="switchMode('fullterm')">Full term (Exam)</button>
+      <button id="midTermTab" class="active" onclick="switchMode('midterm')">Mid-term</button>
+      <button id="fullTermTab" onclick="switchMode('fullterm')">Full term</button>
     </div>
 
     <div class="filters">
@@ -340,7 +261,7 @@
       <button class="primary" onclick="loadRoster()">Load class</button>
     </div>
 
-    <p id="deadlineCountdown" style="font-size:12px; color:var(--warn); margin:12px 0 0; display:none;"></p>
+    <p id="deadlineCountdown" style="font-size:12px; color:var(--warn); margin:12px 0 0; display:none; font-weight:700;"></p>
   </div>
 
   <div class="card" id="rosterCard" style="display:none;">
@@ -349,10 +270,14 @@
       <span class="badge badge-draft" id="statusBadge">Draft</span>
     </div>
 
-    <table>
+    <!-- Desktop Table -->
+    <table class="desktop-table">
       <thead id="tableHead"></thead>
       <tbody id="tableBody"></tbody>
     </table>
+
+    <!-- Mobile Cards -->
+    <div class="mobile-cards" id="mobileCards"></div>
 
     <div class="save-row">
       <button class="ghost" onclick="saveScores('draft')">Save draft</button>
@@ -363,10 +288,26 @@
   <div class="empty-note" id="emptyNote" style="display:none;">
     No students found for that class yet.
   </div>
-
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- PASSWORD MODAL -->
+<div id="passwordModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: var(--card); width: 100%; max-width: 400px; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid var(--border);">
+    <h3 style="margin: 0 0 16px; font-family: 'Baloo 2', sans-serif; color: var(--text);">Change Password</h3>
+    <label style="font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase;">Current Password</label>
+    <input type="password" id="currentPass" style="width: 100%; margin-bottom: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-soft); color: var(--text);" />
+    <label style="font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase;">New Password</label>
+    <input type="password" id="newPass" style="width: 100%; margin-bottom: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-soft); color: var(--text);" />
+    <label style="font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase;">Confirm New Password</label>
+    <input type="password" id="confirmPass" style="width: 100%; margin-bottom: 20px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-soft); color: var(--text);" />
+    <div style="display: flex; gap: 10px;">
+      <button onclick="document.getElementById('passwordModal').style.display='none'" style="flex: 1; padding: 10px; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 8px; cursor: pointer; font-weight: bold;">Cancel</button>
+      <button onclick="submitPasswordChange()" class="primary" style="flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold;">Save</button>
+    </div>
+  </div>
+</div>
 
 <script>
   const API_BASE = window.location.origin;
@@ -375,10 +316,53 @@
   let myAssignments = [];
   let teacher = null;
   let countdownInterval;
+  let greetingClockTimer;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlSchoolCode = urlParams.get('school');
+  if (urlSchoolCode) {
+    window.hiddenSchoolCode = urlSchoolCode.toUpperCase();
+  }
+
+  function getGreetingFor(hour) {
+    if (hour >= 5  && hour < 12) return 'Good morning';
+    if (hour >= 12 && hour < 17) return 'Good afternoon';
+    if (hour >= 17 && hour < 22) return 'Good evening';
+    return 'Welcome back';
+  }
+
+  function updateGreeting() {
+    if (!teacher || !teacher.name) return;
+    const firstName = teacher.name.trim().split(/\s+/)[0];
+    const phrase = getGreetingFor(new Date().getHours());
+    const lineEl = document.getElementById('greetLine');
+    const subtleEl = document.getElementById('whoAmISubtle');
+    const whoEl = document.getElementById('whoAmI');
+    const newLine = `${phrase}, ${firstName}!`;
+    
+    if (lineEl && lineEl.textContent !== newLine) {
+      lineEl.textContent = newLine;
+    }
+    if (subtleEl) subtleEl.textContent = teacher.name;
+    if (whoEl) whoEl.textContent = `Logged in as ${teacher.name}`;
+  }
+
+  function startGreetingClock() {
+    updateGreeting();
+    if (greetingClockTimer) clearInterval(greetingClockTimer);
+    greetingClockTimer = setInterval(updateGreeting, 60000);
+  }
 
   async function fetchInitialSchoolSettings() {
+    const code = window.hiddenSchoolCode;
+    if (!code) return; 
+
     try {
-      const res = await fetch(`${API_BASE}/api/settings`);
+      const lookup = await fetch(`${API_BASE}/api/developer/public/school-lookup?code=${code}`);
+      if (!lookup.ok) return;
+      const lookupData = await lookup.json();
+      
+      const res = await fetch(`${API_BASE}/api/settings?school_id=${lookupData.school.id}`);
       const data = await res.json();
       if (data.settings && data.settings.school_name) {
         const s = data.settings;
@@ -396,7 +380,7 @@
         });
       }
     } catch (err) {
-      console.error('Could not load school settings for header:', err);
+      console.error('Could not load school settings:', err);
     }
   }
   fetchInitialSchoolSettings();
@@ -405,15 +389,9 @@
     try {
       const res = await fetch(`${API_BASE}/api/teacher/active-session`);
       const data = await res.json();
-      if (data.session) {
-        document.getElementById('sessionInput').value = data.session;
-      }
-      if (data.term) {
-        document.getElementById('termSelect').value = data.term;
-      }
-    } catch (err) {
-      console.error('Could not load active session/term:', err);
-    }
+      if (data.session) document.getElementById('sessionInput').value = data.session;
+      if (data.term) document.getElementById('termSelect').value = data.term;
+    } catch (err) { console.error(err); }
   }
 
   const saved = sessionStorage.getItem('resultpro_teacher');
@@ -435,45 +413,42 @@
     else { input.type = "password"; btn.textContent = "Show"; }
   }
 
-    async function login() {
-  const email = document.getElementById('teacherEmail').value.trim();
-  const password = document.getElementById('teacherPassword').value;
-  const school_code = window.hiddenSchoolCode || '';
-  const errEl = document.getElementById('loginError');
-  
-  errEl.style.display = 'none';
-
-  if (!email || !password) {
-    errEl.textContent = 'Please enter both email and password.';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/teacher/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        email: email, 
-        password: password, 
-        school_code: school_code // <--- THIS is the fix
-      }),
-    });
+  async function login() {
+    const email = document.getElementById('teacherEmail').value.trim();
+    const password = document.getElementById('teacherPassword').value;
+    const school_code = window.hiddenSchoolCode || '';
+    const errEl = document.getElementById('loginError');
     
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Login failed');
+    errEl.style.display = 'none';
 
-    teacher = data.teacher;
-    sessionStorage.setItem('resultpro_teacher', JSON.stringify(teacher));
-    boot();
-  } catch (err) {
-    errEl.textContent = err.message || 'Login failed.';
-    errEl.style.display = 'block';
+    if (!email || !password) {
+      errEl.textContent = 'Please enter both email and password.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/teacher/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, school_code }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+
+      teacher = data.teacher;
+      sessionStorage.setItem('resultpro_teacher', JSON.stringify(teacher));
+      boot();
+    } catch (err) {
+      errEl.textContent = err.message || 'Login failed.';
+      errEl.style.display = 'block';
+    }
   }
-}
 
   function logout() {
     sessionStorage.removeItem('resultpro_teacher');
+    if (greetingClockTimer) clearInterval(greetingClockTimer);
     teacher = null;
     document.getElementById('appWrap').style.display = 'none';
     document.getElementById('loginWrap').style.display = 'block';
@@ -482,9 +457,7 @@
   async function boot() {
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
-    document.getElementById('whoAmI').textContent = `Logged in as ${teacher.name}`;
-
-    // Automatically load active session and term set by Exam Office
+    startGreetingClock();
     await loadActiveSession();
 
     try {
@@ -542,6 +515,15 @@
     const endpoint = mode === 'midterm' ? 'roster' : 'fullterm-roster';
     const url = `${API_BASE}/api/teacher/${endpoint}?class=${encodeURIComponent(className)}&subject_id=${subjectId}&term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}&teacher_id=${teacher.id}`;
 
+    // Show loading skeletons
+    document.getElementById('rosterCard').style.display = 'block';
+    document.getElementById('emptyNote').style.display = 'none';
+    const tableBody = document.getElementById('tableBody');
+    const mobileCards = document.getElementById('mobileCards');
+    const skeletonHTML = `<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>`;
+    tableBody.innerHTML = `<tr><td colspan="5">${skeletonHTML}</td></tr>`;
+    mobileCards.innerHTML = skeletonHTML;
+
     try {
       const res = await fetch(url);
       const data = await res.json();
@@ -556,61 +538,60 @@
       document.getElementById('emptyNote').style.display = 'none';
       renderRoster();
     } catch (err) {
+      document.getElementById('rosterCard').style.display = 'none';
       showToast(err.message || 'Could not load class.');
     }
   }
 
   function renderRoster() {
-    document.getElementById('rosterCard').style.display = 'block';
     const head = document.getElementById('tableHead');
     const body = document.getElementById('tableBody');
+    const mobile = document.getElementById('mobileCards');
 
     if (mode === 'midterm') {
-      head.innerHTML = `
-        <tr>
-          <th>Student</th>
-          <th class="num">Assignment (15)</th>
-          <th class="num">Test (15)</th>
-          <th class="num">Total</th>
-          <th class="num">Remark</th>
-        </tr>`;
+      head.innerHTML = `<tr><th>Student</th><th class="num">Assignment (15)</th><th class="num">Test (15)</th><th class="num">Total</th><th class="num">Remark</th></tr>`;
+      
       body.innerHTML = currentRoster.map((s, i) => `
         <tr data-idx="${i}">
           <td><span class="student-name">${s.name}</span></td>
-          <td class="num"><input class="score-input" type="number" min="0" max="15"
-              value="${s.assignment_score ?? ''}" oninput="updateMidTermRow(${i})" id="assignment-${i}" /></td>
-          <td class="num"><input class="score-input" type="number" min="0" max="15"
-              value="${s.test_score ?? ''}" oninput="updateMidTermRow(${i})" id="test-${i}" /></td>
+          <td class="num"><input class="score-input" type="number" min="0" max="15" value="${s.assignment_score ?? ''}" oninput="updateMidTermRow(${i})" id="assignment-${i}" /></td>
+          <td class="num"><input class="score-input" type="number" min="0" max="15" value="${s.test_score ?? ''}" oninput="updateMidTermRow(${i})" id="test-${i}" /></td>
           <td class="num total-cell" id="total-${i}">${s.total_score ?? '—'}</td>
           <td class="num"><span id="remark-${i}" class="${s.remark === 'Pass' ? 'remark-pass' : s.remark === 'Fail' ? 'remark-fail' : ''}">${s.remark ?? '—'}</span></td>
         </tr>`).join('');
+
+      mobile.innerHTML = currentRoster.map((s, i) => `
+        <div class="m-card" style="--i:${i}">
+          <div class="m-card-head"><span>${s.name}</span> <span id="m-total-${i}" style="color:var(--navy);">${s.total_score ?? '—'}</span></div>
+          <div class="m-card-grid">
+            <div><label>Assignment (15)</label><input class="score-input" type="number" min="0" max="15" value="${s.assignment_score ?? ''}" oninput="updateMidTermRow(${i})" /></div>
+            <div><label>Test (15)</label><input class="score-input" type="number" min="0" max="15" value="${s.test_score ?? ''}" oninput="updateMidTermRow(${i})" /></div>
+            <div><label>Remark</label><div style="padding-top:8px;"><span id="m-remark-${i}" class="${s.remark === 'Pass' ? 'remark-pass' : s.remark === 'Fail' ? 'remark-fail' : ''}">${s.remark ?? '—'}</span></div></div>
+          </div>
+        </div>`).join('');
     } else {
-      head.innerHTML = `
-        <tr>
-          <th>Student</th>
-          <th class="num">CA (30)</th>
-          <th class="num">Exam (70)</th>
-          <th class="num">Total</th>
-          <th class="num">Grade</th>
-        </tr>`;
+      head.innerHTML = `<tr><th>Student</th><th class="num">CA (30)</th><th class="num">Exam (70)</th><th class="num">Total</th><th class="num">Grade</th></tr>`;
+      
       body.innerHTML = currentRoster.map((s, i) => `
         <tr data-idx="${i}">
-          <td>
-            <span class="student-name">${s.name}</span>
-            ${s.needs_manual_ca ? '<div class="student-flag">No mid-term record</div>' : ''}
-          </td>
-          <td class="num">
-            ${s.needs_manual_ca
-              ? `<input class="score-input" type="number" min="0" max="30" value="${s.ca ?? ''}" oninput="updateFullTermRow(${i})" id="ca-${i}" />`
-              : `<input class="score-input" type="number" value="${s.ca ?? 0}" disabled />`}
-          </td>
-          <td class="num"><input class="score-input" type="number" min="0" max="70"
-              value="${s.exam_score ?? ''}" oninput="updateFullTermRow(${i})" id="exam-${i}" /></td>
+          <td><span class="student-name">${s.name}</span>${s.needs_manual_ca ? '<div class="student-flag">No mid-term record</div>' : ''}</td>
+          <td class="num">${s.needs_manual_ca ? `<input class="score-input" type="number" min="0" max="30" value="${s.ca ?? ''}" oninput="updateFullTermRow(${i})" id="ca-${i}" />` : `<input class="score-input" type="number" value="${s.ca ?? 0}" disabled />`}</td>
+          <td class="num"><input class="score-input" type="number" min="0" max="70" value="${s.exam_score ?? ''}" oninput="updateFullTermRow(${i})" id="exam-${i}" /></td>
           <td class="num total-cell" id="total-${i}">${s.total_score ?? '—'}</td>
           <td class="num" id="grade-${i}">${s.grade ? `<span class="grade-pill grade-${s.grade}">${s.grade}</span>` : '—'}</td>
         </tr>`).join('');
-    }
 
+      mobile.innerHTML = currentRoster.map((s, i) => `
+        <div class="m-card" style="--i:${i}">
+          <div class="m-card-head"><span>${s.name}</span> <span id="m-total-${i}" style="color:var(--navy);">${s.total_score ?? '—'}</span></div>
+          ${s.needs_manual_ca ? '<p style="font-size:10px; color:var(--warn); font-weight:700; margin:0 0 8px;">No mid-term record — enter CA manually</p>' : ''}
+          <div class="m-card-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div><label>CA (30)</label>${s.needs_manual_ca ? `<input class="score-input" type="number" min="0" max="30" value="${s.ca ?? ''}" oninput="updateFullTermRow(${i})" />` : `<input class="score-input" type="number" value="${s.ca ?? 0}" disabled />`}</div>
+            <div><label>Exam (70)</label><input class="score-input" type="number" min="0" max="70" value="${s.exam_score ?? ''}" oninput="updateFullTermRow(${i})" /></div>
+            <div><label>Grade</label><div style="padding-top:8px;" id="m-grade-${i}">${s.grade ? `<span class="grade-pill grade-${s.grade}">${s.grade}</span>` : '—'}</div></div>
+          </div>
+        </div>`).join('');
+    }
     updateScoredCount();
   }
 
@@ -625,11 +606,20 @@
     currentRoster[i].total_score = total;
 
     document.getElementById(`total-${i}`).textContent = total ?? '—';
+    const mTotal = document.getElementById(`m-total-${i}`);
+    if (mTotal) mTotal.textContent = total ?? '—';
+
     const remark = total === null ? '—' : (total >= 15 ? 'Pass' : 'Fail');
     const remarkEl = document.getElementById(`remark-${i}`);
-    remarkEl.textContent = remark;
-    remarkEl.className = remark === 'Pass' ? 'remark-pass' : remark === 'Fail' ? 'remark-fail' : '';
-
+    const mRemarkEl = document.getElementById(`m-remark-${i}`);
+    if (remarkEl) {
+      remarkEl.textContent = remark;
+      remarkEl.className = remark === 'Pass' ? 'remark-pass' : remark === 'Fail' ? 'remark-fail' : '';
+    }
+    if (mRemarkEl) {
+      mRemarkEl.textContent = remark;
+      mRemarkEl.className = remark === 'Pass' ? 'remark-pass' : remark === 'Fail' ? 'remark-fail' : '';
+    }
     updateScoredCount();
   }
 
@@ -651,14 +641,18 @@
 
     currentRoster[i].manual_ca_override = currentRoster[i].needs_manual_ca ? ca : null;
     currentRoster[i].exam_score = exam;
-
     const total = (ca !== null && exam !== null) ? ca + exam : null;
     currentRoster[i].total_score = total;
 
     document.getElementById(`total-${i}`).textContent = total ?? '—';
+    const mTotal = document.getElementById(`m-total-${i}`);
+    if (mTotal) mTotal.textContent = total ?? '—';
+
     const grade = getGrade(total);
     document.getElementById(`grade-${i}`).innerHTML = grade ? `<span class="grade-pill grade-${grade}">${grade}</span>` : '—';
-
+    const mGrade = document.getElementById(`m-grade-${i}`);
+    if (mGrade) mGrade.innerHTML = grade ? `<span class="grade-pill grade-${grade}">${grade}</span>` : '—';
+    
     updateScoredCount();
   }
 
@@ -670,27 +664,16 @@
   async function updateDeadlineCountdown(term, session) {
     clearInterval(countdownInterval);
     const el = document.getElementById('deadlineCountdown');
-
     try {
       const res = await fetch(`${API_BASE}/api/term-settings?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}`);
       const data = await res.json();
       const deadline = data.settings?.teacher_deadline;
-
-      if (!deadline) {
-        el.style.display = 'none';
-        return;
-      }
-
+      if (!deadline) { el.style.display = 'none'; return; }
       const deadlineDate = new Date(deadline);
       el.style.display = 'block';
-
       function tick() {
         const diff = deadlineDate - new Date();
-        if (diff <= 0) {
-          el.textContent = `⏰ Deadline has passed (was ${deadlineDate.toLocaleString()})`;
-          clearInterval(countdownInterval);
-          return;
-        }
+        if (diff <= 0) { el.textContent = `⏰ Deadline has passed (was ${deadlineDate.toLocaleString()})`; clearInterval(countdownInterval); return; }
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
         const mins = Math.floor((diff / (1000 * 60)) % 60);
@@ -699,15 +682,12 @@
       }
       tick();
       countdownInterval = setInterval(tick, 1000);
-    } catch (err) {
-      el.style.display = 'none';
-    }
+    } catch (err) { el.style.display = 'none'; }
   }
 
   async function saveScores(status) {
     const { className, subjectId, term, session } = getFilters();
     const endpoint = mode === 'midterm' ? 'midterm-scores' : 'fullterm-scores';
-
     const scores = mode === 'midterm'
       ? currentRoster.map(s => ({ student_id: s.student_id, assignment_score: s.assignment_score, test_score: s.test_score, status }))
       : currentRoster.map(s => ({ student_id: s.student_id, exam_score: s.exam_score, manual_ca_override: s.manual_ca_override, status }));
@@ -723,39 +703,9 @@
       document.getElementById('statusBadge').textContent = status === 'final' ? 'Final' : 'Draft';
       document.getElementById('statusBadge').className = `badge ${status === 'final' ? 'badge-ready' : 'badge-draft'}`;
       showToast(status === 'final' ? 'Scores submitted.' : 'Draft saved.');
-    } catch (err) {
-      showToast(err.message || 'Could not save scores.');
-    }
+    } catch (err) { showToast(err.message || 'Could not save scores.'); }
   }
-</script>
-<!-- PASSWORD MODAL -->
-<div id="passwordModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
-  <div style="background: var(--card); width: 100%; max-width: 400px; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-    <h3 style="margin: 0 0 16px; font-family: 'Baloo 2', sans-serif; color: var(--text);">Change Password</h3>
-    
-    <label style="font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase;">Current Password</label>
-    <input type="password" id="currentPass" style="width: 100%; margin-bottom: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); color: var(--text);" />
-    
-    <label style="font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase;">New Password</label>
-    <input type="password" id="newPass" style="width: 100%; margin-bottom: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); color: var(--text);" />
-    
-    <label style="font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase;">Confirm New Password</label>
-    <input type="password" id="confirmPass" style="width: 100%; margin-bottom: 20px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); color: var(--text);" />
-    
-    <div style="display: flex; gap: 10px;">
-      <button onclick="document.getElementById('passwordModal').style.display='none'" style="flex: 1; padding: 10px; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 8px; cursor: pointer; font-weight: bold;">Cancel</button>
-      <button onclick="submitPasswordChange()" class="primary" style="flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold;">Save</button>
-    </div>
-  </div>
-</div>
 
-<script>
-    // Auto-read school code from the Gateway URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlSchoolCode = urlParams.get('school');
-  if (urlSchoolCode) {
-    window.hiddenSchoolCode = urlSchoolCode.toUpperCase();
-  }
   function openPasswordModal() {
     document.getElementById('passwordModal').style.display = 'flex';
     document.getElementById('currentPass').value = '';
@@ -776,20 +726,13 @@
       const res = await fetch(`${API_BASE}/api/teacher/change-password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          teacher_id: teacher.id, 
-          current_password: currentPass, 
-          new_password: newPass 
-        }),
+        body: JSON.stringify({ teacher_id: teacher.id, current_password: currentPass, new_password: newPass }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      
       showToast('Password changed successfully!');
       document.getElementById('passwordModal').style.display = 'none';
-    } catch (err) {
-      showToast(err.message || 'Failed to change password.');
-    }
+    } catch (err) { showToast(err.message || 'Failed to change password.'); }
   }
 </script>
 </body>
