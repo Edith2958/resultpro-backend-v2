@@ -436,47 +436,41 @@
   }
 
     async function login() {
-    const email = document.getElementById('teacherEmail').value.trim();
-    const password = document.getElementById('teacherPassword').value;
-    const school_code = window.hiddenSchoolCode || '';
-    const errEl = document.getElementById('loginError');
-    
-    errEl.style.display = 'none';
+  const email = document.getElementById('teacherEmail').value.trim();
+  const password = document.getElementById('teacherPassword').value;
+  const school_code = window.hiddenSchoolCode || '';
+  const errEl = document.getElementById('loginError');
+  
+  errEl.style.display = 'none';
 
-    if (!schoolCode) {
-      errEl.textContent = 'Please enter your School Code (e.g. AHS).';
-      errEl.style.display = 'block';
-      return;
-    }
-
-    if (!email || !password) {
-      errEl.textContent = 'Please enter both email and password.';
-      errEl.style.display = 'block';
-      return;
-    }
-
-    try {
-      // Note: Make sure the URL matches the file (either /api/teacher/login or /api/form-teacher/login)
-      const res = await fetch(`${API_BASE}/api/teacher/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: email, 
-          password: password, 
-          school_code: schoolCode 
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
-
-      teacher = data.teacher;
-      sessionStorage.setItem('resultpro_teacher', JSON.stringify(teacher));
-      boot();
-    } catch (err) {
-      errEl.textContent = err.message || 'Login failed.';
-      errEl.style.display = 'block';
-    }
+  if (!email || !password) {
+    errEl.textContent = 'Please enter both email and password.';
+    errEl.style.display = 'block';
+    return;
   }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/teacher/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        email: email, 
+        password: password, 
+        school_code: school_code // <--- THIS is the fix
+      }),
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+
+    teacher = data.teacher;
+    sessionStorage.setItem('resultpro_teacher', JSON.stringify(teacher));
+    boot();
+  } catch (err) {
+    errEl.textContent = err.message || 'Login failed.';
+    errEl.style.display = 'block';
+  }
+}
 
   function logout() {
     sessionStorage.removeItem('resultpro_teacher');
