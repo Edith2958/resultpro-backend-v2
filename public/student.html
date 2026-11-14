@@ -2002,21 +2002,27 @@
   // ============================================================
   // Initial load — branding + active term/session
   // ============================================================
-  async function fetchInitialContext() {
+    async function fetchInitialContext() {
     try {
-      const [settingsRes, activeRes] = await Promise.all([
-        fetch(`${API_BASE}/api/settings`),
-        fetch(`${API_BASE}/api/student/active-session`)
-      ]);
-
-      if (settingsRes.ok) {
-        const settingsData = await settingsRes.json();
-        if (settingsData.settings) {
-          currentSchoolBranding = settingsData.settings;
-          updateSchoolHeader(settingsData.settings);
+      // 1. Load the branding based on the school code from the Gateway URL
+      const code = window.hiddenSchoolCode;
+      if (code) {
+        const lookup = await fetch(`${API_BASE}/api/developer/public/school-lookup?code=${code}`);
+        if (lookup.ok) {
+          const lookupData = await lookup.json();
+          const settingsRes = await fetch(`${API_BASE}/api/settings?school_id=${lookupData.school.id}`);
+          if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            if (settingsData.settings) {
+              currentSchoolBranding = settingsData.settings;
+              updateSchoolHeader(settingsData.settings);
+            }
+          }
         }
       }
 
+      // 2. Load the active session and term
+      const activeRes = await fetch(`${API_BASE}/api/student/active-session`);
       if (activeRes.ok) {
         const active = await activeRes.json();
         if (active.term) {
