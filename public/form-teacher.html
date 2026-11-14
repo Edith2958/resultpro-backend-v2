@@ -663,6 +663,87 @@ button:focus-visible {
     color: #111 !important;
   }
 }
+
+/* PREMIUM ACADEMIC REPORT SYSTEM */
+.report-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:16px 0 18px;padding:14px 16px;border:1px solid #dce8df;border-radius:15px;background:linear-gradient(135deg,#f8fcf9,#edf5ef)}
+.report-toolbar .toolbar-copy{display:flex;flex-direction:column;gap:2px}
+.report-toolbar strong{font-size:13px;color:#193e2d;letter-spacing:.1px}
+.report-toolbar small{font-size:11px;color:#718078}
+.report-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.report-tools input,.report-tools select{width:auto;min-width:155px;padding:9px 11px;background:#fff}
+.report-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px}
+.report-kpi{padding:14px 15px;border:1px solid #e0e9e2;border-radius:13px;background:#fff;box-shadow:0 3px 12px rgba(24,55,39,.035);min-width:0}
+.report-kpi span{display:block;color:#748278;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.7px}
+.report-kpi strong{display:block;margin-top:4px;color:#173e2c;font-size:23px;line-height:1.15;font-weight:900;font-variant-numeric:tabular-nums}
+.report-kpi em{display:block;margin-top:3px;color:#87948b;font-size:10px;font-style:normal}
+.table-shell{overflow:auto;border:1px solid #e0e9e2;border-radius:14px;background:#fff}
+#broadsheetTable{min-width:780px;border-collapse:separate!important;border-spacing:0!important;font-variant-numeric:tabular-nums}
+#broadsheetTable thead th{position:sticky;top:0;z-index:2;padding:13px 11px!important;background:#173f2d!important;color:#f7fbf8!important;border:0!important;font-size:10px!important;letter-spacing:.45px;text-transform:uppercase}
+#broadsheetTable thead th:first-child{left:0;z-index:4;min-width:210px}
+#broadsheetTable tbody td{padding:11px!important;border-bottom:1px solid #edf1ee!important;background:#fff;white-space:nowrap}
+#broadsheetTable tbody tr:nth-child(even) td{background:#f8fbf9}
+#broadsheetTable tbody tr:hover td{background:#edf7f0}
+#broadsheetTable tbody td:first-child{position:sticky;left:0;z-index:1;font-weight:900;color:#203d2e;box-shadow:5px 0 9px rgba(22,55,35,.035)}
+#broadsheetTable tbody tr:nth-child(even) td:first-child{background:#f8fbf9}
+#broadsheetTable .score-pill{display:inline-block;min-width:35px;padding:4px 7px;border-radius:7px;background:#edf5ef;color:#254d37;font-weight:900;text-align:center}
+#broadsheetTable .score-missing{color:#a0aaa3}
+#broadsheetTable .total-cell{font-weight:900;color:#173f2d}
+#broadsheetTable .average-cell{font-weight:900}
+#broadsheetTable .position-pill{display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:5px 8px;border-radius:8px;background:#f4edda;color:#76591d;font-weight:900}
+#broadsheetTable tfoot td{padding:12px 10px;background:#edf5ef;border-top:2px solid #d6e5da;font-weight:900;color:#254b36}
+#allSlipsContainer{display:grid;gap:22px}
+.bulk-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 20px;padding:16px;border:1px solid #dfe9e2;border-radius:15px;background:linear-gradient(135deg,#f5faf6,#eaf3ed)}
+.bulk-summary .bulk-stat{padding:7px 10px;border-right:1px solid #d8e5dc}
+.bulk-summary .bulk-stat:last-child{border:0}
+.bulk-summary small{display:block;color:#6d7e72;font-size:9px;font-weight:900;letter-spacing:.65px;text-transform:uppercase}
+.bulk-summary strong{display:block;margin-top:3px;color:#183f2d;font-size:21px;font-weight:900}
+.result-slip-page{position:relative;overflow:hidden;border:1px solid #dce7df!important;border-radius:18px!important;padding:25px!important;box-shadow:0 8px 24px rgba(23,63,45,.055)!important}
+.result-slip-page:before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#174d35,#3b8960,#d8ad55)}
+.slip-school-head{display:grid;grid-template-columns:58px 1fr;align-items:center;gap:13px;text-align:left!important;padding:8px 0 17px!important;margin-bottom:17px!important;border-bottom:2px solid #dce8df!important}
+.slip-crest{width:56px;height:56px;border-radius:15px;background:#174d35;color:#f2d58e;display:flex;align-items:center;justify-content:center;overflow:hidden;font-weight:900;font-size:16px}
+.slip-school-head h2{font-size:20px!important;line-height:1.15;margin:0!important;color:#173f2d!important}
+.slip-school-head p{margin:3px 0 0!important;color:#718078!important}
+.slip-kicker{font-size:9px!important;letter-spacing:1.3px;text-transform:uppercase;color:#8a9a8e!important;font-weight:900}
+.slip-student-head{display:flex;align-items:center;gap:13px;margin:0 0 17px;padding:13px;border-radius:13px;background:#f5f9f6}
+.slip-student-avatar{width:52px;height:52px;flex:0 0 52px;border-radius:14px;background:#dcece1;color:#174d35;display:flex;align-items:center;justify-content:center;overflow:hidden;font-weight:900}
+.slip-student-head h3{margin:0;color:#1d3d2c;font-size:17px}
+.slip-student-head p{margin:3px 0 0;color:#748278;font-size:10px}
+.slip-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:0 0 18px!important}
+.slip-stat{padding:11px 12px;border:1px solid #e1eae3;border-radius:11px;background:#fff}
+.slip-stat span{display:block;color:#7b897f;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.55px}
+.slip-stat strong{display:block;margin-top:4px;color:#173f2d;font-size:17px;font-weight:900}
+.slip-subject-table{width:100%;border-collapse:collapse;font-size:10px!important}
+.slip-subject-table thead th{padding:10px 8px!important;background:#173f2d!important;color:#fff!important;border:0!important;font-size:9px!important;text-transform:uppercase;letter-spacing:.4px}
+.slip-subject-table tbody td{padding:9px 8px!important;border-bottom:1px solid #e8eee9!important}
+.slip-subject-table tbody tr:nth-child(even) td{background:#f7faf8}
+.slip-subject-table td:not(:first-child),.slip-subject-table th:not(:first-child){text-align:right!important;font-variant-numeric:tabular-nums}
+.slip-subject-table td:nth-child(4){font-weight:900;color:#173f2d}
+.slip-grade{display:inline-block;min-width:27px;padding:3px 7px;border-radius:6px;background:#e6f3e9;color:#176345;font-weight:900;text-align:center}
+.slip-comments{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:17px!important}
+.slip-comment{padding:12px;border:1px solid #e2eae4;border-radius:11px;background:#fbfdfb}
+.slip-comment label{margin:0 0 5px;color:#78877d;font-size:9px}
+.slip-comment p{margin:0;font-size:11px;line-height:1.5}
+.slip-footer{display:flex;justify-content:space-between;gap:10px;margin-top:22px;padding-top:10px;border-top:1px solid #e2eae4;color:#87948b;font-size:9px}
+@media(max-width:650px){.report-kpis,.bulk-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.bulk-summary .bulk-stat:nth-child(2){border-right:0}.slip-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.slip-comments{grid-template-columns:1fr}.report-tools{width:100%}.report-tools input{flex:1;min-width:140px}}
+@media print{
+ @page{size:A4 landscape;margin:9mm}
+ body{background:#fff!important}
+ #broadsheetCard{page:broadsheet}
+ #broadsheetCard .report-toolbar,#broadsheetCard .topbar button,#broadsheetCard .topbar select{display:none!important}
+ #broadsheetTable{min-width:0!important;width:100%!important;font-size:7pt!important}
+ #broadsheetTable thead th{position:static!important;padding:5px 3px!important;font-size:6.5pt!important}
+ #broadsheetTable tbody td{position:static!important;padding:4px 3px!important;font-size:7pt!important}
+ #broadsheetTable tbody td:first-child{box-shadow:none!important}
+ #allSlipsCard{page:slips}
+ #allSlipsContainer{display:block!important}
+ .bulk-summary{break-inside:avoid}
+ .result-slip-page{min-height:0;break-after:page;page-break-after:always;border:0!important;border-radius:0!important;box-shadow:none!important;padding:5mm!important;margin:0!important}
+ .result-slip-page:last-child{break-after:auto;page-break-after:auto}
+ .slip-school-head h2{font-size:17pt!important}
+ .slip-subject-table{font-size:8pt!important}
+ .slip-subject-table thead th,.slip-subject-table tbody td{padding:5px 6px!important}
+}
+
 </style>
 </head>
 <body>
@@ -747,7 +828,7 @@ button:focus-visible {
         <button onclick="window.print()">Print</button>
       </span>
     </div>
-    <div style="overflow-x:auto;">
+    <div class="table-shell" style="overflow-x:auto;">
       <table id="broadsheetTable" style="width:100%; border-collapse:collapse; font-size:12px; min-width:600px;"></table>
     </div>
   </div>
@@ -755,7 +836,7 @@ button:focus-visible {
   <div class="card" id="allSlipsCard" style="display:none;">
     <div class="topbar" style="margin-bottom:14px;">
       <span class="who" id="allSlipsTitle"></span>
-      <button onclick="window.print()">Print / Save as PDF</button>
+      <button class="primary" onclick="window.print()">Print / Save class reports as PDF</button>
     </div>
     <div id="allSlipsContainer"></div>
   </div>
@@ -1123,89 +1204,88 @@ button:focus-visible {
     }
   }
 
+  function reportEscape(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+  function reportNumber(value, digits=0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n.toFixed(digits) : '—';
+  }
   function renderAllResultSlips(data) {
     const container = document.getElementById('allSlipsContainer');
-    container.innerHTML = data.slips.map((slip, idx) => {
-      const s = slip.student;
+    const slips = data.slips || [];
+    const averages = slips.map(x => Number(x.slip?.summary?.average ?? x.summary?.average ?? x.summary?.average_score ?? x.summary?.average_percentage ?? x.summary?.average));
+    const validAverages = averages.filter(Number.isFinite);
+    const classAverage = validAverages.length ? validAverages.reduce((a,b)=>a+b,0)/validAverages.length : null;
+    const topAverage = validAverages.length ? Math.max(...validAverages) : null;
+    const school = globalSchoolSettings || {};
+    const schoolName = school.school_name || document.getElementById('appSchoolName').textContent || 'School';
+    const bulkSummary = `
+      <div class="bulk-summary">
+        <div class="bulk-stat"><small>Class</small><strong>${reportEscape(data.class || myClass || '—')}</strong></div>
+        <div class="bulk-stat"><small>Students</small><strong>${slips.length}</strong></div>
+        <div class="bulk-stat"><small>Class average</small><strong>${classAverage === null ? '—' : classAverage.toFixed(1)+'%'}</strong></div>
+        <div class="bulk-stat"><small>Highest average</small><strong>${topAverage === null ? '—' : topAverage.toFixed(1)+'%'}</strong></div>
+      </div>`;
+    const pages = slips.map((slip, idx) => {
+      const s = slip.student || {};
+      const summary = slip.summary || {};
+      const subjects = slip.subjects || [];
+      const logo = school.logo_url
+        ? `<img src="${reportEscape(getPhotoUrl(school.logo_url))}" alt="" style="width:100%;height:100%;object-fit:cover">`
+        : reportEscape(getInitials(schoolName));
       const avatar = s.photo_url
-        ? `<img src="${getPhotoUrl(s.photo_url)}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
-        : getInitials(s.name);
-
-      let schoolHeaderHtml = '';
-      if (globalSchoolSettings) {
-        const gs = globalSchoolSettings;
-        const crest = gs.logo_url
-          ? `<img src="${getPhotoUrl(gs.logo_url)}" alt="Logo" style="width:100%;height:100%;object-fit:cover;" />`
-          : getInitials(gs.school_name);
-
-        let detailsParts = [];
-        if (gs.school_address) detailsParts.push(gs.school_address);
-        if (gs.school_phone) detailsParts.push(`Phone: ${gs.school_phone}`);
-        if (gs.school_email) detailsParts.push(`Email: ${gs.school_email}`);
-
-        schoolHeaderHtml = `
-          <div style="text-align:center; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid var(--border);">
-            <div style="width:40px; height:40px; border-radius:50%; background:var(--navy); color:var(--gold); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; margin:0 auto 6px; overflow:hidden;">${crest}</div>
-            <h2 style="font-size:16px; font-weight:800; margin:0; font-family:'Baloo 2',sans-serif;">${gs.school_name}</h2>
-            ${gs.motto ? `<p style="font-size:11px; color:var(--text-soft); margin:2px 0;">${gs.motto}</p>` : ''}
-            ${detailsParts.length > 0 ? `<p style="font-size:10px; color:var(--text-soft); margin:2px 0;">${detailsParts.join(' &middot; ')}</p>` : ''}
-          </div>`;
-      }
-
-      const subjectRows = slip.subjects.map(sub => `
+        ? `<img src="${reportEscape(getPhotoUrl(s.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover">`
+        : reportEscape(getInitials(s.name || 'Student'));
+      const details = [school.school_address, school.school_phone ? `Tel: ${school.school_phone}` : '', school.school_email].filter(Boolean).map(reportEscape).join(' · ');
+      const subjectRows = subjects.map(sub => `
         <tr>
-          <td style="padding:6px 4px; border-bottom:1px solid var(--border);">${sub.subject_name}</td>
-          <td style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);">${sub.ca}</td>
-          <td style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);">${sub.exam}</td>
-          <td style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border); font-weight:bold;">${sub.total}</td>
-          <td style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);">${sub.highest ?? '—'}</td>
-          <td style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);">${sub.position}</td>
-          <td style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);"><span style="background:var(--pass-bg); color:var(--pass); padding:1px 7px; border-radius:6px; font-weight:bold; font-size:11px;">${sub.grade || '—'}</span></td>
+          <td>${reportEscape(sub.subject_name)}</td>
+          <td>${reportEscape(sub.ca ?? '—')}</td>
+          <td>${reportEscape(sub.exam ?? '—')}</td>
+          <td>${reportEscape(sub.total ?? '—')}</td>
+          <td>${reportEscape(sub.highest ?? '—')}</td>
+          <td>${reportEscape(sub.position ?? '—')}</td>
+          <td><span class="slip-grade">${reportEscape(sub.grade || '—')}</span></td>
         </tr>`).join('');
-
-      const commentsHtml = (slip.comments && (slip.comments.form_teacher || slip.comments.principal)) ? `
-        <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:12px;">
-          ${slip.comments.form_teacher ? `<p style="font-size:11px; color:var(--text-soft); margin:0 0 4px; text-transform:uppercase;">Form teacher's comment</p><p style="font-size:13px; margin:0 0 10px;">${slip.comments.form_teacher}</p>` : ''}
-          ${slip.comments.principal ? `<p style="font-size:11px; color:var(--text-soft); margin:0 0 4px; text-transform:uppercase;">Principal's comment</p><p style="font-size:13px; margin:0;">${slip.comments.principal}</p>` : ''}
+      const comments = slip.comments || {};
+      const commentBlock = (comments.form_teacher || comments.principal) ? `
+        <div class="slip-comments">
+          ${comments.form_teacher ? `<div class="slip-comment"><label>FORM TEACHER'S COMMENT</label><p>${reportEscape(comments.form_teacher)}</p></div>` : ''}
+          ${comments.principal ? `<div class="slip-comment"><label>PRINCIPAL'S COMMENT</label><p>${reportEscape(comments.principal)}</p></div>` : ''}
         </div>` : '';
-
+      const attendance = slip.attendance ? `${reportEscape(slip.attendance.present ?? '—')} / ${reportEscape(slip.attendance.total_days ?? '—')}` : '—';
       return `
-        <div class="result-slip-page" style="--i:${idx}; border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px;">
-          ${schoolHeaderHtml}
-
-          <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--border);">
-            <div style="width:48px; height:48px; border-radius:50%; background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; overflow:hidden; flex-shrink:0;">${avatar}</div>
-            <div>
-              <p style="font-weight:bold; font-size:15px; margin:0;">${s.name}</p>
-              <p style="font-size:12px; color:var(--text-soft); margin:2px 0 0;">${data.class} &middot; Admission no. ${s.admission_no} &middot; ${data.term}, ${data.session}</p>
+        <article class="result-slip-page" style="--i:${idx}">
+          <header class="slip-school-head">
+            <div class="slip-crest">${logo}</div>
+            <div><div class="slip-kicker">OFFICIAL STUDENT ACADEMIC REPORT</div>
+              <h2>${reportEscape(schoolName)}</h2>
+              ${school.motto ? `<p>${reportEscape(school.motto)}</p>` : ''}
+              ${details ? `<p>${details}</p>` : ''}
+            </div>
+          </header>
+          <div class="slip-student-head">
+            <div class="slip-student-avatar">${avatar}</div>
+            <div><h3>${reportEscape(s.name || 'Student')}</h3>
+              <p>${reportEscape(data.class)} &nbsp;·&nbsp; Admission No. ${reportEscape(s.admission_no || '—')} &nbsp;·&nbsp; ${reportEscape(data.term)}, ${reportEscape(data.session)}</p>
             </div>
           </div>
-
-          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:14px;">
-            <div style="background:var(--cream); border-radius:10px; padding:8px 10px;"><p style="font-size:10px; color:var(--text-soft); margin:0;">Total</p><p style="font-size:14px; font-weight:bold; margin:2px 0 0;">${slip.summary.total_score}/${slip.summary.max_obtainable}</p></div>
-            <div style="background:var(--cream); border-radius:10px; padding:8px 10px;"><p style="font-size:10px; color:var(--text-soft); margin:0;">Average</p><p style="font-size:14px; font-weight:bold; margin:2px 0 0;">${slip.summary.average}%</p></div>
-            <div style="background:var(--cream); border-radius:10px; padding:8px 10px;"><p style="font-size:10px; color:var(--text-soft); margin:0;">Position</p><p style="font-size:14px; font-weight:bold; margin:2px 0 0;">${slip.summary.class_position} of ${slip.summary.class_size}</p></div>
-            <div style="background:var(--cream); border-radius:10px; padding:8px 10px;"><p style="font-size:10px; color:var(--text-soft); margin:0;">Attendance</p><p style="font-size:14px; font-weight:bold; margin:2px 0 0;">${slip.attendance ? `${slip.attendance.present}/${slip.attendance.total_days}` : '—'}</p></div>
+          <div class="slip-stat-grid">
+            <div class="slip-stat"><span>Total score</span><strong>${reportEscape(summary.total_score ?? '—')}<small style="font-size:10px;color:#839087"> / ${reportEscape(summary.max_obtainable ?? '—')}</small></strong></div>
+            <div class="slip-stat"><span>Average</span><strong>${reportEscape(summary.average ?? '—')}${summary.average !== undefined ? '%' : ''}</strong></div>
+            <div class="slip-stat"><span>Class position</span><strong>${reportEscape(summary.class_position ?? '—')}<small style="font-size:10px;color:#839087"> / ${reportEscape(summary.class_size ?? slips.length)}</small></strong></div>
+            <div class="slip-stat"><span>Attendance</span><strong>${attendance}</strong></div>
           </div>
-
-          <table style="width:100%; border-collapse:collapse; font-size:12px;">
-            <thead>
-              <tr>
-                <th style="text-align:left; padding:6px 4px; border-bottom:1px solid var(--border); color:var(--text-soft); font-size:11px;">Subject</th>
-                <th style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border); color:var(--text-soft); font-size:11px;">CA</th>
-                <th style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border); color:var(--text-soft); font-size:11px;">Exam</th>
-                <th style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border); color:var(--text-soft); font-size:11px;">Total</th>
-                <th style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border); color:var(--text-soft); font-size:11px;">Highest</th>
-                <th style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border); color:var(--text-soft); font-size:11px;">Pos</th>
-                <th style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border); color:var(--text-soft); font-size:11px;">Grade</th>
-              </tr>
-            </thead>
-            <tbody>${subjectRows}</tbody>
+          <table class="slip-subject-table">
+            <thead><tr><th>Subject</th><th>CA</th><th>Exam</th><th>Total</th><th>Highest</th><th>Position</th><th>Grade</th></tr></thead>
+            <tbody>${subjectRows || '<tr><td colspan="7" style="text-align:center">No subject records available</td></tr>'}</tbody>
           </table>
-
-          ${commentsHtml}
-        </div>`;
+          ${commentBlock}
+          <footer class="slip-footer"><span>${reportEscape(data.term)} · ${reportEscape(data.session)}</span><span>${idx+1} of ${slips.length} &nbsp;|&nbsp; ${reportEscape(schoolName)}</span></footer>
+        </article>`;
     }).join('');
+    container.innerHTML = bulkSummary + pages;
   }
 
   /* ==========================================================
@@ -1251,39 +1331,61 @@ button:focus-visible {
 
   function renderBroadsheet(data) {
     const sortMode = document.getElementById('broadsheetSort').value;
-    const sortedRows = [...data.rows].sort((a, b) => {
-      if (sortMode === 'position') return a.class_position_rank - b.class_position_rank;
-      return a.name.localeCompare(b.name);
+    const query = (document.getElementById('broadsheetSearch')?.value || '').trim().toLowerCase();
+    const sortedRows = [...data.rows].sort((a,b) => {
+      if (sortMode === 'position') return (Number(a.class_position_rank)||999999) - (Number(b.class_position_rank)||999999);
+      return String(a.name || '').localeCompare(String(b.name || ''));
     });
-
+    const visibleRows = sortedRows.filter(r => String(r.name || '').toLowerCase().includes(query));
+    const subjects = data.subjects || [];
+    const allAverages = data.rows.map(r => Number(r.average)).filter(Number.isFinite);
+    const classAverage = allAverages.length ? allAverages.reduce((a,b)=>a+b,0)/allAverages.length : 0;
+    const highest = allAverages.length ? Math.max(...allAverages) : 0;
+    const completed = data.rows.filter(r => (r.subject_scores || []).some(sc => sc.total !== null && sc.total !== undefined)).length;
+    const card = document.getElementById('broadsheetCard');
+    let toolbar = document.getElementById('broadsheetInsights');
+    if (!toolbar) {
+      toolbar = document.createElement('div');
+      toolbar.id = 'broadsheetInsights';
+      document.getElementById('broadsheetTable').parentElement.insertAdjacentElement('beforebegin', toolbar);
+    }
+    toolbar.innerHTML = `
+      <div class="report-kpis">
+        <div class="report-kpi"><span>Class size</span><strong>${data.rows.length}</strong><em>Students on roll</em></div>
+        <div class="report-kpi"><span>Class average</span><strong>${classAverage.toFixed(1)}%</strong><em>Mean student average</em></div>
+        <div class="report-kpi"><span>Highest average</span><strong>${highest.toFixed(1)}%</strong><em>Top recorded average</em></div>
+        <div class="report-kpi"><span>Scores recorded</span><strong>${completed}</strong><em>Students with score data</em></div>
+      </div>
+      <div class="report-toolbar">
+        <div class="toolbar-copy"><strong>Academic performance register</strong><small>Search learners, review subject grades and print the class record</small></div>
+        <div class="report-tools">
+          <input id="broadsheetSearch" type="search" placeholder="Search student name…" value="${reportEscape(query)}" oninput="renderBroadsheet(lastBroadsheetData)">
+          <span style="font-size:11px;color:#718078;font-weight:800">${visibleRows.length} / ${data.rows.length} shown</span>
+        </div>
+      </div>`;
+    // Keep the search cursor stable while rerendering.
+    const searchInput = toolbar.querySelector('#broadsheetSearch');
+    if (searchInput && document.activeElement === document.getElementById('broadsheetSearch')) {
+      searchInput.focus(); searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+    }
     const table = document.getElementById('broadsheetTable');
-    const subjectHeaders = data.subjects.map(s => `<th style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border); font-size:10px;">${s.name}</th>`).join('');
-
-    const headerRow = `
-      <tr>
-        <th style="text-align:left; padding:6px 4px; border-bottom:1px solid var(--border);">Student</th>
-        ${subjectHeaders}
-        <th style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);">Total</th>
-        <th style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);">Avg</th>
-        <th style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);">Position</th>
-      </tr>`;
-
-    const bodyRows = sortedRows.map(r => {
-      const subjectCells = r.subject_scores.map(sc => `
-        <td style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);">
-          ${sc.total !== null ? `${sc.total} <span style="color:var(--text-soft); font-size:10px;">(${sc.grade})</span>` : '—'}
-        </td>`).join('');
-      return `
-        <tr>
-          <td style="padding:6px 4px; border-bottom:1px solid var(--border); font-weight:bold;">${r.name}</td>
-          ${subjectCells}
-          <td style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border); font-weight:bold;">${r.total_score} / ${r.max_obtainable}</td>
-          <td style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);">${r.average}%</td>
-          <td style="text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);">${r.class_position}</td>
-        </tr>`;
-    }).join('');
-
-    table.innerHTML = headerRow + bodyRows;
+    table.innerHTML = `
+      <thead><tr>
+        <th style="text-align:left">Student</th>
+        ${subjects.map(s=>`<th>${reportEscape(s.name)}</th>`).join('')}
+        <th>Total</th><th>Average</th><th>Position</th>
+      </tr></thead>
+      <tbody>${visibleRows.map(r=>{
+        const cells=(r.subject_scores||[]).map(sc=>{
+          const val=sc.total===null||sc.total===undefined?'—':reportEscape(sc.total);
+          return `<td>${val==='—'?'<span class="score-missing">—</span>':`<span class="score-pill">${val}</span>`}${sc.grade?`<small style="display:block;color:#839087;font-size:9px;margin-top:3px">${reportEscape(sc.grade)}</small>`:''}</td>`;
+        }).join('');
+        return `<tr><td>${reportEscape(r.name)}</td>${cells}<td class="total-cell">${reportEscape(r.total_score)} <small style="color:#87948b;font-weight:600">/ ${reportEscape(r.max_obtainable)}</small></td><td class="average-cell">${reportEscape(r.average)}%</td><td><span class="position-pill">${reportEscape(r.class_position || '—')}</span></td></tr>`;
+      }).join('')}</tbody>
+      <tfoot><tr><td>CLASS SUMMARY</td>${subjects.map((s,i)=>{
+        const vals=data.rows.map(r=>Number(r.subject_scores?.[i]?.total)).filter(Number.isFinite);
+        return `<td>${vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'—'}<small style="display:block;font-size:8px;font-weight:600">Mean</small></td>`;
+      }).join('')}<td>${reportEscape(data.rows.reduce((a,r)=>a+(Number(r.total_score)||0),0))}<small style="display:block;font-size:8px;font-weight:600">Class total</small></td><td>${classAverage.toFixed(1)}%</td><td>—</td></tr></tfoot>`;
   }
 
   /* ==========================================================
