@@ -6,6 +6,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <title id="pageTitle">Exam Office Control Panel</title>
+<meta name="theme-color" content="#176345">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <style>
   :root {
     color-scheme: light;
@@ -2290,6 +2293,15 @@
     } catch (err) {
       showToast(err.message || 'Failed to change password.');
     }
+  }
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js').catch(err => {
+        console.log('Service Worker registration failed:', err);
+      });
+    });
   }
 </script>
 </body>
