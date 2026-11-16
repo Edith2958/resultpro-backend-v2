@@ -261,6 +261,12 @@ router.get('/result', async (req, res) => {
       });
     }
 
+        // 1. We need to find the student's school_id first
+    const studentSchoolRes = await pool.query('SELECT school_id FROM students WHERE id::integer = $1', [student_id]);
+    if (studentSchoolRes.rows.length === 0) return res.status(404).json({ error: 'Student not found' });
+    const studentSchoolId = studentSchoolRes.rows[0].school_id;
+
+    // 2. Now check the PIN, ensuring it belongs to the SAME school
     const pinUpdateRes = await pool.query(
       `UPDATE result_pins
        SET uses_count = COALESCE(uses_count, 0) + 1,
@@ -269,8 +275,9 @@ router.get('/result', async (req, res) => {
        WHERE code = $1
          AND COALESCE(uses_count, 0) < COALESCE(max_uses, 5)
          AND (student_id IS NULL OR student_id::integer = $2)
+         AND school_id = $3
        RETURNING *`,
-      [pin_code, student_id]
+      [pin_code, student_id, studentSchoolId]
     );
 
     if (pinUpdateRes.rows.length === 0) {
