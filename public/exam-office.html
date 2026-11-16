@@ -31,6 +31,10 @@
     --ease-out-back: cubic-bezier(.34,1.56,.64,1);
   }
   * { box-sizing: border-box; }
+  :focus-visible { outline: 3px solid rgba(49,131,93,.24); outline-offset: 2px; }
+  button, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+  button { touch-action: manipulation; user-select: none; }
+  ::selection { background: rgba(35,123,85,.18); }
   html { min-height: 100%; scroll-behavior: smooth; }
   body {
     margin: 0;
@@ -44,6 +48,16 @@
     font-size: 14px;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  input, select, textarea { min-height: 42px; }
+  .card { backdrop-filter: saturate(1.08); }
+  .list-row:hover { background: linear-gradient(90deg, rgba(23,99,69,.035), transparent); }
+  .empty-state { transition: border-color .2s ease, background .2s ease; }
+  .empty-state:hover { border-color: #b9d2c1; background: #fff; }
+  @media (hover: none) {
+    .school-header .crest:hover, button.primary:hover, button.small:hover,
+    button.delete-btn:hover { transform: none; }
   }
   .wrap { width: min(100%, 900px); margin: 0 auto; }
   .wrap.narrow { width: min(100%, 440px); }
@@ -1325,16 +1339,29 @@
   }
   
   function logout() {
+    if (window.__officerGreetingTimer) clearInterval(window.__officerGreetingTimer);
     sessionStorage.removeItem('resultpro_officer');
     sessionStorage.removeItem('resultpro_school_id');
     officer = null;
     document.getElementById('mainApp').style.display = 'none';
     document.getElementById('loginWrap').style.display = 'block';
   }
+  function updateOfficerGreeting() {
+    const el = document.getElementById('whoAmI');
+    if (!el || !officer) return;
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const displayName = String(officer.name || 'Exam Officer').trim();
+    el.textContent = `${greeting}, ${displayName} · Exam Office`;
+    el.setAttribute('aria-label', `${greeting}, ${displayName}`);
+  }
+
   async function boot() {
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
-    document.getElementById('whoAmI').textContent = `Logged in as ${officer.name}`;
+    updateOfficerGreeting();
+    if (window.__officerGreetingTimer) clearInterval(window.__officerGreetingTimer);
+    window.__officerGreetingTimer = setInterval(updateOfficerGreeting, 60000);
     await refreshAll();
   }
 
@@ -1377,20 +1404,42 @@
     populateDropdowns();
   }
 
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[ch]);
+  }
+
+  function normalizeClassName(value) {
+    return String(value ?? '').toLowerCase().replace(/\s+/g, '').trim();
+  }
+
   function populateDropdowns() {
-    const classOpts = cache.classes.length
-      ? cache.classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('')
-      : '<option value="">No classes available</option>';
-    document.getElementById('newStudentClass').innerHTML = classOpts;
-    document.getElementById('studentClassFilter').innerHTML = `<option value="">All classes</option>${classOpts}`;
-    document.getElementById('feeClassFilter').innerHTML = `<option value="">All classes</option>${classOpts}`;
-    document.getElementById('assignTeacher').innerHTML = cache.teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-    document.getElementById('assignSubject').innerHTML = cache.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-    document.getElementById('assignClass').innerHTML = classOpts;
-    document.getElementById('ftTeacher').innerHTML = cache.teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-    document.getElementById('ftClass').innerHTML = classOpts;
-    document.getElementById('doTeacher').innerHTML = cache.teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-    document.getElementById('doClass').innerHTML = classOpts;
+    const setOptions = (id, items, valueOf, labelOf, placeholder) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const previous = el.value;
+      const options = items.map(item => {
+        const value = String(valueOf(item) ?? '');
+        const label = String(labelOf(item) ?? value);
+        return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+      }).join('');
+      el.innerHTML = `${placeholder ? `<option value="">${escapeHtml(placeholder)}</option>` : ''}${options}`;
+      if ([...el.options].some(option => option.value === previous)) el.value = previous;
+    };
+    const classes = Array.isArray(cache.classes) ? cache.classes.filter(c => c && c.name) : [];
+    const teachers = Array.isArray(cache.teachers) ? cache.teachers : [];
+    const subjects = Array.isArray(cache.subjects) ? cache.subjects : [];
+    setOptions('newStudentClass', classes, c => c.name, c => c.name, classes.length ? 'Select a class' : 'No classes found — create or refresh a class');
+    setOptions('studentClassFilter', classes, c => c.name, c => c.name, 'All classes');
+    setOptions('feeClassFilter', classes, c => c.name, c => c.name, 'All classes');
+    setOptions('assignClass', classes, c => c.name, c => c.name, 'Select a class');
+    setOptions('ftClass', classes, c => c.name, c => c.name, 'Select a class');
+    setOptions('doClass', classes, c => c.name, c => c.name, 'Select a class');
+    setOptions('assignTeacher', teachers, t => t.id, t => t.name, 'Select a teacher');
+    setOptions('ftTeacher', teachers, t => t.id, t => t.name, 'Select a teacher');
+    setOptions('doTeacher', teachers, t => t.id, t => t.name, 'Select a teacher');
+    setOptions('assignSubject', subjects, item => item.id, item => item.name, 'Select a subject');
   }
 
   function renderSkeleton(containerEl, rows = 4) {
@@ -1554,22 +1603,49 @@
     const first_name = document.getElementById('newStudentFirstName').value.trim();
     const middle_name = document.getElementById('newStudentMiddleName').value.trim();
     const admission_no = document.getElementById('newStudentAdmissionNo').value.trim();
-    const className = document.getElementById('newStudentClass').value;
+    const classSelect = document.getElementById('newStudentClass');
+    let className = classSelect.value;
+    if (!className) {
+      await loadClasses();
+      className = classSelect.value;
+    }
+    if (!className) return showToast('No class is available for this school. Create a class, then try again.');
+
     try {
+      const classesRes = await fetch(`${API_BASE}/api/exam-office/classes?school_id=${encodeURIComponent(getSchoolId() || '')}`, { cache: 'no-store' });
+      const classesData = await classesRes.json();
+      if (!classesRes.ok) throw new Error(classesData.error || 'Could not verify the class list.');
+      cache.classes = Array.isArray(classesData.classes) ? classesData.classes : [];
+      const matchingClass = cache.classes.find(c => normalizeClassName(c.name) === normalizeClassName(className));
+      populateDropdowns();
+      if (!matchingClass) {
+        classSelect.value = '';
+        return showToast(`"${className}" is not in the latest class list. It has been refreshed; select the class again.`);
+      }
+      className = matchingClass.name;
+
       const res = await fetch(`${API_BASE}/api/exam-office/students`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ surname, first_name, middle_name, admission_no, class: className, school_id: getSchoolId() }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      document.getElementById('newStudentSurname').value = '';
-      document.getElementById('newStudentFirstName').value = '';
-      document.getElementById('newStudentMiddleName').value = '';
-      document.getElementById('newStudentAdmissionNo').value = '';
+      if (!res.ok) {
+        const message = data.error || 'Could not add student.';
+        if (/class/i.test(message)) {
+          await loadClasses();
+          throw new Error(`The server could not match "${className}" to a class in this school. The class list has been refreshed. Please reselect it. If this repeats, the server's class lookup needs checking.`);
+        }
+        throw new Error(message);
+      }
+      ['newStudentSurname','newStudentFirstName','newStudentMiddleName','newStudentAdmissionNo'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
       studentPage = 1;
       await loadStudents();
       showToast('Student saved successfully.');
-    } catch (err) { showToast(err.message || 'Could not add student.'); }
+    } catch (err) {
+      showToast(err.message || 'Could not add student.');
+    }
   }
 
   async function lookupStudentCommentRecord() {
@@ -1694,7 +1770,8 @@
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/classes?school_id=${getSchoolId()}`);
       const data = await res.json();
-      cache.classes = data.classes || [];
+      cache.classes = Array.isArray(data.classes) ? data.classes : [];
+      populateDropdowns();
       const list = document.getElementById('classesList');
       if (!cache.classes.length) {
         renderEmpty(list, { title: 'No classes yet', sub: 'Add your first class above — JSS1A, SS2 Science A…', icon: '🏷️' });
@@ -1711,6 +1788,11 @@
   async function addClass() {
     const level = document.getElementById('newClassLevel').value;
     const arm = document.getElementById('newClassArm').value;
+    const requestedName = `${level}${arm}`.trim();
+    if (cache.classes.some(c => normalizeClassName(c.name) === normalizeClassName(requestedName))) {
+      await loadClasses();
+      return showToast(`${requestedName} already exists. The class list has been refreshed.`);
+    }
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/classes`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },

@@ -1176,6 +1176,7 @@ button.ghost,button.small{background:var(--sec-btn-bg);border-color:var(--sec-bt
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
       teacher = data.teacher;
+            sessionStorage.setItem('resultpro_school_id', data.school.id);
       sessionStorage.setItem('resultpro_teacher', JSON.stringify(teacher));
       boot();
     } catch (err) {

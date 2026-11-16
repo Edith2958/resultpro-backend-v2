@@ -1705,6 +1705,11 @@
   <!-- LOGIN VIEW -->
   <div class="card" id="loginView">
     <h2>Check your result</h2>
+        <!-- BOLD RELEASE BANNER -->
+    <div id="releaseCountdown" style="display:none; background: linear-gradient(135deg, #fff4d1, #fdf0c8); border: 1px solid #e6c477; border-left: 5px solid #ce8e00; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(206,142,0,.15);">
+      <p style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #8a6000; font-weight: 900;">Result Release Countdown</p>
+      <p id="releaseCountdownText" style="margin: 4px 0 0; font-size: 16px; color: #5c3f00; font-weight: 800;"></p>
+    </div>
     <div class="error-msg" id="loginError"></div>
 
     <!-- Session banner: appears when a student was remembered -->
@@ -1749,7 +1754,7 @@
       </div>
     </div>
 
-    <p id="releaseCountdown" style="font-size:12px; color:var(--warn); margin:0 0 14px; display:none; font-weight:800;"></p>
+    
     <button id="loginBtn" onclick="checkResult()">View result</button>
   </div>
 
@@ -1990,13 +1995,22 @@
     }
   }
 
-   function signOut() {
+     function signOut() {
     clearSessionStudent();
-    document.getElementById('schoolCode').value = '';
+    
+    // Clear the form fields
     document.getElementById('admissionNo').value = '';
     document.getElementById('surname').value = '';
     document.getElementById('pinCode').value = '';
+    
+    // Hide the result, hide empty state, show the login view
+    document.getElementById('resultView').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('loginView').style.display = 'block';
+    
+    // Update the banner
     applySessionStudent();
+    hideError();
   }
 
   // ============================================================
@@ -2104,30 +2118,37 @@
   // ============================================================
   // Release countdown
   // ============================================================
-  async function checkReleaseCountdown() {
+    async function checkReleaseCountdown() {
     clearInterval(releaseCountdownInterval);
     const el = document.getElementById('releaseCountdown');
+    const textEl = document.getElementById('releaseCountdownText');
     const isFullTerm = document.getElementById('resultType').value === 'fullterm';
     const term = document.getElementById('termSelect').value;
     const session = document.getElementById('sessionInput').value.trim();
-    if (!isFullTerm || !session) {
-      el.style.display = 'none';
-      return;
-    }
+
+    if (!isFullTerm || !session) { el.style.display = 'none'; return; }
+
     try {
-      const res = await fetch(`${API_BASE}/api/term-settings?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}`);
+      const code = window.hiddenSchoolCode;
+      const lookup = await fetch(`${API_BASE}/api/developer/public/school-lookup?code=${code}`);
+      const lookupData = await lookup.json();
+      
+      const res = await fetch(`${API_BASE}/api/term-settings?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}&school_id=${lookupData.school.id}`);
       const data = await res.json();
       const releaseAt = data.settings?.result_release_at;
+
       if (!releaseAt || new Date(releaseAt) <= new Date()) {
         el.style.display = 'none';
         return;
       }
+
       const releaseDate = new Date(releaseAt);
       el.style.display = 'block';
+
       function tick() {
         const diff = releaseDate - new Date();
         if (diff <= 0) {
-          el.textContent = `🎉 Results are now available!`;
+          textEl.textContent = `Results are now available!`;
           clearInterval(releaseCountdownInterval);
           return;
         }
@@ -2135,13 +2156,15 @@
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
         const mins = Math.floor((diff / (1000 * 60)) % 60);
         const secs = Math.floor((diff / 1000) % 60);
-        el.textContent = `⏳ Results open in ${days}d ${hours}h ${mins}m ${secs}s`;
+        
+        let timeStr = '';
+        if (days > 0) timeStr += `${days}d `;
+        timeStr += `${hours}h ${mins}m ${secs}s until release`;
+        textEl.textContent = timeStr;
       }
       tick();
       releaseCountdownInterval = setInterval(tick, 1000);
-    } catch (err) {
-      el.style.display = 'none';
-    }
+    } catch (err) { el.style.display = 'none'; }
   }
 
   // ============================================================

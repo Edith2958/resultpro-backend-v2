@@ -535,7 +535,11 @@
       <span class="greet-line" id="greetLine">Welcome back</span>
       <span class="greet-sub" id="greetSub"><span class="dot"></span>Logged in as <span id="whoAmISubtle">—</span></span>
     </div>
-
+    <!-- BOLD DEADLINE BANNER -->
+    <div id="deadlineCountdown" style="display:none; background: linear-gradient(135deg, #fff4d1, #fdf0c8); border: 1px solid #e6c477; border-left: 5px solid #ce8e00; border-radius: 12px; padding: 16px 20px; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(206,142,0,.15); animation: fadeUp .4s ease;">
+      <p style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #8a6000; font-weight: 900;">Score Submission Deadline</p>
+      <p id="deadlineCountdownText" style="margin: 4px 0 0; font-size: 16px; color: #5c3f00; font-weight: 800;"></p>
+    </div>
     <div class="topbar">
       <span class="who" id="whoAmI"></span>
       <span>
@@ -572,7 +576,7 @@
       <button class="primary" onclick="loadRoster()">Load class</button>
     </div>
 
-    <p id="deadlineCountdown" style="font-size:12px; color:var(--warn); margin:12px 0 0; display:none; font-weight:700;"></p>
+    
   </div>
 
   <div class="card" id="rosterCard" style="display:none;">
@@ -781,6 +785,7 @@
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
       teacher = data.teacher;
+            sessionStorage.setItem('resultpro_school_id', data.school.id);
       sessionStorage.setItem('resultpro_teacher', JSON.stringify(teacher));
       boot();
     } catch (err) {
@@ -1036,24 +1041,41 @@
   }
 
 
-  async function updateDeadlineCountdown(term, session) {
+    async function updateDeadlineCountdown(term, session) {
     clearInterval(countdownInterval);
     const el = document.getElementById('deadlineCountdown');
+    const textEl = document.getElementById('deadlineCountdownText');
+    
     try {
-      const res = await fetch(`${API_BASE}/api/term-settings?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}`);
+      const res = await fetch(`${API_BASE}/api/term-settings?term=${encodeURIComponent(term)}&session=${encodeURIComponent(session)}&school_id=${sessionStorage.getItem('resultpro_school_id')}`);
       const data = await res.json();
       const deadline = data.settings?.teacher_deadline;
+
       if (!deadline) { el.style.display = 'none'; return; }
+      
       const deadlineDate = new Date(deadline);
       el.style.display = 'block';
+
       function tick() {
         const diff = deadlineDate - new Date();
-        if (diff <= 0) { el.textContent = `⏰ Deadline has passed (was ${deadlineDate.toLocaleString()})`; clearInterval(countdownInterval); return; }
+        if (diff <= 0) {
+          textEl.textContent = `Closed (was ${deadlineDate.toLocaleString()})`;
+          el.style.background = '#ffe5e5';
+          el.style.borderColor = '#ffb3b3';
+          el.style.borderLeftColor = '#b93838';
+          textEl.style.color = '#7a1a1a';
+          clearInterval(countdownInterval);
+          return;
+        }
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
         const mins = Math.floor((diff / (1000 * 60)) % 60);
         const secs = Math.floor((diff / 1000) % 60);
-        el.textContent = `⏳ Score submission deadline: ${days}d ${hours}h ${mins}m ${secs}s remaining`;
+        
+        let timeStr = '';
+        if (days > 0) timeStr += `${days}d `;
+        timeStr += `${hours}h ${mins}m ${secs}s remaining`;
+        textEl.textContent = timeStr;
       }
       tick();
       countdownInterval = setInterval(tick, 1000);
