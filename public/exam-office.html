@@ -1737,10 +1737,14 @@
         renderEmpty(list, { title: 'No teachers yet', sub: 'Add teachers above so you can assign subjects and form classes.', icon: '🧑‍🏫' });
         return;
       }
-      list.innerHTML = cache.teachers.map((t, i) => `
+                  list.innerHTML = cache.teachers.map((t, i) => `
         <div class="list-row" id="teacher-row-${t.id}" style="--i:${i}">
           <span>${t.name} <span class="meta">(${t.email})</span></span>
-          <button class="delete-btn" onclick="deleteItem('teachers', ${t.id}, loadTeachers, 'teacher-row-${t.id}')">Delete</button>
+          <span style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="small" onclick="startEditTeacher(${t.id})">Edit</button>
+            <button class="small" onclick="resetTeacherPassword(${t.id})">Reset Password</button>
+            <button class="delete-btn" onclick="deleteItem('teachers', ${t.id}, loadTeachers, 'teacher-row-${t.id}')">Delete</button>
+          </span>
         </div>`).join('');
     } catch (err) { showToast('Could not load teachers.'); }
   }
@@ -1768,7 +1772,61 @@
       showToast('Teacher added.');
     } catch (err) { showToast(err.message || 'Could not add teacher.'); }
   }
+  async function resetTeacherPassword(id) {
+    if (!confirm('Are you sure you want to reset this teacher\'s password to "password123"?')) return;
+    
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/api/exam-office/teachers/${id}/reset-password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ school_id: getSchoolId() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      showToast(data.message);
+    } catch (err) {
+      showToast(err.message || 'Could not reset password.');
+    }
+  }
+    function startEditTeacher(id) {
+    // Find the teacher in the cached list
+    const t = cache.teachers.find(x => x.id === id);
+    if (!t) return;
+    
+    const row = document.getElementById(`teacher-row-${id}`);
+    row.innerHTML = `
+      <div style="display:flex; gap:6px; flex:1; flex-wrap:wrap;">
+        <input type="text" id="edit-teacher-name-${id}" value="${t.name}" placeholder="Full name" style="flex:1; min-width:140px; padding:6px 8px; font-size:12px;" />
+        <input type="email" id="edit-teacher-email-${id}" value="${t.email}" placeholder="Email" style="flex:1; min-width:140px; padding:6px 8px; font-size:12px;" />
+      </div>
+      <span style="display:flex; gap:6px;">
+        <button class="small" onclick="saveEditTeacher(${id})">Save</button>
+        <button class="small" onclick="loadTeachers()">Cancel</button>
+      </span>`;
+  }
 
+  async function saveEditTeacher(id) {
+    const name = document.getElementById(`edit-teacher-name-${id}`).value.trim();
+    const email = document.getElementById(`edit-teacher-email-${id}`).value.trim();
+    
+    if (!name || !email) return showToast('Name and email cannot be empty.');
+
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/api/exam-office/teachers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, school_id: getSchoolId() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      await loadTeachers();
+      populateDropdowns();
+      showToast('Teacher updated successfully.');
+    } catch (err) {
+      showToast(err.message || 'Could not update teacher.');
+    }
+  }
   async function loadClasses() {
     try {
       const res = await fetch(`${API_BASE}/api/exam-office/classes?school_id=${getSchoolId()}`);

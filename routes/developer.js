@@ -263,5 +263,37 @@ router.get('/public/school-lookup', async (req, res) => {
     res.status(500).json({ error: 'Lookup failed' });
   }
 });
+// ==========================================
+// RESET EXAM OFFICER PASSWORD
+// ==========================================
+router.put('/schools/:schoolId/reset-admin-password', async (req, res) => {
+  const schoolId = parseInt(req.params.schoolId, 10);
+  const { admin_email } = req.body;
+
+  if (!admin_email) return res.status(400).json({ error: 'admin_email is required' });
+
+  try {
+    // 1. Generate default password and hash
+    const defaultPassword = 'password123';
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(defaultPassword, salt);
+
+    // 2. Update the officer
+    const result = await pool.query(
+      `UPDATE exam_officers SET password_hash = $1 
+       WHERE email = $2 AND school_id = $3 RETURNING id, name, email`,
+      [newHash, admin_email.trim(), schoolId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Exam officer not found for this school' });
+    }
+
+    res.json({ success: true, message: `Password reset to: ${defaultPassword}`, officer: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
 
 module.exports = router;

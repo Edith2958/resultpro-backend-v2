@@ -580,8 +580,9 @@
               <br>
               <span class="meta">Added: ${new Date(s.created_at).toLocaleDateString()}</span>
             </span>
-                        <span style="display:flex; gap:8px; align-items:center;">
+                        <span style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
               ${badge}
+              <button class="primary" style="background:var(--sec-btn-bg); color:var(--text); border:1px solid var(--border); padding:6px 12px; font-size:11px; box-shadow:none;" onclick="promptResetAdminPassword(${s.id}, '${s.name}')">Reset Admin</button>
               <button class="primary" style="background:${btnColor}; border:none; padding:6px 12px; font-size:11px; box-shadow:none;" onclick="toggleSchoolStatus(${s.id}, '${newStatus}')">${btnLabel}</button>
               <button class="primary" style="background:var(--fail-bg); color:var(--fail); border:none; padding:6px 12px; font-size:11px; box-shadow:none;" onclick="deleteSchool(${s.id}, '${s.name}')">Delete</button>
             </span>
@@ -659,6 +660,26 @@
       fetchSchoolsForDropdowns(); // Refresh PIN dropdowns
     } catch (err) {
       showToast(err.message || 'Failed to delete school.');
+    }
+  }
+    async function promptResetAdminPassword(schoolId, schoolName) {
+    const email = prompt(`Enter the Exam Officer's email for ${schoolName} to reset their password to "password123":`);
+    if (!email) return;
+
+    if (!confirm(`Are you sure you want to reset the password for ${email}?`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/developer/schools/${schoolId}/reset-admin-password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_email: email })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      showToast(data.message);
+    } catch (err) {
+      showToast(err.message || 'Failed to reset password.');
     }
   }
 </script>

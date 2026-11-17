@@ -866,5 +866,71 @@ router.put('/change-password', async (req, res) => {
     res.status(500).json({ error: 'Failed to change password' });
   }
 });
+// ==========================================
+// RESET TEACHER PASSWORD
+// ==========================================
+router.put('/teachers/:id/reset-password', async (req, res) => {
+  const teacherId = parseInt(req.params.id, 10);
+  const schoolId = req.body.school_id;
+
+  if (!schoolId) return res.status(400).json({ error: 'school_id is required' });
+
+  try {
+    // 1. Verify the teacher belongs to this school
+    const checkRes = await pool.query(
+      'SELECT id FROM teachers WHERE id = $1 AND school_id = $2',
+      [teacherId, schoolId]
+    );
+    if (checkRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Teacher not found in your school' });
+    }
+
+    // 2. Generate a default password and hash it
+    const defaultPassword = 'password123';
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(defaultPassword, salt);
+
+    // 3. Save it
+    await pool.query('UPDATE teachers SET password_hash = $1 WHERE id = $2', [newHash, teacherId]);
+    
+    res.json({ success: true, message: `Password reset to: ${defaultPassword}` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+// ==========================================
+// UPDATE TEACHER
+// ==========================================
+router.put('/teachers/:id', async (req, res) => {
+  const teacherId = parseInt(req.params.id, 10);
+  const { name, email, school_id } = req.body;
+
+  if (!name || !email || !school_id) {
+    return res.status(400).json({ error: 'name, email and school_id are required' });
+  }
+
+  try {
+    // Ensure the teacher belongs to this school before updating
+    const result = await pool.query(
+      `UPDATE teachers SET name = $1, email = $2 
+       WHERE id = $3 AND school_id = $4 
+       RETURNING id, name, email`,
+      [name.trim(), email.trim(), teacherId, school_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Teacher not found in your school' });
+    }
+
+    res.json({ teacher: result.rows[0] });
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'A teacher with that email already exists' });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update teacher' });
+  }
+});
 
 module.exports = router;
